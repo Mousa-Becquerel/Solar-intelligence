@@ -92,8 +92,28 @@ def cleanup_memory():
         # Clear dataset caches
         close_pydantic_weaviate_agent()
         
-        # Force garbage collection
-        collected = gc.collect()
+        # Aggressive matplotlib cleanup
+        try:
+            import matplotlib.pyplot as plt
+            plt.close('all')  # Close all figures
+            plt.clf()  # Clear current figure
+            plt.cla()  # Clear current axes
+        except Exception as e:
+            memory_logger.error(f"Error cleaning matplotlib: {e}")
+        
+        # Clear pandas cache
+        try:
+            import pandas as pd
+            # Clear any cached DataFrames
+            pd.io.common._NA_VALUES = set()
+        except Exception as e:
+            memory_logger.error(f"Error cleaning pandas cache: {e}")
+        
+        # Force garbage collection multiple times
+        collected = 0
+        for _ in range(3):
+            collected += gc.collect()
+        
         memory_logger.info(f"Garbage collection completed: {collected} objects collected")
         
         # Log memory usage after cleanup
@@ -102,6 +122,19 @@ def cleanup_memory():
         return True
     except Exception as e:
         memory_logger.error(f"Error during memory cleanup: {e}")
+        return False
+
+def periodic_memory_cleanup():
+    """Periodic memory cleanup to prevent accumulation"""
+    try:
+        mem_info = get_memory_usage()
+        if mem_info and mem_info['rss_mb'] > 250:  # Clean up at 250MB
+            memory_logger.info(f"Periodic cleanup triggered at {mem_info['rss_mb']:.1f}MB")
+            cleanup_memory()
+            return True
+        return False
+    except Exception as e:
+        memory_logger.error(f"Error in periodic cleanup: {e}")
         return False
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
@@ -602,10 +635,17 @@ def chat():
     
     # Check memory before processing
     mem_info = get_memory_usage()
-    if mem_info and mem_info['rss_mb'] > 450:
+    if mem_info and mem_info['rss_mb'] > 300:  # Lowered from 450MB to 300MB
         # Perform cleanup if memory usage is high
         memory_logger.warning(f"High memory usage detected ({mem_info['rss_mb']:.1f}MB), performing cleanup")
         cleanup_memory()
+        
+        # Check again after cleanup
+        mem_info_after = get_memory_usage()
+        if mem_info_after and mem_info_after['rss_mb'] > 400:  # If still high after cleanup
+            memory_logger.critical(f"Memory usage still high after cleanup ({mem_info_after['rss_mb']:.1f}MB)")
+            # Force additional cleanup
+            cleanup_memory()
     
     try:
         # Store user message
@@ -652,6 +692,9 @@ def chat():
                         'artifact': web_path,
                                 'comment': None
                     }]
+                    
+                    # Clean up memory after plot generation
+                    cleanup_memory()
                 else:
                     # Fallback to string if parsing fails
                     response_data = [{
@@ -681,6 +724,9 @@ def chat():
             # Log memory after agent call
             log_memory_usage("After Pydantic-AI agent call")
             
+            # Periodic memory cleanup
+            periodic_memory_cleanup()
+            
             return jsonify({'response': response_data})
             
         except Exception as e:
@@ -693,6 +739,8 @@ def chat():
         cleanup_memory()
         # Log memory after error cleanup
         log_memory_usage("After error cleanup")
+        # Periodic cleanup after error
+        periodic_memory_cleanup()
         return jsonify({'error': 'An error occurred processing your request'}), 500
 
 @app.route('/guide')
@@ -966,6 +1014,55 @@ def admin_conversation_memory_info():
             return jsonify({
                 'success': False,
                 'error': 'Pydantic-AI agent not available'
+            })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/memory-status')
+def memory_status():
+    """Get current memory status (public endpoint)"""
+    try:
+        mem_info = get_memory_usage()
+        if not mem_info:
+            return jsonify({'error': 'Could not retrieve memory information'}), 500
+        
+        return jsonify({
+            'success': True,
+            'memory_mb': mem_info['rss_mb'],
+            'memory_percent': mem_info['memory_percent'],
+            'available_gb': mem_info['available_memory_gb'],
+            'status': 'critical' if mem_info['rss_mb'] > 500 else 'warning' if mem_info['rss_mb'] > 400 else 'normal',
+            'timestamp': datetime.utcnow().isoformat()
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/memory-cleanup', methods=['POST'])
+def memory_cleanup():
+    """Trigger memory cleanup (public endpoint)"""
+    try:
+        # Get memory usage before cleanup
+        mem_before = get_memory_usage()
+        
+        # Perform cleanup
+        success = cleanup_memory()
+        
+        # Get memory usage after cleanup
+        mem_after = get_memory_usage()
+        
+        if success and mem_before and mem_after:
+            memory_freed = mem_before['rss_mb'] - mem_after['rss_mb']
+            return jsonify({
+                'success': True,
+                'message': f'Memory cleanup completed. Freed {memory_freed:.1f}MB',
+                'memory_before_mb': mem_before['rss_mb'],
+                'memory_after_mb': mem_after['rss_mb'],
+                'memory_freed_mb': memory_freed
+            })
+        else:
+            return jsonify({
+                'success': success,
+                'message': 'Memory cleanup attempted but could not measure results'
             })
     except Exception as e:
         return jsonify({'error': str(e)}), 500

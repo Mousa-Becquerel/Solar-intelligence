@@ -19,6 +19,9 @@ import matplotlib.pyplot as plt
 from enum import Enum
 from typing import Literal
 from pydantic import BaseModel, ValidationError
+import sys
+import gc
+import psutil
 
 # === Canonical scenario Enum =================================================
 class ScenarioName(str, Enum):
@@ -256,6 +259,8 @@ def plot_market_share_per_segment(
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
             plt.savefig(save_path, dpi=80, bbox_inches="tight")
             plt.close()
+            # Clean up memory after plot generation
+            cleanup_plot_memory()
         else:
             plt.show()
 
@@ -264,10 +269,12 @@ def plot_market_share_per_segment(
     except ValueError as ve:
         # Pass through validation errors (like country not found) without wrapping
         plt.close('all')
+        cleanup_plot_memory()
         raise ve
     except Exception as e:
         # Close any open matplotlib figures to prevent memory leaks
         plt.close('all')
+        cleanup_plot_memory()
         # Re-raise other exceptions with context
         raise Exception(f"Error generating plot: {str(e)}")
 
@@ -360,6 +367,8 @@ def plot_capacity_pie(
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         plt.savefig(save_path, dpi=80, bbox_inches="tight")
         plt.close()
+        # Clean up memory after plot generation
+        cleanup_plot_memory()
     else:
         plt.show()
 
@@ -463,6 +472,8 @@ def plot_total_market(
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         plt.savefig(save_path, dpi=80, bbox_inches="tight")
         plt.close()
+        # Clean up memory after plot generation
+        cleanup_plot_memory()
     else:
         plt.show()
 
@@ -556,6 +567,8 @@ def plot_yoy_growth(
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         plt.savefig(save_path, dpi=80, bbox_inches="tight")
         plt.close()
+        # Clean up memory after plot generation
+        cleanup_plot_memory()
     else:
         plt.show()
 
@@ -629,6 +642,8 @@ def plot_country_installation_share(
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         plt.savefig(save_path, dpi=80, bbox_inches="tight")
         plt.close()
+        # Clean up memory after plot generation
+        cleanup_plot_memory()
     else:
         plt.show()
 
@@ -718,6 +733,8 @@ def plot_capacity_trend(
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         plt.savefig(save_path, dpi=80, bbox_inches="tight")
         plt.close()
+        # Clean up memory after plot generation
+        cleanup_plot_memory()
     else:
         plt.show()
 
@@ -822,6 +839,8 @@ def plot_multi_scenario_capacity_trend(
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         plt.savefig(save_path, dpi=80, bbox_inches='tight')
         plt.close()
+        # Clean up memory after plot generation
+        cleanup_plot_memory()
     else:
         plt.show()
 
@@ -1985,6 +2004,8 @@ def plot_country_comparison_capacity_trend(
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         plt.savefig(save_path, dpi=80, bbox_inches="tight")
         plt.close()
+        # Clean up memory after plot generation
+        cleanup_plot_memory()
     else:
         plt.show()
 
@@ -2068,6 +2089,8 @@ def plot_multi_country_capacity_trend(
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         plt.savefig(save_path, dpi=80, bbox_inches="tight")
         plt.close()
+        # Clean up memory after plot generation
+        cleanup_plot_memory()
     else:
         plt.show()
 
@@ -2085,3 +2108,28 @@ async def _run_plot_with_timeout(agent, cmd: str, ctx: RunContext[None]):
         class Dummy:
             output = f"Sorry, plot generation exceeded {PLOT_TIMEOUT} seconds. Please refine your request and try again."
         return Dummy()
+
+# Memory cleanup function
+def cleanup_plot_memory():
+    """Aggressive memory cleanup after plot generation"""
+    try:
+        # Close all matplotlib figures
+        plt.close('all')
+        
+        # Clear matplotlib cache
+        plt.clf()
+        plt.cla()
+        
+        # Force garbage collection
+        collected = gc.collect()
+        logger.info(f"Memory cleanup: {collected} objects collected")
+        
+        # Get current memory usage
+        process = psutil.Process()
+        memory_mb = process.memory_info().rss / 1024 / 1024
+        logger.info(f"Current memory usage: {memory_mb:.1f}MB")
+        
+        return memory_mb
+    except Exception as e:
+        logger.error(f"Error during memory cleanup: {e}")
+        return None
