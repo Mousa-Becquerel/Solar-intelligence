@@ -176,6 +176,9 @@ def plot_market_share_per_segment(
                 f"Available countries include: {countries_list}. "
                 f"Please try one of these countries instead."
             )
+            # Clean up DataFrame before raising error
+            del df
+            cleanup_plot_memory()
             raise ValueError(error_msg)
 
         # Filter for selected country and appropriate scenario(s)
@@ -214,7 +217,7 @@ def plot_market_share_per_segment(
         )
 
         # Plot
-        plt.figure(figsize=(10, 6), dpi=80)
+        plt.figure(figsize=(8, 5), dpi=60)  # Reduced from (10, 6) to (8, 5)
         plt.bar(
             pivot_df.index,
             pivot_df['Distributed Share'],
@@ -257,12 +260,16 @@ def plot_market_share_per_segment(
 
         if save_path:
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            plt.savefig(save_path, dpi=80, bbox_inches="tight")
+            plt.savefig(save_path, dpi=60, bbox_inches="tight")  # Reduced from 80 to 60
             plt.close()
             # Clean up memory after plot generation
             cleanup_plot_memory()
         else:
             plt.show()
+
+        # Clean up DataFrames
+        del df, df_years, pivot_df
+        cleanup_plot_memory()
 
         return save_path
         
@@ -339,7 +346,7 @@ def plot_capacity_pie(
     plt.close('all')
 
     # Plot
-    plt.figure(figsize=(6, 6), dpi=80)
+    plt.figure(figsize=(5, 5), dpi=60)  # Reduced from (6, 6) to (5, 5)
     wedges, texts, autotexts = plt.pie(
         df_agg,
         labels=df_agg.index,
@@ -365,7 +372,7 @@ def plot_capacity_pie(
 
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=80, bbox_inches="tight")
+        plt.savefig(save_path, dpi=60, bbox_inches="tight")  # Reduced from 80 to 60
         plt.close()
         # Clean up memory after plot generation
         cleanup_plot_memory()
@@ -439,7 +446,7 @@ def plot_total_market(
     df_total_grouped = df_total.groupby('Year')[value_column].sum().reset_index()
 
     # Plot
-    plt.figure(figsize=(10, 6), dpi=80)
+    plt.figure(figsize=(8, 5), dpi=60)  # Reduced from (10, 6) to (8, 5)
     plt.bar(df_total_grouped['Year'], df_total_grouped[value_column], color=BI_COLORS["gold"], label=segment)
     suffix = f" (Up to {max_year})" if max_year else ""
     plot_label = f"{title_prefix} {'Total' if segment=='Total' else segment} Market in {country}{suffix}"
@@ -470,7 +477,7 @@ def plot_total_market(
 
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=80, bbox_inches="tight")
+        plt.savefig(save_path, dpi=60, bbox_inches="tight")  # Reduced from 80 to 60
         plt.close()
         # Clean up memory after plot generation
         cleanup_plot_memory()
@@ -522,7 +529,7 @@ def plot_yoy_growth(
     )
     df_grouped["YoY Growth (%)"] = df_grouped["Annual Market"].pct_change() * 100
 
-    plt.figure(figsize=(10, 6), dpi=80)
+    plt.figure(figsize=(8, 5), dpi=60)  # Reduced from (10, 6) to (8, 5)
     plt.plot(
         df_grouped["Year"],
         df_grouped["YoY Growth (%)"],
@@ -565,7 +572,7 @@ def plot_yoy_growth(
 
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=80, bbox_inches="tight")
+        plt.savefig(save_path, dpi=60, bbox_inches="tight")  # Reduced from 80 to 60
         plt.close()
         # Clean up memory after plot generation
         cleanup_plot_memory()
@@ -624,7 +631,7 @@ def plot_country_installation_share(
     ]
     colors = palette[:len(df_grouped)]
 
-    plt.figure(figsize=(8, 8), dpi=80)
+    plt.figure(figsize=(6, 6), dpi=60)  # Reduced from (8, 8) to (6, 6)
     wedges, texts, autotexts = plt.pie(
         df_grouped,
         labels=df_grouped.index,
@@ -640,7 +647,7 @@ def plot_country_installation_share(
 
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=80, bbox_inches="tight")
+        plt.savefig(save_path, dpi=60, bbox_inches="tight")  # Reduced from 80 to 60
         plt.close()
         # Clean up memory after plot generation
         cleanup_plot_memory()
@@ -697,7 +704,7 @@ def plot_capacity_trend(
         .reset_index()
     )
 
-    plt.figure(figsize=(10, 6), dpi=80)
+    plt.figure(figsize=(8, 5), dpi=60)  # Reduced from (10, 6) to (8, 5)
     plt.plot(
         pivot["Year"],
         pivot[value_column],
@@ -731,7 +738,7 @@ def plot_capacity_trend(
 
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=80, bbox_inches="tight")
+        plt.savefig(save_path, dpi=60, bbox_inches="tight")  # Reduced from 80 to 60
         plt.close()
         # Clean up memory after plot generation
         cleanup_plot_memory()
@@ -801,7 +808,7 @@ def plot_multi_scenario_capacity_trend(
         "Low": "-."
     }
 
-    plt.figure(figsize=(12, 8), dpi=80)
+    plt.figure(figsize=(10, 6), dpi=60)  # Reduced from (12, 8) to (10, 6)
     
     # Plot each scenario
     for scenario in pivot["Scenario"].unique():
@@ -837,7 +844,7 @@ def plot_multi_scenario_capacity_trend(
 
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=80, bbox_inches='tight')
+        plt.savefig(save_path, dpi=60, bbox_inches='tight')
         plt.close()
         # Clean up memory after plot generation
         cleanup_plot_memory()
@@ -1788,7 +1795,7 @@ class PydanticWeaviateAgent:
             message_history = None
             if conversation_id and conversation_id in self.conversation_memory:
                 message_history = self.conversation_memory[conversation_id]
-                print(f"🧠 Using conversation memory: {len(message_history)} previous messages")
+                print(f"�� Using conversation memory: {len(message_history)} previous messages")
                 logger.info(f"Using conversation memory for {conversation_id} with {len(message_history)} previous messages")
             else:
                 print(f"🆕 Starting fresh conversation (no memory)")
@@ -1965,7 +1972,7 @@ def plot_country_comparison_capacity_trend(
     pivot_a = df_a.groupby("Year")[value_column].sum().reset_index()
     pivot_b = df_b.groupby("Year")[value_column].sum().reset_index()
 
-    plt.figure(figsize=(10, 6), dpi=80)
+    plt.figure(figsize=(10, 6), dpi=60)  # Reduced from (12, 8) to (10, 6)
     plt.plot(pivot_a["Year"], pivot_a[value_column], marker="o", color=BI_COLORS["navy"], label=country_a)
     plt.plot(pivot_b["Year"], pivot_b[value_column], marker="o", color=BI_COLORS["gold"], label=country_b)
     plt.title(f"{title_prefix} {segment_norm} Capacity: {country_a} vs {country_b}")
@@ -2002,7 +2009,7 @@ def plot_country_comparison_capacity_trend(
 
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=80, bbox_inches="tight")
+        plt.savefig(save_path, dpi=60, bbox_inches="tight")  # Reduced from 80 to 60
         plt.close()
         # Clean up memory after plot generation
         cleanup_plot_memory()
@@ -2046,7 +2053,7 @@ def plot_multi_country_capacity_trend(
 
     # Build a colour cycle
     colour_cycle = [BI_COLORS["navy"], BI_COLORS["gold"], BI_COLORS["orange"], BI_COLORS["sky"], "#145DA0", "#FFB000", "#003f88"]
-    plt.figure(figsize=(12, 7), dpi=80)
+    plt.figure(figsize=(10, 6), dpi=60)  # Reduced from (12, 7) to (10, 6)
 
     for idx, c in enumerate(countries):
         c_clean = _sanitize_country(c)
@@ -2087,7 +2094,7 @@ def plot_multi_country_capacity_trend(
 
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=80, bbox_inches="tight")
+        plt.savefig(save_path, dpi=60, bbox_inches="tight")  # Reduced from 80 to 60
         plt.close()
         # Clean up memory after plot generation
         cleanup_plot_memory()
@@ -2120,14 +2127,42 @@ def cleanup_plot_memory():
         plt.clf()
         plt.cla()
         
-        # Force garbage collection
-        collected = gc.collect()
+        # Clear pandas cache and DataFrames
+        try:
+            import pandas as pd
+            # Clear any cached DataFrames
+            pd.io.common._NA_VALUES = set()
+            # Force pandas to release memory
+            pd._libs.parsers._c_parser_defaults = None
+        except Exception as e:
+            logger.debug(f"Pandas cleanup note: {e}")
+        
+        # Force garbage collection multiple times
+        collected = 0
+        for _ in range(3):
+            collected += gc.collect()
+        
         logger.info(f"Memory cleanup: {collected} objects collected")
         
         # Get current memory usage
         process = psutil.Process()
         memory_mb = process.memory_info().rss / 1024 / 1024
         logger.info(f"Current memory usage: {memory_mb:.1f}MB")
+        
+        # If memory is still high, try more aggressive cleanup
+        if memory_mb > 200:
+            logger.warning(f"Memory still high after cleanup: {memory_mb:.1f}MB, performing additional cleanup")
+            # Clear matplotlib backend cache
+            try:
+                import matplotlib
+                matplotlib.pyplot.close('all')
+                matplotlib.pyplot.clf()
+                matplotlib.pyplot.cla()
+            except Exception as e:
+                logger.debug(f"Matplotlib backend cleanup note: {e}")
+            
+            # Force another garbage collection
+            gc.collect()
         
         return memory_mb
     except Exception as e:

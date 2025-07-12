@@ -128,7 +128,7 @@ def periodic_memory_cleanup():
     """Periodic memory cleanup to prevent accumulation"""
     try:
         mem_info = get_memory_usage()
-        if mem_info and mem_info['rss_mb'] > 250:  # Clean up at 250MB
+        if mem_info and mem_info['rss_mb'] > 150:  # Lowered from 250MB to 150MB
             memory_logger.info(f"Periodic cleanup triggered at {mem_info['rss_mb']:.1f}MB")
             cleanup_memory()
             return True
@@ -635,18 +635,24 @@ def chat():
     
     # Check memory before processing
     mem_info = get_memory_usage()
-    if mem_info and mem_info['rss_mb'] > 300:  # Lowered from 450MB to 300MB
+    if mem_info and mem_info['rss_mb'] > 200:  # Lowered from 300MB to 200MB
         # Perform cleanup if memory usage is high
         memory_logger.warning(f"High memory usage detected ({mem_info['rss_mb']:.1f}MB), performing cleanup")
         cleanup_memory()
         
         # Check again after cleanup
         mem_info_after = get_memory_usage()
-        if mem_info_after and mem_info_after['rss_mb'] > 400:  # If still high after cleanup
+        if mem_info_after and mem_info_after['rss_mb'] > 300:  # Lowered from 400MB to 300MB
             memory_logger.critical(f"Memory usage still high after cleanup ({mem_info_after['rss_mb']:.1f}MB)")
             # Force additional cleanup
             cleanup_memory()
-    
+            
+            # If still high, return error
+            mem_info_final = get_memory_usage()
+            if mem_info_final and mem_info_final['rss_mb'] > 400:  # Hard limit at 400MB
+                memory_logger.critical(f"Memory usage critically high ({mem_info_final['rss_mb']:.1f}MB), rejecting request")
+                return jsonify({'error': 'Server memory usage is too high. Please try again later.'}), 503
+        
     try:
         # Store user message
         try:
@@ -695,6 +701,9 @@ def chat():
                     
                     # Clean up memory after plot generation
                     cleanup_memory()
+                    
+                    # Additional immediate cleanup for plots
+                    periodic_memory_cleanup()
                 else:
                     # Fallback to string if parsing fails
                     response_data = [{
@@ -1064,6 +1073,49 @@ def memory_cleanup():
                 'success': success,
                 'message': 'Memory cleanup attempted but could not measure results'
             })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/memory-monitor')
+def memory_monitor():
+    """Simple memory monitoring and cleanup endpoint"""
+    try:
+        mem_info = get_memory_usage()
+        if not mem_info:
+            return jsonify({'error': 'Could not retrieve memory information'}), 500
+        
+        # Determine status
+        if mem_info['rss_mb'] > 400:
+            status = 'critical'
+            action = 'immediate_cleanup'
+        elif mem_info['rss_mb'] > 300:
+            status = 'warning'
+            action = 'cleanup_recommended'
+        elif mem_info['rss_mb'] > 200:
+            status = 'caution'
+            action = 'monitor'
+        else:
+            status = 'normal'
+            action = 'none'
+        
+        # Auto-cleanup if critical
+        if status == 'critical':
+            cleanup_memory()
+            mem_after = get_memory_usage()
+            memory_freed = mem_info['rss_mb'] - mem_after['rss_mb'] if mem_after else 0
+        else:
+            memory_freed = 0
+        
+        return jsonify({
+            'success': True,
+            'memory_mb': mem_info['rss_mb'],
+            'memory_percent': mem_info['memory_percent'],
+            'available_gb': mem_info['available_memory_gb'],
+            'status': status,
+            'action': action,
+            'memory_freed_mb': memory_freed,
+            'timestamp': datetime.utcnow().isoformat()
+        })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
