@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Becquerel Institute PV Market Chat</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Main application container -->
+    <div class="main-layout">
+        <!-- Sidebar Container -->
+        <div class="sidebar">
+            <div class="sidebar-collapsed-icons">
+                <button class="sidebar-icon-btn" id="new-chat-collapsed" title="New Chat">
+                    <!-- Plus icon SVG -->
+                    <svg width="22" height="22" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="10" stroke="#2563eb" fill="#fff"/>
+                        <path d="M11 7v8M7 11h8"/>
+                    </svg>
+                </button>
+                <a href="https://datahub.becquerelinstitute.eu/Home" target="_blank" rel="noopener" class="sidebar-icon-btn" title="PV Data Hub">
+                    <!-- Solar panel icon SVG -->
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="7" rx="2" fill="#fbbf24" stroke="#2563eb"/>
+                        <rect x="7" y="4" width="10" height="7" rx="2" fill="#fff" stroke="#2563eb"/>
+                        <path d="M12 11V4" stroke="#2563eb"/>
+                    </svg>
+                </a>
+            </div>
+            
+            <!-- Conversations indicator when collapsed -->
+            <div class="conversations-indicator" id="conversations-indicator" title="View conversations">
+                <div class="conversations-count" id="conversations-count">0</div>
+            </div>
+            
+            <div class="sidebar-header">
+                <button id="new-chat-btn" class="new-chat-btn">+ New Chat</button>
+            </div>
+            <div class="sidebar-section-title">Recent</div>
+            <ul id="conversation-list" class="conversation-list"></ul>
+            <div class="sidebar-footer footer">
+                <div class="sidebar-copyright">&copy; 2024 BecqSight</div>
+                <a href="https://datahub.becquerelinstitute.eu/Home" target="_blank" rel="noopener" class="sidebar-link-btn">
+                    <span class="icon-solar" aria-label="Data Hub">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="7" rx="2" fill="#fbbf24" stroke="#2563eb"/>
+                            <rect x="7" y="4" width="10" height="7" rx="2" fill="#fff" stroke="#2563eb"/>
+                            <path d="M12 11V4" stroke="#2563eb"/>
+                        </svg>
+                    </span>
+                    <span class="sidebar-link-btn-text">PV Data Hub</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content Container -->
+        <div class="main-content">
+            <!-- App Title Bar -->
+    <div class="app-title-bar">
+                <div class="title-section">
+        <div class="app-title">BecqSight</div>
+        <div class="agent-selector">
+            <select id="agent-select" class="agent-select">
+                <option value="market">Market Analysis Agent</option>
+                <option value="price">Price Analysis Agent</option>
+            </select>
+        </div>
+    </div>
+    <div class="user-section">
+        <div class="user-info" id="user-info">
+            <span class="user-name" id="user-name">Loading...</span>
+            <span class="user-role" id="user-role"></span>
+        </div>
+        <a href="{{ url_for('admin_users') }}" class="admin-btn" id="admin-btn" title="User Management" style="display: none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+        </a>
+        <button class="logout-btn" id="logout-btn" title="Logout">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16,17 21,12 16,7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+    </button>
+    </div>
+    </div>
+
+            <!-- Chat Messages Container -->
+                <div id="chat-messages" class="chat-container">
+                <div class="chat-messages-wrapper">
+                    <div id="welcome-message" class="welcome-message" style="position: fixed !important; top: 20px !important; display: flex !important; margin-top: 0 !important; transition: left 0.3s cubic-bezier(.4,2,.6,1) !important;">
+                        <div class="welcome-background"></div>
+                        <div class="welcome-content">
+                            <h1 class="welcome-title">PV Market Intelligence</h1>
+                            <p class="welcome-subtitle">
+                                Unlock comprehensive insights into photovoltaic markets worldwide with AI-powered analysis
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Messages will be added here -->
+                </div>
+                    </div>
+
+            <!-- Error Message Container -->
+            <div id="error-message" class="error-message" style="display:none;"></div>
+
+            <!-- Input Section Container -->
+            <div class="main-input-wrapper">
+                <div class="input-wrapper">
+                    <div class="input-bar-content">
+                        <div class="input-row">
+                            <div class="input-container">
+                                <div class="autocomplete-overlay" id="autocomplete-overlay"></div>
+                                <input type="text" id="user-input" placeholder="Ask about PV market data...">
+                </div>
+                            <button id="send-btn" class="send-btn" onclick="sendMessage()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
+                                </svg>
+                            </button>
+            </div>
+    </div>
+                </div>
+            </div>
+        </div>
+                </div>
+
+    <!-- Fixed Position Elements (outside main layout) -->
+    <!-- Help Button -->
+    <button id="help-btn" class="help-icon-btn" title="User Guide" tabindex="0">
+        ?
+        <span class="help-tooltip">Find a detailed guide to using the agent</span>
+    </button>
+
+    <!-- News Card -->
+    <div id="news-card" class="news-card">
+        <span class="news-badge"><span class="news-badge-icon">📰</span>NEWS</span>
+        <div class="news-card-title"></div>
+        <div class="news-card-divider"></div>
+        <div class="news-card-desc"></div>
+        <a class="news-card-link" href="#" target="_blank" style="display:none;"></a>
+                </div>
+
+    <!-- Modal Elements -->
+    <!-- User Guide Modal -->
+    <div id="guide-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>PV Market & Price Analysis Agent - User Guide</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="guide-content">
+                    <!-- Guide content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="confirm-modal">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-header">
+                <div class="confirm-modal-icon">🗑️</div>
+                <h3 class="confirm-modal-title">Delete Conversation</h3>
+            </div>
+            <div class="confirm-modal-body">
+                <p class="confirm-modal-message">
+                    Are you sure you want to delete this conversation? This action cannot be undone.
+                </p>
+                <div class="confirm-modal-actions">
+                    <button class="confirm-btn confirm-btn-cancel" id="confirm-cancel">Cancel</button>
+                    <button class="confirm-btn confirm-btn-delete" id="confirm-delete">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- External Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="/static/js/main.js"></script>
+</body>
+</html> 

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create User - BecqSight Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .admin-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: var(--becq-white);
+            min-height: 100vh;
+        }
+
+        .admin-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(251, 191, 36, 0.2);
+        }
+
+        .admin-title {
+            color: var(--becq-blue);
+            font-size: 2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-title i {
+            color: var(--becq-gold);
+        }
+
+        .admin-subtitle {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.75rem;
+            color: var(--becq-blue);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--becq-gold);
+            box-shadow: 0 4px 16px rgba(251, 191, 36, 0.2), 0 0 0 3px rgba(251, 191, 36, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .form-help {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1rem;
+            font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--becq-gold) 0%, var(--becq-gold-dark) 100%);
+            color: var(--becq-blue);
+            box-shadow: 0 8px 24px rgba(251, 191, 36, 0.3);
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(251, 191, 36, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--becq-blue);
+            color: white;
+            text-align: center;
+            width: 100%;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .btn-secondary:hover {
+            background: var(--becq-accent-blue);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--becq-accent-blue);
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 2rem;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--becq-gold);
+        }
+
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .alert-error {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .loading-spinner {
+            display: none;
+            margin-left: 0.5rem;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-spinner.show {
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .role-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .role-card {
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .role-card:hover {
+            border-color: var(--becq-gold);
+            background: rgba(251, 191, 36, 0.05);
+        }
+
+        .role-card.selected {
+            border-color: var(--becq-gold);
+            background: rgba(251, 191, 36, 0.1);
+        }
+
+        .role-name {
+            font-weight: 600;
+            color: var(--becq-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .role-description {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                margin: 1rem;
+                padding: 1rem;
+            }
+
+            .form-container {
+                padding: 1.5rem;
+            }
+
+            .role-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <a href="{{ url_for('admin_users') }}" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            Back to User Management
+        </a>
+
+        <div class="admin-header">
+            <h1 class="admin-title">
+                <i class="fas fa-user-plus"></i>
+                Create New User
+            </h1>
+            <p class="admin-subtitle">Add a new user to the BecqSight platform</p>
+        </div>
+
+        <div class="form-container">
+            <div id="alertContainer"></div>
+
+            <form id="createUserForm">
+                <div class="form-group">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" id="username" name="username" class="form-input" required>
+                    <div class="form-help">Username must be unique and will be used for login</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="full_name" class="form-label">Full Name</label>
+                    <input type="text" id="full_name" name="full_name" class="form-input" required>
+                    <div class="form-help">Display name shown in the interface</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-input" required>
+                    <div class="form-help">Minimum 6 characters recommended</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password" class="form-label">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-input" required>
+                    <div class="form-help">Re-enter the password to confirm</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">User Role</label>
+                    <div class="role-info">
+                        <div class="role-card" onclick="selectRole('admin')">
+                            <div class="role-name">
+                                <i class="fas fa-crown"></i> Administrator
+                            </div>
+                            <div class="role-description">Full system access and user management</div>
+                        </div>
+                        <div class="role-card" onclick="selectRole('analyst')">
+                            <div class="role-name">
+                                <i class="fas fa-chart-line"></i> Analyst
+                            </div>
+                            <div class="role-description">Market analysis and research capabilities</div>
+                        </div>
+                        <div class="role-card" onclick="selectRole('researcher')">
+                            <div class="role-name">
+                                <i class="fas fa-microscope"></i> Researcher
+                            </div>
+                            <div class="role-description">Research and data exploration tools</div>
+                        </div>
+                        <div class="role-card" onclick="selectRole('demo')">
+                            <div class="role-name">
+                                <i class="fas fa-eye"></i> Demo User
+                            </div>
+                            <div class="role-description">Limited access for demonstration purposes</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="role" name="role" value="demo" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i>
+                    Create User
+                    <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let selectedRole = 'demo';
+
+        function selectRole(role) {
+            selectedRole = role;
+            document.getElementById('role').value = role;
+            
+            // Update visual selection
+            document.querySelectorAll('.role-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.role-card').classList.add('selected');
+        }
+
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            
+            const icon = type === 'error' ? 'exclamation-triangle' : 'check-circle';
+            alertDiv.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                ${message}
+            `;
+            
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        document.getElementById('createUserForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const password = formData.get('password');
+            const confirmPassword = formData.get('confirm_password');
+            
+            // Validate passwords match
+            if (password !== confirmPassword) {
+                showAlert('error', 'Passwords do not match');
+                return;
+            }
+            
+            // Validate password length
+            if (password.length < 3) {
+                showAlert('error', 'Password must be at least 3 characters long');
+                return;
+            }
+            
+            const btn = this.querySelector('.btn-primary');
+            const loading = this.querySelector('.loading-spinner');
+            
+            btn.disabled = true;
+            loading.classList.add('show');
+            
+            const data = {
+                username: formData.get('username'),
+                full_name: formData.get('full_name'),
+                password: password,
+                role: selectedRole
+            };
+            
+            fetch('/admin/users/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('success', data.message);
+                    btn.innerHTML = '<i class="fas fa-check"></i> User Created Successfully!';
+                    btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                    
+                    // Reset form after success
+                    setTimeout(() => {
+                        this.reset();
+                        selectedRole = 'demo';
+                        document.querySelectorAll('.role-card').forEach(card => {
+                            card.classList.remove('selected');
+                        });
+                        document.querySelector('[onclick="selectRole(\'demo\')"]').classList.add('selected');
+                        
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-user-plus"></i> Create User <i class="fas fa-spinner fa-spin loading-spinner"></i>';
+                        btn.style.background = '';
+                    }, 2000);
+                } else {
+                    showAlert('error', data.error || 'Failed to create user');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('error', 'Network error. Please check your connection and try again.');
+            })
+            .finally(() => {
+                if (!document.querySelector('.alert-success')) {
+                    btn.disabled = false;
+                    loading.classList.remove('show');
+                }
+            });
+        });
+
+        // Initialize default selection
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('[onclick="selectRole(\'demo\')"]').classList.add('selected');
+        });
+
+        // Auto-focus username field
+        document.getElementById('username').focus();
+    </script>
+</body>
+</html> 
