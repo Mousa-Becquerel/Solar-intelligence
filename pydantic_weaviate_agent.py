@@ -395,6 +395,9 @@ def plot_total_market(
             f"Available examples include: {', '.join(available_countries[:10])}..."
         )
 
+    # Ensure value_type is not None and convert to lowercase
+    if value_type is None:
+        value_type = "cumulative"  # Default to cumulative if None
     value_type = value_type.lower()
     if value_type == "cumulative":
         value_column = "Cumulative Market"
@@ -1123,7 +1126,7 @@ class PydanticWeaviateAgent:
                         sheet="Market Search Data",
                         country=country,
                         segment=segment_norm,
-                        value_type=value_type,
+                        value_type=vt_text,  # Use vt_text instead of value_type to ensure it's never None
                         max_year=max_year,
                         scenario=scenario,
                         save_path=save_path,
