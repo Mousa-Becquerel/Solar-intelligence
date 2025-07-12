@@ -1507,7 +1507,7 @@ class PydanticWeaviateAgent:
                 # Detailed debug information
                 print("🔧 SINGLE-SCENARIO TOOL CALLED:")
                 print(f"   country   = {country}")
-                print(f"   value_type= {value_type}")
+                print(f"   value_type = {value_type}")
                 print(f"   segment   = {segment}")
                 print(f"   max_year  = {max_year}")
                 print(f"   min_year  = {min_year}")
@@ -1540,7 +1540,7 @@ class PydanticWeaviateAgent:
                 """Wrapper that delegates multi-scenario capacity trend generation to nested agent."""
                 print("🔧 MULTI-SCENARIO TOOL CALLED:")
                 print(f"   country   = {country}")
-                print(f"   value_type= {value_type}")
+                print(f"   value_type = {value_type}")
                 print(f"   segment   = {segment}")
                 print(f"   max_year  = {max_year}")
                 print(f"   min_year  = {min_year}")

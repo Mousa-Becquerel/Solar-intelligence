@@ -647,26 +647,26 @@ def chat():
                     
                     # Create chart response structure
                     response_data = [{
-                        'type': 'chart',
+                                'type': 'chart',
                         'value': description,
                         'artifact': web_path,
-                        'comment': None
+                                'comment': None
                     }]
                 else:
                     # Fallback to string if parsing fails
                     response_data = [{
-                        'type': 'string',
+                            'type': 'string',
                         'value': response_text,
-                        'comment': None
+                            'comment': None
                     }]
             else:
                 # Create a simple response structure for regular text responses
                 response_data = [{
-                    'type': 'string',
+                        'type': 'string',
                     'value': response_text,
-                    'comment': None
+                        'comment': None
                 }]
-            
+
             # Store bot response
             try:
                 for resp in response_data:
