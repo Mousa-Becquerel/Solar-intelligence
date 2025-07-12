@@ -88,9 +88,7 @@ plt.rcParams.update({
 import re # Added for segment normalisation
 
 # Default data file for plotting (BI_Market_Data.xlsx located alongside this module or in project root)
-DEFAULT_DATA_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "BI_Market_Data.xlsx")
-
-# Load .env file
+DEFAULT_DATA_FILE = os.path.join(os.getcwd(), "BI_Market_Data.xlsx")# Load .env file
 load_dotenv()
 
 # Configure logging
