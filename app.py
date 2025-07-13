@@ -19,6 +19,11 @@ import gc
 import logging
 from sqlalchemy import text
 
+# Set matplotlib backend BEFORE importing pyplot
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for web apps
+import matplotlib.pyplot as plt
+
 # Fix Unicode encoding issues on Windows
 if sys.platform.startswith('win'):
     # Set console output encoding to UTF-8
@@ -94,7 +99,6 @@ def cleanup_memory():
         
         # Aggressive matplotlib cleanup
         try:
-            import matplotlib.pyplot as plt
             plt.close('all')  # Close all figures
             plt.clf()  # Clear current figure
             plt.cla()  # Clear current axes
@@ -128,7 +132,7 @@ def periodic_memory_cleanup():
     """Periodic memory cleanup to prevent accumulation"""
     try:
         mem_info = get_memory_usage()
-        if mem_info and mem_info['rss_mb'] > 250:  # Clean up at 250MB
+        if mem_info and mem_info['rss_mb'] > 200:  # Lowered from 250MB to 200MB
             memory_logger.info(f"Periodic cleanup triggered at {mem_info['rss_mb']:.1f}MB")
             cleanup_memory()
             return True
@@ -136,6 +140,57 @@ def periodic_memory_cleanup():
     except Exception as e:
         memory_logger.error(f"Error in periodic cleanup: {e}")
         return False
+
+def force_memory_cleanup():
+    """Force immediate memory cleanup regardless of current usage"""
+    try:
+        memory_logger.info("Forcing immediate memory cleanup")
+        cleanup_memory()
+        
+        # Additional matplotlib-specific cleanup
+        try:
+            import matplotlib.pyplot as plt
+            plt.close('all')
+            plt.clf()
+            plt.cla()
+        except Exception as e:
+            memory_logger.error(f"Error in matplotlib cleanup: {e}")
+        
+        # Force garbage collection
+        collected = gc.collect()
+        memory_logger.info(f"Force cleanup completed: {collected} objects collected")
+        
+        return True
+    except Exception as e:
+        memory_logger.error(f"Error in force cleanup: {e}")
+        return False
+
+def monitor_memory_usage():
+    """Monitor memory usage and log detailed information"""
+    try:
+        mem_info = get_memory_usage()
+        if mem_info:
+            memory_logger.info(f"Memory Monitor - RSS: {mem_info['rss_mb']:.1f}MB, "
+                              f"VMS: {mem_info['vms_mb']:.1f}MB, "
+                              f"Memory%: {mem_info['memory_percent']:.1f}%, "
+                              f"Available: {mem_info['available_memory_gb']:.1f}GB")
+            
+            # Alert if memory usage is getting high
+            if mem_info['rss_mb'] > 300:
+                memory_logger.warning(f"HIGH MEMORY USAGE: {mem_info['rss_mb']:.1f}MB RSS")
+                # Trigger cleanup
+                cleanup_memory()
+            
+            if mem_info['rss_mb'] > 400:
+                memory_logger.critical(f"CRITICAL MEMORY USAGE: {mem_info['rss_mb']:.1f}MB RSS")
+                # Force cleanup
+                force_memory_cleanup()
+            
+            return mem_info
+        return None
+    except Exception as e:
+        memory_logger.error(f"Error in memory monitoring: {e}")
+        return None
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 
@@ -695,6 +750,9 @@ def chat():
                     
                     # Clean up memory after plot generation
                     cleanup_memory()
+                    
+                    # Force additional cleanup for plots
+                    force_memory_cleanup()
                 else:
                     # Fallback to string if parsing fails
                     response_data = [{
@@ -723,6 +781,9 @@ def chat():
             
             # Log memory after agent call
             log_memory_usage("After Pydantic-AI agent call")
+            
+            # Monitor memory usage
+            monitor_memory_usage()
             
             # Periodic memory cleanup
             periodic_memory_cleanup()
@@ -1064,6 +1125,53 @@ def memory_cleanup():
                 'success': success,
                 'message': 'Memory cleanup attempted but could not measure results'
             })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/force-memory-cleanup', methods=['POST'])
+def force_memory_cleanup_endpoint():
+    """Force immediate memory cleanup (public endpoint)"""
+    try:
+        # Get memory usage before cleanup
+        mem_before = get_memory_usage()
+        
+        # Perform force cleanup
+        success = force_memory_cleanup()
+        
+        # Get memory usage after cleanup
+        mem_after = get_memory_usage()
+        
+        if success and mem_before and mem_after:
+            memory_freed = mem_before['rss_mb'] - mem_after['rss_mb']
+            return jsonify({
+                'success': True,
+                'message': f'Force memory cleanup completed. Freed {memory_freed:.1f}MB',
+                'memory_before_mb': mem_before['rss_mb'],
+                'memory_after_mb': mem_after['rss_mb'],
+                'memory_freed_mb': memory_freed
+            })
+        else:
+            return jsonify({
+                'success': success,
+                'message': 'Force memory cleanup attempted but could not measure results'
+            })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/memory-monitor')
+def memory_monitor():
+    """Get detailed memory monitoring information"""
+    try:
+        mem_info = monitor_memory_usage()
+        if mem_info:
+            return jsonify({
+                'success': True,
+                'memory_info': mem_info,
+                'status': 'critical' if mem_info['rss_mb'] > 400 else 'warning' if mem_info['rss_mb'] > 300 else 'normal',
+                'timestamp': datetime.utcnow().isoformat()
+            })
+        else:
+            return jsonify({'error': 'Could not retrieve memory information'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

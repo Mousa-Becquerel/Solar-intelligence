@@ -2113,6 +2113,14 @@ async def _run_plot_with_timeout(agent, cmd: str, ctx: RunContext[None]):
 def cleanup_plot_memory():
     """Aggressive memory cleanup after plot generation"""
     try:
+        # Verify we're using the Agg backend
+        current_backend = matplotlib.get_backend()
+        if current_backend != 'Agg':
+            logger.warning(f"Matplotlib backend is {current_backend}, not Agg. This may cause memory issues.")
+            # Force Agg backend
+            matplotlib.use('Agg', force=True)
+            logger.info("Forced matplotlib to use Agg backend")
+        
         # Close all matplotlib figures
         plt.close('all')
         
@@ -2120,8 +2128,25 @@ def cleanup_plot_memory():
         plt.clf()
         plt.cla()
         
-        # Force garbage collection
-        collected = gc.collect()
+        # Clear matplotlib's internal caches
+        try:
+            import matplotlib.cbook as cbook
+            cbook._lock_held = False
+        except:
+            pass
+        
+        # Clear any remaining matplotlib objects
+        try:
+            import matplotlib._pylab_helpers as pylab_helpers
+            pylab_helpers.Gcf.destroy_all()
+        except:
+            pass
+        
+        # Force garbage collection multiple times
+        collected = 0
+        for _ in range(3):
+            collected += gc.collect()
+        
         logger.info(f"Memory cleanup: {collected} objects collected")
         
         # Get current memory usage
