@@ -128,7 +128,7 @@ def periodic_memory_cleanup():
     """Periodic memory cleanup to prevent accumulation"""
     try:
         mem_info = get_memory_usage()
-        if mem_info and mem_info['rss_mb'] > 150:  # Lowered from 250MB to 150MB
+        if mem_info and mem_info['rss_mb'] > 250:  # Clean up at 250MB
             memory_logger.info(f"Periodic cleanup triggered at {mem_info['rss_mb']:.1f}MB")
             cleanup_memory()
             return True
@@ -171,10 +171,6 @@ os.makedirs(EXPORTS_DIR, exist_ok=True)
 
 # Thread-safe chart generation lock
 chart_lock = threading.Lock()
-
-# Plot counter for memory management
-plot_counter = 0
-plot_counter_lock = threading.Lock()
 
 db = SQLAlchemy(app)
 
@@ -639,24 +635,18 @@ def chat():
     
     # Check memory before processing
     mem_info = get_memory_usage()
-    if mem_info and mem_info['rss_mb'] > 200:  # Lowered from 300MB to 200MB
+    if mem_info and mem_info['rss_mb'] > 300:  # Lowered from 450MB to 300MB
         # Perform cleanup if memory usage is high
         memory_logger.warning(f"High memory usage detected ({mem_info['rss_mb']:.1f}MB), performing cleanup")
         cleanup_memory()
         
         # Check again after cleanup
         mem_info_after = get_memory_usage()
-        if mem_info_after and mem_info_after['rss_mb'] > 300:  # Lowered from 400MB to 300MB
+        if mem_info_after and mem_info_after['rss_mb'] > 400:  # If still high after cleanup
             memory_logger.critical(f"Memory usage still high after cleanup ({mem_info_after['rss_mb']:.1f}MB)")
             # Force additional cleanup
             cleanup_memory()
-            
-            # If still high, return error
-            mem_info_final = get_memory_usage()
-            if mem_info_final and mem_info_final['rss_mb'] > 400:  # Hard limit at 400MB
-                memory_logger.critical(f"Memory usage critically high ({mem_info_final['rss_mb']:.1f}MB), rejecting request")
-                return jsonify({'error': 'Server memory usage is too high. Please try again later.'}), 503
-        
+    
     try:
         # Store user message
         try:
@@ -703,32 +693,8 @@ def chat():
                                 'comment': None
                     }]
                     
-                    # Increment plot counter
-                    global plot_counter
-                    with plot_counter_lock:
-                        plot_counter += 1
-                        current_plot_count = plot_counter
-                    
-                    memory_logger.info(f"Plot generated. Total plots: {current_plot_count}")
-                    
                     # Clean up memory after plot generation
                     cleanup_memory()
-                    
-                    # Additional immediate cleanup for plots
-                    periodic_memory_cleanup()
-                    
-                    # Force agent restart after every 8 plots to prevent memory accumulation
-                    if current_plot_count % 8 == 0:
-                        memory_logger.warning(f"Restarting agent after {current_plot_count} plots to prevent memory accumulation")
-                        try:
-                            close_pydantic_weaviate_agent()
-                            # Small delay to allow cleanup
-                            import time
-                            time.sleep(1)
-                            # Agent will be recreated on next request
-                            memory_logger.info("Agent restarted successfully")
-                        except Exception as e:
-                            memory_logger.error(f"Error restarting agent: {e}")
                 else:
                     # Fallback to string if parsing fails
                     response_data = [{
@@ -1101,55 +1067,6 @@ def memory_cleanup():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/memory-monitor')
-def memory_monitor():
-    """Simple memory monitoring and cleanup endpoint"""
-    try:
-        mem_info = get_memory_usage()
-        if not mem_info:
-            return jsonify({'error': 'Could not retrieve memory information'}), 500
-        
-        # Get plot counter
-        with plot_counter_lock:
-            current_plot_count = plot_counter
-        
-        # Determine status
-        if mem_info['rss_mb'] > 400:
-            status = 'critical'
-            action = 'immediate_cleanup'
-        elif mem_info['rss_mb'] > 300:
-            status = 'warning'
-            action = 'cleanup_recommended'
-        elif mem_info['rss_mb'] > 200:
-            status = 'caution'
-            action = 'monitor'
-        else:
-            status = 'normal'
-            action = 'none'
-        
-        # Auto-cleanup if critical
-        if status == 'critical':
-            cleanup_memory()
-            mem_after = get_memory_usage()
-            memory_freed = mem_info['rss_mb'] - mem_after['rss_mb'] if mem_after else 0
-        else:
-            memory_freed = 0
-        
-        return jsonify({
-            'success': True,
-            'memory_mb': mem_info['rss_mb'],
-            'memory_percent': mem_info['memory_percent'],
-            'available_gb': mem_info['available_memory_gb'],
-            'status': status,
-            'action': action,
-            'memory_freed_mb': memory_freed,
-            'plot_counter': current_plot_count,
-            'plots_until_restart': 8 - (current_plot_count % 8),
-            'timestamp': datetime.utcnow().isoformat()
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 @app.route('/health')
 def health_check():
     """Health check endpoint for monitoring"""
@@ -1206,41 +1123,6 @@ def get_stats():
             'total_messages': total_messages,
             'conversations_24h': recent_conversations,
             'status': 'active'
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/admin/restart-agent', methods=['POST'])
-@login_required
-def admin_restart_agent():
-    """Force restart the Pydantic-AI agent (admin only)"""
-    if current_user.role != 'admin':
-        return jsonify({'error': 'Access denied'}), 403
-    
-    try:
-        # Get plot counter before restart
-        with plot_counter_lock:
-            plots_before = plot_counter
-        
-        # Restart agent
-        close_pydantic_weaviate_agent()
-        
-        # Small delay to allow cleanup
-        import time
-        time.sleep(1)
-        
-        # Reset plot counter
-        with plot_counter_lock:
-            plot_counter = 0
-        
-        # Force memory cleanup
-        cleanup_memory()
-        
-        return jsonify({
-            'success': True,
-            'message': f'Agent restarted successfully. Previous plot count: {plots_before}',
-            'plots_before': plots_before,
-            'plots_after': 0
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
