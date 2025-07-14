@@ -92,10 +92,10 @@ def log_memory_usage(context=""):
     return mem_info
 
 def cleanup_memory():
-    """Perform memory cleanup operations"""
+    """Perform memory cleanup operations while preserving conversation memory and agent instance"""
     try:
-        # Clear dataset caches
-        close_pydantic_weaviate_agent()
+        # Don't close the agent completely - just clean up system resources
+        # close_pydantic_weaviate_agent()  # REMOVED - this was clearing conversation memory
         
         # Aggressive matplotlib cleanup
         try:
@@ -128,11 +128,24 @@ def cleanup_memory():
         memory_logger.error(f"Error during memory cleanup: {e}")
         return False
 
+def clear_conversation_memory(conversation_id: str = None):
+    """Clear conversation memory for specific conversation or all conversations"""
+    try:
+        from pydantic_weaviate_agent import get_pydantic_weaviate_agent
+        agent = get_pydantic_weaviate_agent()
+        if agent:
+            agent.clear_conversation_memory(conversation_id)
+            memory_logger.info(f"Cleared conversation memory for {conversation_id if conversation_id else 'all conversations'}")
+        return True
+    except Exception as e:
+        memory_logger.error(f"Error clearing conversation memory: {e}")
+        return False
+
 def periodic_memory_cleanup():
     """Periodic memory cleanup to prevent accumulation"""
     try:
         mem_info = get_memory_usage()
-        if mem_info and mem_info['rss_mb'] > 200:  # Lowered from 250MB to 200MB
+        if mem_info and mem_info['rss_mb'] > 350:  # Increased from 200MB to 350MB
             memory_logger.info(f"Periodic cleanup triggered at {mem_info['rss_mb']:.1f}MB")
             cleanup_memory()
             return True
@@ -176,12 +189,12 @@ def monitor_memory_usage():
                               f"Available: {mem_info['available_memory_gb']:.1f}GB")
             
             # Alert if memory usage is getting high
-            if mem_info['rss_mb'] > 300:
+            if mem_info['rss_mb'] > 400:  # Increased from 300MB to 400MB
                 memory_logger.warning(f"HIGH MEMORY USAGE: {mem_info['rss_mb']:.1f}MB RSS")
                 # Trigger cleanup
                 cleanup_memory()
             
-            if mem_info['rss_mb'] > 400:
+            if mem_info['rss_mb'] > 500:  # Increased from 400MB to 500MB
                 memory_logger.critical(f"CRITICAL MEMORY USAGE: {mem_info['rss_mb']:.1f}MB RSS")
                 # Force cleanup
                 force_memory_cleanup()
@@ -748,14 +761,14 @@ def chat():
     
     # Check memory before processing
     mem_info = get_memory_usage()
-    if mem_info and mem_info['rss_mb'] > 300:  # Lowered from 450MB to 300MB
+    if mem_info and mem_info['rss_mb'] > 400:  # Increased from 300MB to 400MB
         # Perform cleanup if memory usage is high
         memory_logger.warning(f"High memory usage detected ({mem_info['rss_mb']:.1f}MB), performing cleanup")
         cleanup_memory()
         
         # Check again after cleanup
         mem_info_after = get_memory_usage()
-        if mem_info_after and mem_info_after['rss_mb'] > 400:  # If still high after cleanup
+        if mem_info_after and mem_info_after['rss_mb'] > 500:  # Increased from 400MB to 500MB
             memory_logger.critical(f"Memory usage still high after cleanup ({mem_info_after['rss_mb']:.1f}MB)")
             # Force additional cleanup
             cleanup_memory()
@@ -806,11 +819,10 @@ def chat():
                                 'comment': None
                     }]
                     
-                    # Clean up memory after plot generation
-                    cleanup_memory()
-                    
-                    # Force additional cleanup for plots
-                    force_memory_cleanup()
+                    # Only cleanup if memory usage is high
+                    mem_info = get_memory_usage()
+                    if mem_info and mem_info['rss_mb'] > 450:
+                        cleanup_memory()
                 else:
                     # Fallback to string if parsing fails
                     response_data = [{
@@ -840,11 +852,8 @@ def chat():
             # Log memory after agent call
             log_memory_usage("After Pydantic-AI agent call")
             
-            # Monitor memory usage
+            # Only monitor memory usage, don't automatically cleanup
             monitor_memory_usage()
-            
-            # Periodic memory cleanup
-            periodic_memory_cleanup()
             
             return jsonify({'response': response_data})
             
@@ -854,12 +863,12 @@ def chat():
         
     except Exception as e:
         memory_logger.error(f"Error in chat endpoint: {e}")
-        # Perform cleanup on error
-        cleanup_memory()
+        # Only cleanup if memory usage is high
+        mem_info = get_memory_usage()
+        if mem_info and mem_info['rss_mb'] > 450:
+            cleanup_memory()
         # Log memory after error cleanup
         log_memory_usage("After error cleanup")
-        # Periodic cleanup after error
-        periodic_memory_cleanup()
         return jsonify({'error': 'An error occurred processing your request'}), 500
 
 @app.route('/guide')
@@ -1133,6 +1142,37 @@ def admin_conversation_memory_info():
             return jsonify({
                 'success': False,
                 'error': 'Pydantic-AI agent not available'
+            })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/admin/clear-conversation-memory', methods=['POST'])
+@login_required
+def admin_clear_conversation_memory():
+    """Clear conversation memory (admin only)"""
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        data = request.get_json()
+        conversation_id = data.get('conversation_id')  # Optional - if None, clears all
+        
+        success = clear_conversation_memory(conversation_id)
+        
+        if success:
+            if conversation_id:
+                message = f"Cleared conversation memory for conversation {conversation_id}"
+            else:
+                message = "Cleared all conversation memory"
+            
+            return jsonify({
+                'success': True,
+                'message': message
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to clear conversation memory'
             })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
