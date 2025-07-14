@@ -60,7 +60,7 @@ postgresql://becqsight_user:password@dpg-xxxxx-a.oregon-postgres.render.com/becq
 - The app automatically uses `psycopg3` for PostgreSQL connections
 
 ### Python 3.13 Compatibility
-- If you see `psycopg2` import errors, ensure `psycopg[binary]==3.2.9` is in requirements.txt
+- If you see `psycopg2` import errors, ensure `psycopg[binary]` is in requirements.txt
 - The app automatically falls back to `psycopg2` if `psycopg3` is not available
 
 ### Schema Issues
