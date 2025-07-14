@@ -3,6 +3,9 @@
 ## Overview
 This guide explains how to set up a PostgreSQL database on Render to persist conversation history across deployments.
 
+## Important Note: Python 3.13 Compatibility
+This application uses `psycopg3` (psycopg[binary]==3.1.18) for PostgreSQL connections, which is compatible with Python 3.13. The older `psycopg2` package has known compatibility issues with Python 3.13.
+
 ## Step 1: Create PostgreSQL Database on Render
 
 1. Go to [Render Dashboard](https://dashboard.render.com)
@@ -54,6 +57,11 @@ postgresql://becqsight_user:password@dpg-xxxxx-a.oregon-postgres.render.com/becq
 - Ensure the database is in the same region as your web service
 - Use the Internal Database URL, not External
 - Check that `DATABASE_URL` environment variable is set correctly
+- The app automatically uses `psycopg3` for PostgreSQL connections
+
+### Python 3.13 Compatibility
+- If you see `psycopg2` import errors, ensure `psycopg[binary]==3.1.18` is in requirements.txt
+- The app automatically falls back to `psycopg2` if `psycopg3` is not available
 
 ### Schema Issues
 - The app automatically creates tables on first run

@@ -204,6 +204,18 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///cha
 if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
     app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
 
+# Force psycopg3 for PostgreSQL connections (better Python 3.13 compatibility)
+if 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']:
+    # Ensure we're using psycopg3
+    try:
+        import psycopg
+        # Update the URL to explicitly use psycopg3
+        if 'postgresql://' in app.config['SQLALCHEMY_DATABASE_URI']:
+            app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgresql://', 'postgresql+psycopg://', 1)
+    except ImportError:
+        # Fallback to psycopg2 if psycopg3 is not available
+        pass
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'dev-key-change-in-production')
 
