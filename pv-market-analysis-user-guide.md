@@ -62,7 +62,6 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Display Spain's annual PV additions as bars"
 "Chart Germany's distributed vs centralized solar as bars"
 "Show Poland's annual solar installations as grouped bars"
-"Create a bar chart comparing major European countries' solar capacity"
 ```
 
 **Market Share Pie Charts:**
@@ -84,7 +83,6 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Create a multi-year view of Spain's solar performance"
 "Show all scenarios for Germany's solar projections to 2030"
 "Compare capacity trends between Germany and Italy"
-"Display multi-country capacity trends for major markets"
 ```
 
 ### 🌍 Market Intelligence Questions
@@ -198,15 +196,6 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Show Italy vs Poland's solar development"
 ```
 
-**Multi-Country Analysis:**
-```
-"Show capacity trends for major markets"
-"Display solar growth across multiple countries"
-"Compare countries' solar performance"
-"Show multi-country capacity trends from 2020-2024"
-"Display solar market comparison across major markets"
-```
-
 ## Chart Types Reference
 
 ### Standard Charts
@@ -217,7 +206,7 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 ### Advanced Charts
 - **Stacked Charts**: "stacked bars", "breakdown by segment", "component view"
 - **Multi-Scenario**: "all scenarios", "multiple scenarios", "forecast scenarios"
-- **Country Comparisons**: "compare countries", "country vs country", "multi-country"
+- **Country Comparisons**: "compare countries", "country vs country"
 - **Capacity Trends**: "capacity trend", "line over time", "growth trajectory"
 
 ## Tips for Better Results
@@ -245,7 +234,6 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 5. "Display Netherlands' distributed vs centralized solar as pie chart"
 6. "Show all scenarios for Germany's solar projections to 2030"
 7. "Compare capacity trends between Germany and Italy"
-8. "Display multi-country capacity trends for major markets"
 
 ## Sample Questions by Use Case
 
@@ -273,7 +261,6 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Show market opportunity analysis for Italy based on forecasts"
 "Display France's market stability over time"
 "Create an investment attractiveness view of Spain's solar market"
-"Compare investment potential across major markets"
 ```
 
 ### For Business Presentations
@@ -282,7 +269,6 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Generate an executive summary of Italy's solar market"
 "Show a compelling growth story for France's market"
 "Create a dashboard view of Netherlands' solar performance"
-"Display multi-country solar market comparison"
 ```
 
 ## Advanced Query Examples
@@ -306,13 +292,4 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Show Italy vs Poland's solar development"
 ```
 
-### Multi-Country Analysis
-```
-"Show capacity trends for major markets"
-"Display solar growth across multiple countries"
-"Compare countries' solar performance"
-"Show multi-country capacity trends from 2020-2024"
-"Display solar market comparison across major markets"
-```
-
-Ask clear, specific questions about individual countries or request multi-country comparisons, and you'll get professional analysis with detailed charts and insights!
+Ask clear, specific questions about individual countries or request country-to-country comparisons, and you'll get professional analysis with detailed charts and insights!
