@@ -2,14 +2,15 @@
 
 ## Introduction
 
-Welcome to the PV Market Analysis Agent! Ask clear questions about European solar markets and get professional charts and detailed insights.
+Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool provides comprehensive insights into photovoltaic (PV) market data across Europe and globally. Ask clear questions about solar capacity, market trends, and forecasts to get professional charts and detailed analysis.
 
 ## What Data We Have
 
-- **Years**: 2015-2024 (actual data) + 2025-2030 (forecasts)
-- **Countries**: All major European solar markets
-- **Types**: Rooftop solar and utility-scale solar
-- **Scenarios**: Conservative, likely, and optimistic forecasts
+- **Historical Data**: 2015-2024 (actual installations)
+- **Forecast Data**: 2025-2030 (projections with multiple scenarios)
+- **Geographic Coverage**: European countries + global markets
+- **Market Segments**: Centralized (utility-scale) and Distributed (rooftop) solar
+- **Scenarios**: Most Probable, High, and Low forecasts for future years
 
 ## Query Examples by Category
 
@@ -19,12 +20,14 @@ Welcome to the PV Market Analysis Agent! Ask clear questions about European sola
 ```
 "What was Germany's total solar capacity installed in 2023?"
 "Show me Italy's PV market performance for 2024"
-"How much rooftop solar did France add in 2022?"
-"What was Spain's utility-scale solar growth in 2023?"
+"How much distributed solar did France add in 2022?"
+"What was Spain's centralized solar growth in 2023?"
 "Display Netherlands solar installations for 2024"
 "Show me Poland's PV market data for 2024"
 "What was Belgium's solar capacity in 2023?"
-"Display Austria's rooftop solar installations for 2024"
+"Display Austria's distributed solar installations for 2024"
+"Show me the UK's solar market performance in 2024"
+"What was Sweden's PV capacity in 2023?"
 ```
 
 **Multi-Year Trends:**
@@ -36,6 +39,7 @@ Welcome to the PV Market Analysis Agent! Ask clear questions about European sola
 "Chart Poland's PV development over the past 4 years"
 "Show Netherlands' solar market growth from 2020 to 2024"
 "Display Belgium's PV capacity trend over the last 5 years"
+"Show the UK's solar growth trajectory from 2015 to 2024"
 ```
 
 ### 📊 Chart and Visualization Requests
@@ -49,6 +53,7 @@ Welcome to the PV Market Analysis Agent! Ask clear questions about European sola
 "Chart Germany's solar development from 2015 to 2024"
 "Plot Netherlands' PV market growth from 2020 to 2024"
 "Show Belgium's solar capacity trend line over time"
+"Create a trend analysis of the UK's solar market"
 ```
 
 **Comparative Bar Charts:**
@@ -57,17 +62,19 @@ Welcome to the PV Market Analysis Agent! Ask clear questions about European sola
 "Show Italy's solar capacity by year as bars for 2020-2024"
 "Bar graph showing France's solar growth by year"
 "Display Spain's annual PV additions as bars"
-"Chart Germany's rooftop vs utility solar as bars"
+"Chart Germany's distributed vs centralized solar as bars"
 "Show Poland's annual solar installations as grouped bars"
+"Create a bar chart comparing European countries' solar capacity"
 ```
 
 **Market Share Pie Charts:**
 ```
-"Show Germany's rooftop vs utility solar split as pie chart"
+"Show Germany's distributed vs centralized solar split as pie chart"
 "Create a pie chart of Italy's solar segment distribution"
 "Display France's distributed vs centralized solar as pie chart"
 "Show Spain's solar market segments as pie chart"
-"Chart Netherlands' rooftop vs utility solar split"
+"Chart Netherlands' distributed vs centralized solar split"
+"Show the UK's solar segment breakdown for 2024"
 ```
 
 **Advanced Visualizations:**
@@ -77,6 +84,9 @@ Welcome to the PV Market Analysis Agent! Ask clear questions about European sola
 "Generate a before and after chart for France's market changes"
 "Display Germany's growth rate by solar segment"
 "Create a multi-year view of Spain's solar performance"
+"Show all scenarios for Germany's solar projections to 2030"
+"Compare capacity trends between Germany and Italy"
+"Display multi-country capacity trends for major European markets"
 ```
 
 ### 🌍 Market Intelligence Questions
@@ -86,18 +96,21 @@ Welcome to the PV Market Analysis Agent! Ask clear questions about European sola
 "What is Germany's total solar capacity as of 2024?"
 "What was Italy's PV growth rate in 2023?"
 "Show me France's current solar market size"
-"What is Spain's rooftop solar capacity?"
-"Display Netherlands' utility-scale solar development"
+"What is Spain's distributed solar capacity?"
+"Display Netherlands' centralized solar development"
 "What is Poland's distributed solar capacity?"
+"Show the UK's solar market position in 2024"
+"What is Sweden's total PV capacity?"
 ```
 
 **Market Share Analysis:**
 ```
-"What's Germany's rooftop vs utility solar share?"
+"What's Germany's distributed vs centralized solar share?"
 "How big is Italy's distributed solar segment?"
-"What portion of France's capacity is utility-scale?"
+"What portion of France's capacity is centralized?"
 "Show Spain's solar segment breakdown"
-"Display Netherlands' rooftop solar market share"
+"Display Netherlands' distributed solar market share"
+"Show the UK's solar segment distribution"
 ```
 
 ### 🔮 Future Market Projections
@@ -111,6 +124,17 @@ Welcome to the PV Market Analysis Agent! Ask clear questions about European sola
 "Compare optimistic vs conservative forecasts for Germany"
 "Show Netherlands' solar capacity projections to 2030"
 "What is Poland's projected PV growth through 2028?"
+"Show all scenarios for the UK's solar development to 2030"
+```
+
+**Multi-Scenario Analysis:**
+```
+"Show all scenarios for Germany's solar projections to 2030"
+"Display multiple scenarios for Italy's solar growth"
+"Compare different forecast scenarios for France"
+"Show all the scenarios for Spain's solar development"
+"Display forecasting scenarios for Netherlands' solar market"
+"Show three scenarios for Poland's PV growth"
 ```
 
 **Single Country Growth Assessment:**
@@ -120,26 +144,29 @@ Welcome to the PV Market Analysis Agent! Ask clear questions about European sola
 "Display France's projected growth rates"
 "What is Spain's solar outlook for 2025-2030?"
 "Show Netherlands' long-term solar development potential"
+"What is the UK's solar growth potential through 2030?"
 ```
 
 ### 📈 Solar Market Segments
 
-**Rooftop vs Utility Analysis:**
+**Distributed vs Centralized Analysis:**
 ```
-"What's Germany's rooftop vs utility solar split in 2024?"
+"What's Germany's distributed vs centralized solar split in 2024?"
 "Show Italy's distributed solar trend over time"
 "How is France's solar segment mix changing over time?"
-"Display Spain's utility-scale solar development"
-"Show Netherlands' rooftop solar penetration trend"
+"Display Spain's centralized solar development"
+"Show Netherlands' distributed solar penetration trend"
+"Show the UK's solar segment evolution"
 ```
 
 **Segment Performance:**
 ```
 "Which solar segment is driving growth in Spain's market?"
 "Show Germany's distributed solar development"
-"What's Italy's utility-scale solar capacity?"
-"Display France's rooftop solar growth rate"
+"What's Italy's centralized solar capacity?"
+"Display France's distributed solar growth rate"
 "Show Netherlands' solar segment performance over time"
+"Which segment is growing fastest in the UK?"
 ```
 
 ### 🔢 Market Statistics and Metrics
@@ -151,6 +178,7 @@ Welcome to the PV Market Analysis Agent! Ask clear questions about European sola
 "Show France's solar market size for 2024"
 "What's Spain's biggest solar installation year on record?"
 "Display Netherlands' annual solar capacity additions"
+"Show the UK's solar growth rate over the past 5 years"
 ```
 
 **Performance Analysis:**
@@ -160,6 +188,27 @@ Welcome to the PV Market Analysis Agent! Ask clear questions about European sola
 "Display France's market growth consistency"
 "What is Spain's most consistent solar growth period?"
 "Show Netherlands' market volatility over the past 5 years"
+"What is the UK's solar market stability?"
+```
+
+### 🌐 Regional and Global Analysis
+
+**Country Comparisons:**
+```
+"Compare Germany and Italy's solar capacity trends"
+"Show France vs Spain's solar market development"
+"Compare Netherlands and Belgium's PV growth"
+"Display Germany vs UK's solar market performance"
+"Show Italy vs Poland's solar development"
+```
+
+**Multi-Country Analysis:**
+```
+"Show capacity trends for major European markets"
+"Display solar growth across multiple countries"
+"Compare European countries' solar performance"
+"Show multi-country capacity trends from 2020-2024"
+"Display solar market comparison across Europe"
 ```
 
 ## Chart Types Reference
@@ -171,22 +220,24 @@ Welcome to the PV Market Analysis Agent! Ask clear questions about European sola
 
 ### Advanced Charts
 - **Stacked Charts**: "stacked bars", "breakdown by segment", "component view"
-- **Multi-Panel**: "side by side", "yearly comparison", "dashboard view"
-- **Forecast Charts**: "scenarios", "projections", "future outlook"
+- **Multi-Scenario**: "all scenarios", "multiple scenarios", "forecast scenarios"
+- **Country Comparisons**: "compare countries", "country vs country", "multi-country"
+- **Capacity Trends**: "capacity trend", "line over time", "growth trajectory"
 
 ## Tips for Better Results
 
 ### 🎯 Query Best Practices
 - **Be specific with timeframes**: "2020-2024" instead of "recent years"
 - **Name countries clearly**: "Germany" or "Netherlands", not "major markets"
-- **Specify solar types**: "rooftop solar" or "utility-scale PV"
-- **Choose scenarios**: "optimistic forecast" or "conservative projection"
+- **Specify solar types**: "distributed solar" or "centralized PV"
+- **Choose scenarios**: "most probable forecast" or "all scenarios"
 
 ### 📊 Visualization Tips
 - **Request specific chart types**: "bar chart" or "line graph"
 - **Focus on single countries**: "Germany's solar trend" 
 - **Set clear time ranges**: "chart 2020-2024 trend"
 - **Specify what to highlight**: "show peak growth years"
+- **Ask for scenarios**: "show all scenarios" for forecast data
 
 ## Quick Start Examples
 
@@ -195,7 +246,10 @@ Welcome to the PV Market Analysis Agent! Ask clear questions about European sola
 2. "What was Italy's PV capacity in 2023?"
 3. "Create a bar chart of France's annual solar installations"
 4. "What's Spain's solar market forecast through 2030?"
-5. "Display Netherlands' rooftop vs utility solar as pie chart"
+5. "Display Netherlands' distributed vs centralized solar as pie chart"
+6. "Show all scenarios for Germany's solar projections to 2030"
+7. "Compare capacity trends between Germany and Italy"
+8. "Display multi-country capacity trends for major European markets"
 
 ## Sample Questions by Use Case
 
@@ -205,6 +259,7 @@ Welcome to the PV Market Analysis Agent! Ask clear questions about European sola
 "Show Italy's solar growth rate over the past 3 years"
 "Create a market analysis of France's solar landscape"
 "What momentum does Spain show over past 3 years?"
+"Show the UK's solar market position in Europe"
 ```
 
 ### For Strategic Planning
@@ -213,6 +268,7 @@ Welcome to the PV Market Analysis Agent! Ask clear questions about European sola
 "What's Italy's most likely solar capacity outlook through 2028?"
 "Show forecast scenarios for Netherlands' solar market"
 "What are Poland's long-term growth opportunities?"
+"Display all scenarios for the UK's solar development"
 ```
 
 ### For Investment Analysis
@@ -221,6 +277,7 @@ Welcome to the PV Market Analysis Agent! Ask clear questions about European sola
 "Show market opportunity analysis for Italy based on forecasts"
 "Display France's market stability over time"
 "Create an investment attractiveness view of Spain's solar market"
+"Compare investment potential across European markets"
 ```
 
 ### For Business Presentations
@@ -229,6 +286,37 @@ Welcome to the PV Market Analysis Agent! Ask clear questions about European sola
 "Generate an executive summary of Italy's solar market"
 "Show a compelling growth story for France's market"
 "Create a dashboard view of Netherlands' solar performance"
+"Display multi-country solar market comparison"
 ```
 
-Ask clear, specific questions about individual European countries and you'll get professional analysis with detailed charts and insights!
+## Advanced Query Examples
+
+### Multi-Scenario Analysis
+```
+"Show all scenarios for Germany's solar projections to 2030"
+"Display multiple scenarios for Italy's solar growth"
+"Compare different forecast scenarios for France"
+"Show all the scenarios for Spain's solar development"
+"Display forecasting scenarios for Netherlands' solar market"
+"Show three scenarios for Poland's PV growth"
+```
+
+### Country Comparisons
+```
+"Compare Germany and Italy's solar capacity trends"
+"Show France vs Spain's solar market development"
+"Compare Netherlands and Belgium's PV growth"
+"Display Germany vs UK's solar market performance"
+"Show Italy vs Poland's solar development"
+```
+
+### Multi-Country Analysis
+```
+"Show capacity trends for major European markets"
+"Display solar growth across multiple countries"
+"Compare European countries' solar performance"
+"Show multi-country capacity trends from 2020-2024"
+"Display solar market comparison across Europe"
+```
+
+Ask clear, specific questions about individual European countries or request multi-country comparisons, and you'll get professional analysis with detailed charts and insights!
