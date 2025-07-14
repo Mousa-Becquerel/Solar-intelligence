@@ -8,7 +8,7 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 
 - **Historical Data**: 2015-2024 (actual installations)
 - **Forecast Data**: 2025-2030 (projections with multiple scenarios)
-- **Geographic Coverage**: European countries + global markets
+- **Geographic Coverage**: Major European solar markets
 - **Market Segments**: Centralized (utility-scale) and Distributed (rooftop) solar
 - **Scenarios**: Most Probable, High, and Low forecasts for future years
 
@@ -26,7 +26,6 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Show me Poland's PV market data for 2024"
 "What was Belgium's solar capacity in 2023?"
 "Display Austria's distributed solar installations for 2024"
-"Show me the UK's solar market performance in 2024"
 "What was Sweden's PV capacity in 2023?"
 ```
 
@@ -39,7 +38,6 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Chart Poland's PV development over the past 4 years"
 "Show Netherlands' solar market growth from 2020 to 2024"
 "Display Belgium's PV capacity trend over the last 5 years"
-"Show the UK's solar growth trajectory from 2015 to 2024"
 ```
 
 ### 📊 Chart and Visualization Requests
@@ -53,7 +51,7 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Chart Germany's solar development from 2015 to 2024"
 "Plot Netherlands' PV market growth from 2020 to 2024"
 "Show Belgium's solar capacity trend line over time"
-"Create a trend analysis of the UK's solar market"
+"Create a trend analysis of Austria's solar market"
 ```
 
 **Comparative Bar Charts:**
@@ -64,7 +62,7 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Display Spain's annual PV additions as bars"
 "Chart Germany's distributed vs centralized solar as bars"
 "Show Poland's annual solar installations as grouped bars"
-"Create a bar chart comparing European countries' solar capacity"
+"Create a bar chart comparing major European countries' solar capacity"
 ```
 
 **Market Share Pie Charts:**
@@ -74,7 +72,7 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Display France's distributed vs centralized solar as pie chart"
 "Show Spain's solar market segments as pie chart"
 "Chart Netherlands' distributed vs centralized solar split"
-"Show the UK's solar segment breakdown for 2024"
+"Show Austria's solar segment breakdown for 2024"
 ```
 
 **Advanced Visualizations:**
@@ -86,7 +84,7 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Create a multi-year view of Spain's solar performance"
 "Show all scenarios for Germany's solar projections to 2030"
 "Compare capacity trends between Germany and Italy"
-"Display multi-country capacity trends for major European markets"
+"Display multi-country capacity trends for major markets"
 ```
 
 ### 🌍 Market Intelligence Questions
@@ -99,7 +97,6 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "What is Spain's distributed solar capacity?"
 "Display Netherlands' centralized solar development"
 "What is Poland's distributed solar capacity?"
-"Show the UK's solar market position in 2024"
 "What is Sweden's total PV capacity?"
 ```
 
@@ -110,7 +107,7 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "What portion of France's capacity is centralized?"
 "Show Spain's solar segment breakdown"
 "Display Netherlands' distributed solar market share"
-"Show the UK's solar segment distribution"
+"Show Austria's solar segment distribution"
 ```
 
 ### 🔮 Future Market Projections
@@ -124,7 +121,6 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Compare optimistic vs conservative forecasts for Germany"
 "Show Netherlands' solar capacity projections to 2030"
 "What is Poland's projected PV growth through 2028?"
-"Show all scenarios for the UK's solar development to 2030"
 ```
 
 **Multi-Scenario Analysis:**
@@ -144,7 +140,7 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Display France's projected growth rates"
 "What is Spain's solar outlook for 2025-2030?"
 "Show Netherlands' long-term solar development potential"
-"What is the UK's solar growth potential through 2030?"
+"What is Austria's solar growth potential through 2030?"
 ```
 
 ### 📈 Solar Market Segments
@@ -156,7 +152,7 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "How is France's solar segment mix changing over time?"
 "Display Spain's centralized solar development"
 "Show Netherlands' distributed solar penetration trend"
-"Show the UK's solar segment evolution"
+"Show Austria's solar segment evolution"
 ```
 
 **Segment Performance:**
@@ -166,7 +162,7 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "What's Italy's centralized solar capacity?"
 "Display France's distributed solar growth rate"
 "Show Netherlands' solar segment performance over time"
-"Which segment is growing fastest in the UK?"
+"Which segment is growing fastest in Austria?"
 ```
 
 ### 🔢 Market Statistics and Metrics
@@ -178,7 +174,7 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Show France's solar market size for 2024"
 "What's Spain's biggest solar installation year on record?"
 "Display Netherlands' annual solar capacity additions"
-"Show the UK's solar growth rate over the past 5 years"
+"Show Austria's solar growth rate over the past 5 years"
 ```
 
 **Performance Analysis:**
@@ -188,7 +184,7 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Display France's market growth consistency"
 "What is Spain's most consistent solar growth period?"
 "Show Netherlands' market volatility over the past 5 years"
-"What is the UK's solar market stability?"
+"What is Austria's solar market stability?"
 ```
 
 ### 🌐 Regional and Global Analysis
@@ -198,17 +194,17 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Compare Germany and Italy's solar capacity trends"
 "Show France vs Spain's solar market development"
 "Compare Netherlands and Belgium's PV growth"
-"Display Germany vs UK's solar market performance"
+"Display Germany vs Austria's solar market performance"
 "Show Italy vs Poland's solar development"
 ```
 
 **Multi-Country Analysis:**
 ```
-"Show capacity trends for major European markets"
+"Show capacity trends for major markets"
 "Display solar growth across multiple countries"
-"Compare European countries' solar performance"
+"Compare countries' solar performance"
 "Show multi-country capacity trends from 2020-2024"
-"Display solar market comparison across Europe"
+"Display solar market comparison across major markets"
 ```
 
 ## Chart Types Reference
@@ -249,7 +245,7 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 5. "Display Netherlands' distributed vs centralized solar as pie chart"
 6. "Show all scenarios for Germany's solar projections to 2030"
 7. "Compare capacity trends between Germany and Italy"
-8. "Display multi-country capacity trends for major European markets"
+8. "Display multi-country capacity trends for major markets"
 
 ## Sample Questions by Use Case
 
@@ -259,7 +255,7 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Show Italy's solar growth rate over the past 3 years"
 "Create a market analysis of France's solar landscape"
 "What momentum does Spain show over past 3 years?"
-"Show the UK's solar market position in Europe"
+"Show Austria's solar market position"
 ```
 
 ### For Strategic Planning
@@ -268,7 +264,7 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "What's Italy's most likely solar capacity outlook through 2028?"
 "Show forecast scenarios for Netherlands' solar market"
 "What are Poland's long-term growth opportunities?"
-"Display all scenarios for the UK's solar development"
+"Display all scenarios for Austria's solar development"
 ```
 
 ### For Investment Analysis
@@ -277,7 +273,7 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Show market opportunity analysis for Italy based on forecasts"
 "Display France's market stability over time"
 "Create an investment attractiveness view of Spain's solar market"
-"Compare investment potential across European markets"
+"Compare investment potential across major markets"
 ```
 
 ### For Business Presentations
@@ -306,17 +302,17 @@ Welcome to the **BecqSight PV Market Analysis Agent**! This AI-powered tool prov
 "Compare Germany and Italy's solar capacity trends"
 "Show France vs Spain's solar market development"
 "Compare Netherlands and Belgium's PV growth"
-"Display Germany vs UK's solar market performance"
+"Display Germany vs Austria's solar market performance"
 "Show Italy vs Poland's solar development"
 ```
 
 ### Multi-Country Analysis
 ```
-"Show capacity trends for major European markets"
+"Show capacity trends for major markets"
 "Display solar growth across multiple countries"
-"Compare European countries' solar performance"
+"Compare countries' solar performance"
 "Show multi-country capacity trends from 2020-2024"
-"Display solar market comparison across Europe"
+"Display solar market comparison across major markets"
 ```
 
-Ask clear, specific questions about individual European countries or request multi-country comparisons, and you'll get professional analysis with detailed charts and insights!
+Ask clear, specific questions about individual countries or request multi-country comparisons, and you'll get professional analysis with detailed charts and insights!
