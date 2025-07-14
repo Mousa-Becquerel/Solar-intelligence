@@ -4,7 +4,7 @@
 This guide explains how to set up a PostgreSQL database on Render to persist conversation history across deployments.
 
 ## Important Note: Python 3.13 Compatibility
-This application uses `psycopg3` (psycopg[binary]==3.1.18) for PostgreSQL connections, which is compatible with Python 3.13. The older `psycopg2` package has known compatibility issues with Python 3.13.
+This application uses `psycopg3` (psycopg[binary]) for PostgreSQL connections, which is compatible with Python 3.13. The older `psycopg2` package has known compatibility issues with Python 3.13.
 
 ## Step 1: Create PostgreSQL Database on Render
 
@@ -60,7 +60,7 @@ postgresql://becqsight_user:password@dpg-xxxxx-a.oregon-postgres.render.com/becq
 - The app automatically uses `psycopg3` for PostgreSQL connections
 
 ### Python 3.13 Compatibility
-- If you see `psycopg2` import errors, ensure `psycopg[binary]==3.1.18` is in requirements.txt
+- If you see `psycopg2` import errors, ensure `psycopg[binary]==3.2.9` is in requirements.txt
 - The app automatically falls back to `psycopg2` if `psycopg3` is not available
 
 ### Schema Issues
