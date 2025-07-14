@@ -199,15 +199,33 @@ log_memory_usage("Application startup")
 
 # Production-ready configuration with connection pooling
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///chat_history.db')
+
 # Handle PostgreSQL URL format from Render
 if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
     app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'dev-key-change-in-production')
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_pre_ping': True,
-    'pool_recycle': 300,
-}
+
+# Enhanced PostgreSQL configuration for Render
+if 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']:
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_pre_ping': True,
+        'pool_recycle': 300,
+        'pool_size': 10,
+        'max_overflow': 20,
+        'pool_timeout': 30,
+        'connect_args': {
+            'connect_timeout': 10,
+            'application_name': 'BecqSight'
+        }
+    }
+else:
+    # SQLite configuration for local development
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_pre_ping': True,
+        'pool_recycle': 300,
+    }
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -305,32 +323,60 @@ def load_user(user_id):
 def migrate_database():
     """Handle database migrations for existing databases"""
     try:
-        # Simple check: try to query both tables
-        db.session.execute(text('SELECT COUNT(*) FROM "user"'))
-        db.session.execute(text('SELECT COUNT(*) FROM conversation'))
-        db.session.execute(text('SELECT COUNT(*) FROM message'))
-        db.session.commit()
-        print("SUCCESS: Database schema verified successfully")
+        # Check if we're using PostgreSQL
+        is_postgresql = 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']
+        
+        if is_postgresql:
+            # For PostgreSQL, we can be more careful about migrations
+            try:
+                # Check if tables exist
+                db.session.execute(text('SELECT COUNT(*) FROM "user"'))
+                db.session.execute(text('SELECT COUNT(*) FROM conversation'))
+                db.session.execute(text('SELECT COUNT(*) FROM message'))
+                db.session.commit()
+                print("SUCCESS: PostgreSQL database schema verified successfully")
+                return True
+            except Exception as e:
+                print(f"PostgreSQL schema verification failed: {e}")
+                # Create tables if they don't exist
+                db.create_all()
+                db.session.commit()
+                print("SUCCESS: PostgreSQL tables created successfully")
+                return True
+        else:
+            # For SQLite, use the existing logic
+            try:
+                # Simple check: try to query both tables
+                db.session.execute(text('SELECT COUNT(*) FROM "user"'))
+                db.session.execute(text('SELECT COUNT(*) FROM conversation'))
+                db.session.execute(text('SELECT COUNT(*) FROM message'))
+                db.session.commit()
+                print("SUCCESS: SQLite database schema verified successfully")
+                return True
+            except Exception as e:
+                print(f"SQLite database schema verification failed: {e}")
+                try:
+                    # Rollback any failed transaction first
+                    db.session.rollback()
+                    
+                    print("REBUILDING: Recreating database tables...")
+                    # Drop and recreate all tables if there's an issue
+                    db.drop_all()
+                    db.create_all()
+                    db.session.commit()
+                    
+                    print("SUCCESS: SQLite database tables recreated successfully")
+                    print("WARNING: All previous data has been cleared due to schema changes.")
+                    return True
+                    
+                except Exception as migrate_error:
+                    print(f"ERROR: Migration failed: {migrate_error}")
+                    db.session.rollback()
+                    raise
         
     except Exception as e:
-        print(f"Database schema verification failed: {e}")
-        try:
-            # Rollback any failed transaction first
-            db.session.rollback()
-            
-            print("REBUILDING: Recreating database tables...")
-            # Drop and recreate all tables if there's an issue
-            db.drop_all()
-            db.create_all()
-            db.session.commit()
-            
-            print("SUCCESS: Database tables recreated successfully")
-            print("WARNING: All previous data has been cleared due to schema changes.")
-            
-        except Exception as migrate_error:
-            print(f"ERROR: Migration failed: {migrate_error}")
-            db.session.rollback()
-            raise
+        print(f"ERROR: Database migration failed: {e}")
+        return False
 
 def create_predefined_users():
     """Create predefined users if they don't exist"""
@@ -1181,6 +1227,7 @@ def health_check():
     try:
         # Check database connection
         db_status = check_database_connection()
+        db_health = check_database_health()
         
         # Get memory usage
         memory_info = get_memory_usage()
@@ -1196,7 +1243,10 @@ def health_check():
         
         health_data = {
             'status': 'healthy' if db_status else 'degraded',
-            'database': 'connected' if db_status else 'disconnected',
+            'database': {
+                'connected': db_status,
+                'health': db_health
+            },
             'memory': memory_info,
             'stats': {
                 'conversations': conversation_count,
@@ -1235,6 +1285,23 @@ def get_stats():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/database-health')
+def database_health():
+    """Get database health status"""
+    try:
+        health_info = check_database_health()
+        return jsonify({
+            'success': True,
+            'database': health_info,
+            'timestamp': datetime.utcnow().isoformat()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'timestamp': datetime.utcnow().isoformat()
+        }), 500
+
 # Database connection health check
 def check_database_connection():
     """Check if database connection is healthy and attempt to reconnect if needed"""
@@ -1257,6 +1324,58 @@ def check_database_connection():
         except Exception as e2:
             memory_logger.error(f"Failed to restore database connection: {e2}")
             return False
+
+def check_database_health():
+    """Check database health and connection status"""
+    try:
+        # Test basic connection
+        db.session.execute(text('SELECT 1'))
+        db.session.commit()
+        
+        # Get database info
+        if 'postgresql' in app.config['SQLALCHEMY_DATABASE_URI']:
+            # PostgreSQL specific checks
+            result = db.session.execute(text("SELECT version()"))
+            version = result.fetchone()[0]
+            
+            # Get table counts
+            user_count = db.session.execute(text('SELECT COUNT(*) FROM "user"')).fetchone()[0]
+            conv_count = db.session.execute(text('SELECT COUNT(*) FROM conversation')).fetchone()[0]
+            msg_count = db.session.execute(text('SELECT COUNT(*) FROM message')).fetchone()[0]
+            
+            return {
+                'status': 'healthy',
+                'type': 'postgresql',
+                'version': version,
+                'tables': {
+                    'users': user_count,
+                    'conversations': conv_count,
+                    'messages': msg_count
+                }
+            }
+        else:
+            # SQLite specific checks
+            user_count = db.session.execute(text('SELECT COUNT(*) FROM "user"')).fetchone()[0]
+            conv_count = db.session.execute(text('SELECT COUNT(*) FROM conversation')).fetchone()[0]
+            msg_count = db.session.execute(text('SELECT COUNT(*) FROM message')).fetchone()[0]
+            
+            return {
+                'status': 'healthy',
+                'type': 'sqlite',
+                'tables': {
+                    'users': user_count,
+                    'conversations': conv_count,
+                    'messages': msg_count
+                }
+            }
+            
+    except Exception as e:
+        memory_logger.error(f"Database health check failed: {e}")
+        return {
+            'status': 'unhealthy',
+            'error': str(e),
+            'type': 'unknown'
+        }
 
 if __name__ == '__main__':
     # Development server configuration
