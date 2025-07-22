@@ -462,6 +462,74 @@ function addMessage(content, isUser = false, nextContent = null, customHeading =
                     messageDiv.appendChild(tableContainer);
                 }
                 break;
+            case 'table':
+                // Handle table display with raw text response and structured table data
+                if (content.value && content.value.trim()) {
+                    // Display the raw text response first
+                    const textDiv = document.createElement('div');
+                    textDiv.className = 'table-text-response';
+                    textDiv.innerHTML = marked.parse(content.value);
+                    messageDiv.appendChild(textDiv);
+                }
+                
+                if (content.table_data && Array.isArray(content.table_data) && content.table_data.length > 0) {
+                    // Create collapsible table structure
+                    const tableContainer = document.createElement('div');
+                    tableContainer.className = 'dataframe';
+                    
+                    // Create summary info
+                    const summary = document.createElement('div');
+                    summary.className = 'table-summary';
+                    const rowCount = content.table_data.length;
+                    const colCount = Object.keys(content.table_data[0] || {}).length;
+                    summary.innerHTML = `Interactive table with <span class="table-row-count">${rowCount} rows</span> and <span class="table-row-count">${colCount} columns</span>`;
+                    
+                    // Create toggle button
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.className = 'table-toggle';
+                    toggleBtn.innerHTML = `
+                        <span>View Interactive Table</span>
+                        <span class="table-toggle-icon">▼</span>
+                    `;
+                    
+                    // Create collapsible content
+                    const tableContent = document.createElement('div');
+                    tableContent.className = 'table-content';
+                    tableContent.appendChild(renderTable(content.table_data));
+                    
+                    // Add toggle functionality
+                    toggleBtn.addEventListener('click', function() {
+                        const isExpanded = tableContent.classList.contains('expanded');
+                        if (isExpanded) {
+                            tableContent.classList.remove('expanded');
+                            toggleBtn.classList.remove('expanded');
+                            toggleBtn.querySelector('span:first-child').textContent = 'View Interactive Table';
+                        } else {
+                            tableContent.classList.add('expanded');
+                            toggleBtn.classList.add('expanded');
+                            toggleBtn.querySelector('span:first-child').textContent = 'Hide Table';
+                        }
+                    });
+                    
+                    // Create download button
+                    const downloadBtn = document.createElement('button');
+                    downloadBtn.className = 'table-download-btn';
+                    downloadBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        Download CSV
+                    `;
+                    downloadBtn.onclick = () => downloadTableData(content.full_data || content.table_data, 'table_data.csv');
+                    
+                    // Assemble the structure
+                    tableContainer.appendChild(summary);
+                    tableContainer.appendChild(toggleBtn);
+                    tableContainer.appendChild(downloadBtn);
+                    tableContainer.appendChild(tableContent);
+                    messageDiv.appendChild(tableContainer);
+                }
+                break;
             case 'chart':
                 // Handle chart display
 if (content.artifact) {
@@ -589,12 +657,16 @@ function renderTable(data) {
         fragment.appendChild(empty);
         return fragment;
     }
+    
+    // Format the data before rendering
+    const formattedData = formatTableData(data);
+    
     const table = document.createElement('table');
     table.className = 'min-w-full text-sm border shadow rounded-lg overflow-hidden';
 
     // Preferred column order
-    const preferredOrder = ['country', 'centralised_installations', 'distributed_installations'];
-    const keys = Object.keys(data[0]);
+    const preferredOrder = ['date', 'base_price', 'unit', 'description', 'item', 'region'];
+    const keys = Object.keys(formattedData[0]);
     // Build the column order: preferred first, then any others
     const columnOrder = preferredOrder.filter(col => keys.includes(col)).concat(keys.filter(col => !preferredOrder.includes(col)));
 
@@ -604,7 +676,7 @@ function renderTable(data) {
     columnOrder.forEach((key, idx) => {
         const th = document.createElement('th');
         th.className = 'border px-2 py-2 bg-yellow-100 text-yellow-900 font-semibold sticky top-0 z-10';
-        th.textContent = key;
+        th.textContent = formatColumnName(key);
         th.onclick = () => sortTable(table, idx);
         headerRow.appendChild(th);
     });
@@ -613,7 +685,7 @@ function renderTable(data) {
 
     // Table body
     const tbody = document.createElement('tbody');
-    data.forEach((row, i) => {
+    formattedData.forEach((row, i) => {
         const tr = document.createElement('tr');
         tr.className = i % 2 === 0 ? 'bg-white hover:bg-yellow-50' : 'bg-yellow-50 hover:bg-yellow-100';
         columnOrder.forEach(key => {
@@ -628,6 +700,46 @@ function renderTable(data) {
 
     fragment.appendChild(table);
     return fragment;
+}
+
+// Helper function to format table data
+function formatTableData(data) {
+    console.log('DEBUG: Raw table data:', data);
+    console.log('DEBUG: First row keys:', Object.keys(data[0] || {}));
+    
+    return data.map(row => {
+        const formattedRow = {};
+        for (const [key, value] of Object.entries(row)) {
+            console.log(`DEBUG: Processing ${key}: ${value} (type: ${typeof value})`);
+            
+            // Only format price columns (dates are now pre-formatted from backend)
+            if (key.toLowerCase().includes('price') && typeof value === 'number') {
+                // Format price with appropriate decimal places and dollar sign
+                formattedRow[key] = '$' + value.toFixed(3);
+            } else {
+                // Use the value as-is (dates are already formatted as strings from backend)
+                formattedRow[key] = value;
+            }
+        }
+        console.log('DEBUG: Formatted row:', formattedRow);
+        return formattedRow;
+    });
+}
+
+// Helper function to format column names
+function formatColumnName(columnName) {
+    const nameMap = {
+        'base_price': 'Price',
+        'date': 'Date',
+        'unit': 'Unit',
+        'description': 'Description',
+        'item': 'Item',
+        'region': 'Region',
+        'frequency': 'Frequency',
+        'source': 'Source'
+    };
+    
+    return nameMap[columnName] || columnName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 }
 
 // Table sorting function
@@ -1047,9 +1159,9 @@ function updateWelcomeMessage(agentType) {
     
     setTimeout(() => {
         if (agentType === 'price') {
-            welcomeTitle.textContent = 'PV Price Intelligence';
-            welcomeSubtitle.textContent = 'Analyze photovoltaic component prices and market trends with advanced AI-powered insights';
-            userInput.placeholder = 'Ask about PV component prices...';
+            welcomeTitle.textContent = 'PV Module Prices Intelligence';
+            welcomeSubtitle.textContent = 'Analyze solar component pricing trends and market dynamics with AI-powered insights';
+            userInput.placeholder = 'Ask about solar module prices...';
         } else {
             welcomeTitle.textContent = 'PV Market Intelligence';
             welcomeSubtitle.textContent = 'Unlock comprehensive insights into photovoltaic markets worldwide with AI-powered analysis';
@@ -1142,3 +1254,38 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', function() {
     autocompleteSystem = new AutocompleteSystem();
 });
+
+// Function to download table data as CSV
+async function downloadTableData(tableData, filename = 'table_data.csv') {
+    try {
+        const response = await fetch('/download-table-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                table_data: tableData,
+                filename: filename
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to generate CSV');
+        }
+        
+        // Create download link
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+    } catch (error) {
+        console.error('Error downloading CSV:', error);
+        alert('Failed to download CSV file. Please try again.');
+    }
+}

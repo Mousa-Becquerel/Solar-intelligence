@@ -2616,3 +2616,30 @@
 .admin-btn:hover svg {
     stroke: var(--becq-gold);
 }
+
+/* Table Download Button */
+.table-download-btn {
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 8px 0;
+    transition: all 0.2s ease;
+}
+
+.table-download-btn:hover {
+    background: #e5e7eb;
+    border-color: #9ca3af;
+    color: #1f2937;
+}
+
+.table-download-btn svg {
+    width: 16px;
+    height: 16px;
+}

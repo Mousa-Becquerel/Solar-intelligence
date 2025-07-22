@@ -1,0 +1,31 @@
+name: component_prices
+source:
+  type: parquet
+  path: data.parquet
+description: Dataset of solar component prices across regions
+columns:
+- name: item
+  type: string
+  description: Type of solar component (e.g., Module, Wafer, Cell)
+- name: description
+  type: string
+  description: The type of technology used in the component (e.g., Monocrystalline,
+    Polycrystalline)
+- name: date
+  type: datetime
+  description: Date of the price report
+- name: frequency
+  type: string
+  description: Reporting frequency (e.g., Weekly)
+- name: base_price
+  type: float
+  description: Reported base price
+- name: unit
+  type: string
+  description: Unit of the base price (e.g., US$/Wp)
+- name: region
+  type: string
+  description: Market region where the price is reported
+- name: source
+  type: string
+  description: Source of the data (if available)

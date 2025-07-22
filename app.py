@@ -465,6 +465,10 @@ with app.app_context():
 with open('zotero_news_full.json', encoding='utf-8') as f:
     NEWS_LIST = json.load(f)
 
+# === GLOBAL SINGLETON FOR MODULE PRICES AGENT ===
+from module_prices_agent import ModulePricesAgent, ModulePricesConfig
+module_prices_agent = ModulePricesAgent(ModulePricesConfig(verbose=False))
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     try:
@@ -738,6 +742,9 @@ def chat():
     
     data = request.json
     user_message = data.get('message', '')
+    # Trim whitespace and ignore empty messages to prevent agents from processing empty queries
+    if not user_message or not user_message.strip():
+        return jsonify({'error': 'Empty message'}), 400
     conv_id = data.get('conversation_id')
     agent_type = data.get('agent_type', 'market')
     
@@ -765,7 +772,7 @@ def chat():
         # Perform cleanup if memory usage is high
         memory_logger.warning(f"High memory usage detected ({mem_info['rss_mb']:.1f}MB), performing cleanup")
         cleanup_memory()
-        
+    
         # Check again after cleanup
         mem_info_after = get_memory_usage()
         if mem_info_after and mem_info_after['rss_mb'] > 500:  # Increased from 400MB to 500MB
@@ -791,14 +798,33 @@ def chat():
         # Log memory before agent call
         log_memory_usage("Before agent call")
         
-        # Use the Pydantic-AI Weaviate agent
-        pydantic_agent = get_pydantic_weaviate_agent()
-        if not pydantic_agent:
-            return jsonify({'error': 'Pydantic Weaviate agent not available'}), 400
-        
-        # Process query with Pydantic-AI agent
+        # Handle different agent types directly
         try:
-            response_text = pydantic_agent.process_query(user_message, conversation_id=str(conv_id))
+            if agent_type == "price":
+                # Use the global singleton instance
+                price_agent = module_prices_agent
+                # Run async analysis
+                import asyncio
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    result = loop.run_until_complete(price_agent.analyze(user_message, conversation_id=str(conv_id)))
+                    if result["success"]:
+                        response_text = result["analysis"]
+                    else:
+                        response_text = f"Error analyzing prices: {result['error']}"
+                    memory_logger.info(f"Module Prices Agent response: {response_text}")
+                finally:
+                    loop.close()
+            else:
+                # Use Market Analysis Agent (default)
+                pydantic_agent = get_pydantic_weaviate_agent()
+                if not pydantic_agent:
+                    return jsonify({'error': 'Market Analysis agent not available'}), 400
+                response_text = pydantic_agent.process_query(user_message, conversation_id=str(conv_id))
+            
+            # Debug: Log response format
+            memory_logger.info(f"Response format detection - starts with: {response_text[:50]}...")
             
             # Check if response contains a plot
             if response_text.startswith("PLOT_GENERATED|"):
@@ -811,12 +837,12 @@ def chat():
                     # Convert to web-accessible URL
                     web_path = f"/static/plots/{os.path.basename(plot_path)}"
                     
-                    # Create chart response structure
+                    # Create chart response structure - ONLY this, no additional string response
                     response_data = [{
-                                'type': 'chart',
-                        'value': description,
+                        'type': 'chart',
+                        'value': '',  # Remove 'Generated chart' text
                         'artifact': web_path,
-                                'comment': None
+                        'comment': None
                     }]
                     
                     # Only cleanup if memory usage is high
@@ -826,16 +852,61 @@ def chat():
                 else:
                     # Fallback to string if parsing fails
                     response_data = [{
-                            'type': 'string',
+                        'type': 'string',
                         'value': response_text,
+                        'comment': None
+                    }]
+            elif response_text.startswith("DATAFRAME_RESULT|"):
+                # Parse DataFrame response: DATAFRAME_RESULT|text_response|display_data|full_data
+                try:
+                    parts = response_text.split("|", 3)
+                    if len(parts) >= 4:
+                        text_response = parts[1]
+                        display_json_data = parts[2]
+                        full_json_data = parts[3]
+                        
+                        # Parse the JSON data
+                        table_data = json.loads(display_json_data)
+                        full_data = json.loads(full_json_data)
+                        
+                        # Create table response structure
+                        response_data = [{
+                            'type': 'table',
+                            'value': text_response,
+                            'table_data': table_data,
+                            'full_data': full_data,  # Add full data for download
                             'comment': None
+                        }]
+                    elif len(parts) >= 3:
+                        # Fallback for old format
+                        text_response = parts[1]
+                        json_data = parts[2]
+                        
+                        # Parse the JSON data
+                        table_data = json.loads(json_data)
+                        
+                        # Create table response structure
+                        response_data = [{
+                            'type': 'table',
+                            'value': text_response,
+                            'table_data': table_data,
+                            'full_data': table_data,  # Use same data for download
+                            'comment': None
+                        }]
+                except Exception as e:
+                    memory_logger.error(f"Error parsing DataFrame response: {e}")
+                    # Fallback to string if JSON parsing fails
+                    response_data = [{
+                        'type': 'string',
+                        'value': response_text,
+                        'comment': None
                     }]
             else:
                 # Create a simple response structure for regular text responses
                 response_data = [{
-                        'type': 'string',
+                    'type': 'string',
                     'value': response_text,
-                        'comment': None
+                    'comment': None
                 }]
 
             # Store bot response
@@ -848,9 +919,9 @@ def chat():
             except Exception as e:
                 memory_logger.error(f"Database error storing bot messages: {e}")
                 db.session.rollback()
-            
+                
             # Log memory after agent call
-            log_memory_usage("After Pydantic-AI agent call")
+            log_memory_usage("After agent call")
             
             # Only monitor memory usage, don't automatically cleanup
             monitor_memory_usage()
@@ -858,7 +929,7 @@ def chat():
             return jsonify({'response': response_data})
             
         except Exception as e:
-            memory_logger.error(f"Error in Pydantic-AI agent: {e}")
+            memory_logger.error(f"Error in agent processing: {e}")
             return jsonify({'error': f'Agent error: {str(e)}'}), 500
         
     except Exception as e:
@@ -905,6 +976,42 @@ def serve_chart(filename):
     except Exception as e:
         print(f"Error serving chart file: {e}")
         return "File not found", 404
+
+@app.route('/download-table-data', methods=['POST'])
+@login_required
+def download_table_data():
+    """Download table data as CSV"""
+    try:
+        data = request.json
+        table_data = data.get('table_data')
+        filename = data.get('filename', 'table_data.csv')
+        
+        if not table_data:
+            return jsonify({'error': 'No table data provided'}), 400
+        
+        # Convert JSON data back to DataFrame
+        import pandas as pd
+        df = pd.DataFrame(table_data)
+        
+        # Create CSV content
+        csv_content = df.to_csv(index=False)
+        
+        # Return CSV as response
+        from io import StringIO
+        output = StringIO()
+        output.write(csv_content)
+        output.seek(0)
+        
+        from flask import Response
+        return Response(
+            csv_content,
+            mimetype='text/csv',
+            headers={'Content-Disposition': f'attachment; filename={filename}'}
+        )
+        
+    except Exception as e:
+        memory_logger.error(f"Error generating CSV download: {e}")
+        return jsonify({'error': 'Failed to generate CSV'}), 500
 
 @app.route('/admin/users')
 @login_required

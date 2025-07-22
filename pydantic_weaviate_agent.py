@@ -1,5 +1,6 @@
 from pydantic_ai import Agent, RunContext
 from pydantic_ai.usage import UsageLimits
+from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter
 from pydantic import BaseModel
 from pydantic_ai import ToolOutput
 import weaviate
@@ -959,7 +960,8 @@ class PydanticWeaviateAgent:
         self.client = None
         self.query_agent = None
         self.data_analysis_agent = None
-        self.conversation_memory = {}  # Store message history per conversation
+        # Initialize conversation memory for tracking message history
+        self.conversation_memory: Dict[str, List[ModelMessage]] = {}
         self._last_query_context = None  # Store last QueryAgent response for follow-up queries
         self._initialize_weaviate()
         self._setup_pydantic_agent()
@@ -1785,7 +1787,7 @@ class PydanticWeaviateAgent:
                 return "Agent not properly initialized. Please check your configuration."
             
             # Get conversation history if conversation_id is provided
-            message_history = None
+            message_history: List[ModelMessage] = []
             if conversation_id and conversation_id in self.conversation_memory:
                 message_history = self.conversation_memory[conversation_id]
                 print(f"🧠 Using conversation memory: {len(message_history)} previous messages")
@@ -1801,7 +1803,7 @@ class PydanticWeaviateAgent:
                 result = self.data_analysis_agent.run_sync(
                     user_message,
                     message_history=message_history,
-                    usage_limits=UsageLimits(request_limit=5, total_tokens_limit=5000),  # Increased for conversation context
+                    usage_limits=UsageLimits(request_limit=5, total_tokens_limit=5000),
                 )
                 print(f"   ✅ Agent.run_sync completed successfully")
                 
@@ -1818,22 +1820,19 @@ class PydanticWeaviateAgent:
             if conversation_id:
                 if conversation_id not in self.conversation_memory:
                     self.conversation_memory[conversation_id] = []
-                self.conversation_memory[conversation_id] = result.new_messages()
+                
+                # Add the new messages from this interaction to the conversation history
+                self.conversation_memory[conversation_id].extend(result.new_messages())
                 print(f"💾 Updated conversation memory: {len(self.conversation_memory[conversation_id])} messages")
                 logger.info(f"Updated conversation memory for {conversation_id} with {len(self.conversation_memory[conversation_id])} messages")
             
-            # Return the agent's response (already formatted by the agent)
-            final_response = str(result.output)
-            print(f"🏁 Final response ready to return")
-            logger.info(f"Query processing completed successfully")
-            return final_response
-                
+            # Return the agent's response
+            return str(result.output)
+            
         except Exception as e:
             print(f"❌ ERROR in process_query: {str(e)}")
-            logger.error(f"Error processing query: {e}")
-            error_response = f"Error processing your request: {str(e)}"
-            print(f"🔄 Returning error response: {error_response}")
-            return error_response
+            logger.error(f"Error in process_query: {e}")
+            return f"An error occurred while processing your query: {str(e)}"
     
     def clear_conversation_memory(self, conversation_id: str = None):
         """Clear conversation memory for a specific conversation or all conversations"""
