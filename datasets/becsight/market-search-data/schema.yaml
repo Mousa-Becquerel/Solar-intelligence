@@ -1,0 +1,25 @@
+name: market_search_data
+source:
+  type: parquet
+  path: data.parquet
+description: Dataset of annual and cumulative solar PV market data across countries
+  and segments
+columns:
+- name: country
+  type: string
+  description: Country where the market data is reported
+- name: market_segment
+  type: string
+  description: Type of market segment (Distributed and Centralised)
+- name: scenario
+  type: string
+  description: Market scenario, e.g., Historical or Forecast
+- name: year
+  type: integer
+  description: Year the market data corresponds to
+- name: annual_market
+  type: float
+  description: Annual installed solar PV capacity (in MW or specified unit)
+- name: cumulative_market
+  type: float
+  description: Cumulative installed solar PV capacity up to the given year
