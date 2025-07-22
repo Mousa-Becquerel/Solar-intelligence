@@ -19,7 +19,7 @@ flask-migrate = "*"
 flask-wtf = "*"
 flask-login = "*"
 python-dotenv = "*"
-weaviate-client = "*"
+weaviate-client = {extras = ["agents"], version = "*"}
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
