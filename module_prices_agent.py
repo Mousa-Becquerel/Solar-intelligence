@@ -6,8 +6,59 @@ A Pydantic AI agent for analyzing solar component prices using PandasAI.
 Similar to the market data agent but focused on component pricing data.
 """
 
-import asyncio
+# Configure matplotlib for headless environment BEFORE any imports
 import os
+os.environ['MPLBACKEND'] = 'Agg'
+os.environ['MPLCONFIGDIR'] = '/tmp/matplotlib'
+
+def configure_matplotlib_for_render():
+    """Configure matplotlib for Render deployment to prevent crashes"""
+    import matplotlib
+    matplotlib.use('Agg', force=True)
+    
+    # Disable font manager to reduce memory usage
+    matplotlib.rcParams['font.size'] = 10
+    matplotlib.rcParams['figure.max_open_warning'] = 0
+    
+    # Use minimal memory settings
+    matplotlib.rcParams['agg.path.chunksize'] = 10000
+    matplotlib.rcParams['path.simplify'] = True
+    matplotlib.rcParams['path.simplify_threshold'] = 0.1
+
+def cleanup_plot_memory():
+    """Aggressive memory cleanup after plot generation"""
+    try:
+        import matplotlib.pyplot as plt
+        import matplotlib
+        import gc
+        
+        # Close all matplotlib figures
+        plt.close('all')
+        
+        # Clear matplotlib cache
+        plt.clf()
+        plt.cla()
+        
+        # Clear any remaining matplotlib objects
+        try:
+            import matplotlib._pylab_helpers as pylab_helpers
+            pylab_helpers.Gcf.destroy_all()
+        except:
+            pass
+        
+        # Force garbage collection multiple times
+        for _ in range(3):
+            gc.collect()
+        
+        print("Module prices agent memory cleanup completed")
+        
+    except Exception as e:
+        print(f"Error during module prices agent memory cleanup: {e}")
+
+# Call configuration immediately
+configure_matplotlib_for_render()
+
+import asyncio
 import logging
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass
@@ -15,7 +66,6 @@ import pandas as pd
 import uuid
 from datetime import datetime
 import matplotlib
-matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -154,6 +204,9 @@ class ModulePricesAgent:
         Returns:
             True if successful, False otherwise
         """
+        # Close any existing figures first
+        plt.close('all')
+        
         try:
             # Make a copy to avoid modifying original data
             plot_df = df.copy()
@@ -234,8 +287,10 @@ class ModulePricesAgent:
             
         except Exception as e:
             logger.error(f"Error creating module price plot: {e}")
-            plt.close()  # Ensure figure is closed even on error
             return False
+        finally:
+            # Always cleanup memory
+            cleanup_plot_memory()
     
     def _ensure_list(self, val):
         """Helper method to ensure a value is a list, handling comma-separated strings"""

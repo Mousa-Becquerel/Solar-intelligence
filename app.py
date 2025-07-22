@@ -1,4 +1,25 @@
+# Configure matplotlib for headless environment BEFORE any imports
 import os
+os.environ['MPLBACKEND'] = 'Agg'
+os.environ['MPLCONFIGDIR'] = '/tmp/matplotlib'
+
+def configure_matplotlib_for_render():
+    """Configure matplotlib for Render deployment to prevent crashes"""
+    import matplotlib
+    matplotlib.use('Agg', force=True)
+    
+    # Disable font manager to reduce memory usage
+    matplotlib.rcParams['font.size'] = 10
+    matplotlib.rcParams['figure.max_open_warning'] = 0
+    
+    # Use minimal memory settings
+    matplotlib.rcParams['agg.path.chunksize'] = 10000
+    matplotlib.rcParams['path.simplify'] = True
+    matplotlib.rcParams['path.simplify_threshold'] = 0.1
+
+# Call configuration immediately
+configure_matplotlib_for_render()
+
 import sys
 from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for, flash, session, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
@@ -1284,24 +1305,78 @@ def admin_clear_conversation_memory():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/memory-status')
-def memory_status():
-    """Get current memory status (public endpoint)"""
+@app.route('/cleanup-plots')
+def cleanup_old_plots():
+    """Remove old plot files to free up disk space and memory"""
     try:
-        mem_info = get_memory_usage()
-        if not mem_info:
-            return jsonify({'error': 'Could not retrieve memory information'}), 500
+        import glob
+        import time
+        
+        plots_dir = 'static/plots'
+        if not os.path.exists(plots_dir):
+            return jsonify({'message': 'Plots directory does not exist', 'cleaned': 0})
+        
+        # Remove plots older than 1 hour (3600 seconds)
+        cleaned_count = 0
+        current_time = time.time()
+        
+        for plot_file in glob.glob(os.path.join(plots_dir, '*.png')):
+            try:
+                file_age = current_time - os.path.getmtime(plot_file)
+                if file_age > 3600:  # 1 hour
+                    os.remove(plot_file)
+                    cleaned_count += 1
+                    print(f"Removed old plot: {plot_file}")
+            except Exception as e:
+                print(f"Error removing plot {plot_file}: {e}")
+        
+        # Also cleanup matplotlib memory
+        try:
+            import matplotlib.pyplot as plt
+            import gc
+            plt.close('all')
+            gc.collect()
+        except:
+            pass
         
         return jsonify({
-            'success': True,
-            'memory_mb': mem_info['rss_mb'],
-            'memory_percent': mem_info['memory_percent'],
-            'available_gb': mem_info['available_memory_gb'],
-            'status': 'critical' if mem_info['rss_mb'] > 500 else 'warning' if mem_info['rss_mb'] > 400 else 'normal',
-            'timestamp': datetime.utcnow().isoformat()
+            'message': f'Cleanup completed. Removed {cleaned_count} old plot files.',
+            'cleaned': cleaned_count
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Cleanup failed: {str(e)}'}), 500
+
+# Memory status endpoint for monitoring
+@app.route('/memory-status')
+def memory_status():
+    """Get current memory usage information"""
+    try:
+        import psutil
+        import matplotlib.pyplot as plt
+        
+        process = psutil.Process()
+        memory_info = process.memory_info()
+        
+        # Count open matplotlib figures
+        open_figures = len(plt.get_fignums())
+        
+        # Count plot files
+        plots_dir = 'static/plots'
+        plot_count = 0
+        if os.path.exists(plots_dir):
+            plot_count = len([f for f in os.listdir(plots_dir) if f.endswith('.png')])
+        
+        return jsonify({
+            'memory_rss_mb': round(memory_info.rss / 1024 / 1024, 1),
+            'memory_vms_mb': round(memory_info.vms / 1024 / 1024, 1),
+            'memory_percent': process.memory_percent(),
+            'open_matplotlib_figures': open_figures,
+            'plot_files_count': plot_count,
+            'system_memory_available_gb': round(psutil.virtual_memory().available / 1024 / 1024 / 1024, 1)
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f'Memory status check failed: {str(e)}'}), 500
 
 @app.route('/memory-cleanup', methods=['POST'])
 def memory_cleanup():

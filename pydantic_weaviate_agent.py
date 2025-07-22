@@ -1,16 +1,34 @@
+# Configure matplotlib for headless environment BEFORE any imports
+import os
+os.environ['MPLBACKEND'] = 'Agg'
+os.environ['MPLCONFIGDIR'] = '/tmp/matplotlib'
+
+def configure_matplotlib_for_render():
+    """Configure matplotlib for Render deployment to prevent crashes"""
+    import matplotlib
+    matplotlib.use('Agg', force=True)
+    
+    # Disable font manager to reduce memory usage
+    matplotlib.rcParams['font.size'] = 10
+    matplotlib.rcParams['figure.max_open_warning'] = 0
+    
+    # Use minimal memory settings
+    matplotlib.rcParams['agg.path.chunksize'] = 10000
+    matplotlib.rcParams['path.simplify'] = True
+    matplotlib.rcParams['path.simplify_threshold'] = 0.1
+
 from pydantic_ai import Agent, RunContext
 from pydantic_ai.usage import UsageLimits
 from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter
 from pydantic import BaseModel
 from pydantic_ai import ToolOutput
-import os, json, uuid
+import uuid
 from dotenv import load_dotenv
 import logging
 from typing import Optional, Dict, Any, List, Literal
 import asyncio
 import pandas as pd
 import matplotlib
-matplotlib.use('Agg')  # Use non-interactive backend for web apps
 import matplotlib.pyplot as plt
 from enum import Enum
 from typing import Literal
@@ -96,6 +114,9 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Call configuration immediately
+configure_matplotlib_for_render()
+
 # === Plotting helper (outside of the class so it can be reused) ===
 
 # ---------------- Scenario filtering helper ---------------------------
@@ -149,6 +170,9 @@ def plot_market_share_per_segment(
     min_year: int | None = None,
 ):
     """Plots annual market share (Distributed vs Centralised) for a country up to max_year."""
+    # Close any existing figures first
+    plt.close('all')
+    
     # Resolve filepath
     if not filepath:
         filepath = DEFAULT_DATA_FILE
@@ -257,8 +281,6 @@ def plot_market_share_per_segment(
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
             plt.savefig(save_path, dpi=50, bbox_inches="tight")
             plt.close()
-            # Clean up memory after plot generation
-            cleanup_plot_memory()
         else:
             plt.show()
 
@@ -266,15 +288,13 @@ def plot_market_share_per_segment(
         
     except ValueError as ve:
         # Pass through validation errors (like country not found) without wrapping
-        plt.close('all')
-        cleanup_plot_memory()
         raise ve
     except Exception as e:
-        # Close any open matplotlib figures to prevent memory leaks
-        plt.close('all')
-        cleanup_plot_memory()
         # Re-raise other exceptions with context
         raise Exception(f"Error generating plot: {str(e)}")
+    finally:
+        # Always cleanup memory
+        cleanup_plot_memory()
 
 
 def plot_capacity_pie(
@@ -291,86 +311,94 @@ def plot_capacity_pie(
     value_type: 'cumulative' or 'annual'
     scenario: optional scenario for forecast years (None uses default logic)
     """
+    # Close any existing figures first
+    plt.close('all')
+    
     if not filepath:
         filepath = DEFAULT_DATA_FILE
 
-    # Clean country name
-    country = _sanitize_country(country)
+    try:
+        # Clean country name
+        country = _sanitize_country(country)
 
-    # Load data
-    df = pd.read_excel(filepath, sheet_name=sheet)
-    available_countries = sorted(df['Country'].unique())
-    if country not in available_countries:
-        raise ValueError(
-            f"Sorry, '{country}' is not available in our dataset. "
-            "Our PV market data focuses primarily on European countries. "
-            f"Available examples include: {', '.join(available_countries[:10])}..."
+        # Load data
+        df = pd.read_excel(filepath, sheet_name=sheet)
+        available_countries = sorted(df['Country'].unique())
+        if country not in available_countries:
+            raise ValueError(
+                f"Sorry, '{country}' is not available in our dataset. "
+                "Our PV market data focuses primarily on European countries. "
+                f"Available examples include: {', '.join(available_countries[:10])}..."
+            )
+
+        # Determine column and title
+        if value_type is None:
+            value_type = "cumulative"
+        value_type = value_type.lower()
+        if value_type == "cumulative":
+            value_column = "Cumulative Market"
+            title_prefix = "Cumulative Installed Capacity"
+        elif value_type == "annual":
+            value_column = "Annual Market"
+            title_prefix = "Annual Installed Capacity"
+        else:
+            raise ValueError("value_type must be either 'cumulative' or 'annual'")
+
+        # Filter dataframe using scenario logic
+        df_country = df[df['Country'] == country]
+        df_scenario = _filter_scenario(df_country, scenario=scenario)
+        df_filtered = df_scenario[
+            (df_scenario['Year'] == year)
+            & (df_scenario['Market Segment'].isin(['Distributed', 'Centralised']))
+        ]
+
+        if df_filtered.empty:
+            raise ValueError(f"No {value_type} data found for {country} in {year}.")
+
+        df_agg = df_filtered.groupby('Market Segment')[value_column].sum()
+
+        # Clear any existing plots to prevent state issues
+        plt.close('all')
+
+        # Plot
+        plt.figure(figsize=(6, 6), dpi=50)
+        wedges, texts, autotexts = plt.pie(
+            df_agg,
+            labels=df_agg.index,
+            autopct='%1.1f%%',
+            startangle=90,
+            colors=[BI_COLORS["gold"], BI_COLORS["orange"]],
         )
+        plt.title(
+            f"{title_prefix} by Segment in {country} ({year})\nTotal: {df_agg.sum()/1000:.1f} GW"
+        )
+        # Scenario legend patch if forecast year
+        if year > 2024:
+            import matplotlib.patches as mpatches
+            scenario_label = None
+            forecast_scenarios = df_filtered['Scenario'].unique()
+            if len(forecast_scenarios) > 0:
+                scenario_label = forecast_scenarios[0]
+            if not scenario_label:
+                scenario_label = (scenario or 'Most Probable').title()
+            dummy = mpatches.Patch(facecolor='none', edgecolor='none', label=f'{scenario_label} Scenario')
+            plt.legend(handles=[dummy], loc='upper right')
+        plt.tight_layout()
 
-    # Determine column and title
-    if value_type is None:
-        value_type = "cumulative"
-    value_type = value_type.lower()
-    if value_type == "cumulative":
-        value_column = "Cumulative Market"
-        title_prefix = "Cumulative Installed Capacity"
-    elif value_type == "annual":
-        value_column = "Annual Market"
-        title_prefix = "Annual Installed Capacity"
-    else:
-        raise ValueError("value_type must be either 'cumulative' or 'annual'")
+        if save_path:
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            plt.savefig(save_path, dpi=50, bbox_inches="tight")
+            plt.close()
+        else:
+            plt.show()
 
-    # Filter dataframe using scenario logic
-    df_country = df[df['Country'] == country]
-    df_scenario = _filter_scenario(df_country, scenario=scenario)
-    df_filtered = df_scenario[
-        (df_scenario['Year'] == year)
-        & (df_scenario['Market Segment'].isin(['Distributed', 'Centralised']))
-    ]
-
-    if df_filtered.empty:
-        raise ValueError(f"No {value_type} data found for {country} in {year}.")
-
-    df_agg = df_filtered.groupby('Market Segment')[value_column].sum()
-
-    # Clear any existing plots to prevent state issues
-    plt.close('all')
-
-    # Plot
-    plt.figure(figsize=(6, 6), dpi=50)
-    wedges, texts, autotexts = plt.pie(
-        df_agg,
-        labels=df_agg.index,
-        autopct='%1.1f%%',
-        startangle=90,
-        colors=[BI_COLORS["gold"], BI_COLORS["orange"]],
-    )
-    plt.title(
-        f"{title_prefix} by Segment in {country} ({year})\nTotal: {df_agg.sum()/1000:.1f} GW"
-    )
-    # Scenario legend patch if forecast year
-    if year > 2024:
-        import matplotlib.patches as mpatches
-        scenario_label = None
-        forecast_scenarios = df_filtered['Scenario'].unique()
-        if len(forecast_scenarios) > 0:
-            scenario_label = forecast_scenarios[0]
-        if not scenario_label:
-            scenario_label = (scenario or 'Most Probable').title()
-        dummy = mpatches.Patch(facecolor='none', edgecolor='none', label=f'{scenario_label} Scenario')
-        plt.legend(handles=[dummy], loc='upper right')
-    plt.tight_layout()
-
-    if save_path:
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=50, bbox_inches="tight")
-        plt.close()
-        # Clean up memory after plot generation
+        return save_path
+    
+    except Exception as e:
+        raise Exception(f"Error generating pie chart: {str(e)}")
+    finally:
+        # Always cleanup memory
         cleanup_plot_memory()
-    else:
-        plt.show()
-
-    return save_path
 
 # ------------- NEW HELPER: total market bar chart ----------------
 
@@ -1536,53 +1564,3 @@ async def _run_plot_with_timeout(agent, cmd: str, ctx: RunContext[None]):
         class Dummy:
             output = f"Sorry, plot generation exceeded {PLOT_TIMEOUT} seconds. Please refine your request and try again."
         return Dummy()
-
-# Memory cleanup function
-def cleanup_plot_memory():
-    """Aggressive memory cleanup after plot generation"""
-    try:
-        # Verify we're using the Agg backend
-        current_backend = matplotlib.get_backend()
-        if current_backend != 'Agg':
-            logger.warning(f"Matplotlib backend is {current_backend}, not Agg. This may cause memory issues.")
-            # Force Agg backend
-            matplotlib.use('Agg', force=True)
-            logger.info("Forced matplotlib to use Agg backend")
-        
-        # Close all matplotlib figures
-        plt.close('all')
-        
-        # Clear matplotlib cache
-        plt.clf()
-        plt.cla()
-        
-        # Clear matplotlib's internal caches
-        try:
-            import matplotlib.cbook as cbook
-            cbook._lock_held = False
-        except:
-            pass
-        
-        # Clear any remaining matplotlib objects
-        try:
-            import matplotlib._pylab_helpers as pylab_helpers
-            pylab_helpers.Gcf.destroy_all()
-        except:
-            pass
-        
-        # Force garbage collection multiple times
-        collected = 0
-        for _ in range(3):
-            collected += gc.collect()
-        
-        logger.info(f"Memory cleanup: {collected} objects collected")
-        
-        # Get current memory usage
-        process = psutil.Process()
-        memory_mb = process.memory_info().rss / 1024 / 1024
-        logger.info(f"Current memory usage: {memory_mb:.1f}MB")
-        
-        return memory_mb
-    except Exception as e:
-        logger.error(f"Error during memory cleanup: {e}")
-        return None
