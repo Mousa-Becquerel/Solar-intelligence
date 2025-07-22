@@ -179,7 +179,7 @@ class ModulePricesAgent:
                 return False
             
             # Create the plot
-            plt.figure(figsize=(14, 8))
+            plt.figure(figsize=(12, 6), dpi=50)
             
             # Group by description if available, otherwise plot all data
             if 'description' in plot_df.columns and len(plot_df['description'].unique()) > 1:
@@ -223,9 +223,9 @@ class ModulePricesAgent:
             
             # Save the plot to both paths
             if save_path:
-                plt.savefig(save_path, dpi=300, bbox_inches='tight')
+                plt.savefig(save_path, dpi=50, bbox_inches='tight')
             if export_path:
-                plt.savefig(export_path, dpi=300, bbox_inches='tight')
+                plt.savefig(export_path, dpi=50, bbox_inches='tight')
             
             plt.close()  # Important: close the figure to free memory
             
@@ -330,7 +330,7 @@ class ModulePricesAgent:
             logger.info(f"Available {x_axis}s in filtered data: {available_categories}")
             
             # Create the plot
-            plt.figure(figsize=(12, 6))
+            plt.figure(figsize=(12, 6), dpi=50)
             sns.boxplot(data=filtered_df, x=x_axis, y='base_price')
             title_parts = [f"Distribution of Prices by {x_axis.title()}"]
             if item != "all":
@@ -345,7 +345,7 @@ class ModulePricesAgent:
             plt.xticks(rotation=45)
             plt.tight_layout()
             if save_path:
-                plt.savefig(save_path, dpi=300, bbox_inches='tight')
+                plt.savefig(save_path, dpi=50, bbox_inches='tight')
                 plt.close()
                 logger.info(f"Boxplot saved to {save_path}")
                 return True
@@ -407,7 +407,7 @@ class ModulePricesAgent:
                 return False
             avg_by_desc = filtered_df.groupby('description')['base_price'].mean().sort_values()
             logger.info(f"Average prices by description: {avg_by_desc.to_dict()}")
-            plt.figure(figsize=(12, 6))
+            plt.figure(figsize=(12, 6), dpi=50)
             avg_by_desc.plot(kind='barh')
             title_parts = [f"Average Prices by Description"]
             if item != "all":
@@ -419,7 +419,7 @@ class ModulePricesAgent:
             plt.ylabel('Description')
             plt.tight_layout()
             if save_path:
-                plt.savefig(save_path, dpi=300, bbox_inches='tight')
+                plt.savefig(save_path, dpi=50, bbox_inches='tight')
                 plt.close()
                 logger.info(f"Average price chart saved to {save_path}")
                 return True
@@ -477,23 +477,23 @@ class ModulePricesAgent:
                 return False
 
             # --- Plotting ---
-            plt.figure(figsize=(14, 6))
+            plt.figure(figsize=(12, 5), dpi=50)
             for (desc, region_val), group in df.groupby(['description', 'region']):
                 group_avg = group.groupby('date')['base_price'].mean().reset_index()
                 label = f"{desc} ({region_val})"
                 plt.plot(group_avg['date'], group_avg['base_price'], label=label)
 
-            plt.title('Price Trends Over Time by Description and Region')
-            plt.xlabel('Date')
-            plt.ylabel('Base Price (US$/Wp)')
+            plt.title('Price Trends Over Time by Description and Region', fontsize=16, fontweight='bold')
+            plt.xlabel('Date', fontsize=12)
+            plt.ylabel('Base Price (US$/Wp)', fontsize=12)
             plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
             plt.xticks(rotation=45)
             plt.grid(True)
             plt.tight_layout()
             if save_path:
-                plt.savefig(save_path, dpi=300, bbox_inches='tight')
+                plt.savefig(save_path, dpi=50, bbox_inches='tight')
             if export_path:
-                plt.savefig(export_path, dpi=300, bbox_inches='tight')
+                plt.savefig(export_path, dpi=50, bbox_inches='tight')
             plt.close()
             logger.info(f"Module price plot saved to {save_path}")
             return True
