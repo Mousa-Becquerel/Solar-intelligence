@@ -1177,6 +1177,18 @@ function updateWelcomeMessage(agentType) {
 // Add agent selection handling
 document.getElementById('agent-select').addEventListener('change', function(e) {
     const agentType = e.target.value;
+    const selectedOption = e.target.selectedOptions[0];
+    
+    // Check if the selected option is disabled
+    if (selectedOption && selectedOption.disabled) {
+        // Show a notification
+        alert('This agent is coming soon! Please stay tuned.');
+        
+        // Reset to the previous valid selection (market as default)
+        e.target.value = 'market';
+        updateWelcomeMessage('market');
+        return;
+    }
     
     // Update welcome message
     updateWelcomeMessage(agentType);

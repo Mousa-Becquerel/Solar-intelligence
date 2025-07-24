@@ -2069,6 +2069,18 @@
             background: linear-gradient(135deg, #fffbf0 0%, #fef3c7 100%);
         }
 
+        .agent-select option:disabled {
+            color: #9ca3af;
+            background: #f9fafb;
+            cursor: not-allowed;
+            font-style: italic;
+        }
+
+        .agent-select option:disabled:hover {
+            background: #f9fafb;
+            color: #9ca3af;
+        }
+
         /* Add a subtle label above the selector */
         .agent-selector::before {
             content: "AI Agent";

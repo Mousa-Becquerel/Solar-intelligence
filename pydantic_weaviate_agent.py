@@ -1,34 +1,15 @@
-# Configure matplotlib for headless environment BEFORE any imports
-import os
-os.environ['MPLBACKEND'] = 'Agg'
-os.environ['MPLCONFIGDIR'] = '/tmp/matplotlib'
-
-def configure_matplotlib_for_render():
-    """Configure matplotlib for Render deployment to prevent crashes"""
-    import matplotlib
-    matplotlib.use('Agg', force=True)
-    
-    # Disable font manager to reduce memory usage
-    matplotlib.rcParams['font.size'] = 10
-    matplotlib.rcParams['figure.max_open_warning'] = 0
-    
-    # Use minimal memory settings
-    matplotlib.rcParams['agg.path.chunksize'] = 10000
-    matplotlib.rcParams['path.simplify'] = True
-    matplotlib.rcParams['path.simplify_threshold'] = 0.1
-
-from pydantic_ai import Agent, RunContext
+from pydantic_ai import Agent, RunContext, ToolOutput
 from pydantic_ai.usage import UsageLimits
 from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter
 from pydantic import BaseModel
-from pydantic_ai import ToolOutput
-import uuid
+import os, json, uuid
 from dotenv import load_dotenv
 import logging
 from typing import Optional, Dict, Any, List, Literal
 import asyncio
 import pandas as pd
 import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for web apps
 import matplotlib.pyplot as plt
 from enum import Enum
 from typing import Literal
@@ -38,6 +19,24 @@ import gc
 import psutil
 import pandasai as pai
 from pandasai_litellm.litellm import LiteLLM
+
+# === Plot Output Classes =================================================
+class PlotResult(BaseModel):
+    """Structured output for plot generation results"""
+    plot_type: str
+    file_path: str
+    url_path: str
+    title: str
+    description: Optional[str] = None
+    success: bool = True
+    error_message: Optional[str] = None
+
+class DataAnalysisResult(BaseModel):
+    """Structured output for data analysis results"""
+    result_type: Literal["text", "dataframe", "plot"]
+    content: str
+    dataframe_data: Optional[Dict[str, Any]] = None
+    plot_info: Optional[PlotResult] = None
 
 # === Canonical scenario Enum =================================================
 class ScenarioName(str, Enum):
@@ -114,9 +113,6 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Call configuration immediately
-configure_matplotlib_for_render()
-
 # === Plotting helper (outside of the class so it can be reused) ===
 
 # ---------------- Scenario filtering helper ---------------------------
@@ -170,9 +166,6 @@ def plot_market_share_per_segment(
     min_year: int | None = None,
 ):
     """Plots annual market share (Distributed vs Centralised) for a country up to max_year."""
-    # Close any existing figures first
-    plt.close('all')
-    
     # Resolve filepath
     if not filepath:
         filepath = DEFAULT_DATA_FILE
@@ -236,7 +229,7 @@ def plot_market_share_per_segment(
         )
 
         # Plot
-        plt.figure(figsize=(10, 6), dpi=50)
+        plt.figure(figsize=(10, 6), dpi=80)
         plt.bar(
             pivot_df.index,
             pivot_df['Distributed Share'],
@@ -279,8 +272,10 @@ def plot_market_share_per_segment(
 
         if save_path:
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            plt.savefig(save_path, dpi=50, bbox_inches="tight")
+            plt.savefig(save_path, dpi=80, bbox_inches="tight")
             plt.close()
+            # Clean up memory after plot generation
+            cleanup_plot_memory()
         else:
             plt.show()
 
@@ -288,13 +283,15 @@ def plot_market_share_per_segment(
         
     except ValueError as ve:
         # Pass through validation errors (like country not found) without wrapping
+        plt.close('all')
+        cleanup_plot_memory()
         raise ve
     except Exception as e:
+        # Close any open matplotlib figures to prevent memory leaks
+        plt.close('all')
+        cleanup_plot_memory()
         # Re-raise other exceptions with context
         raise Exception(f"Error generating plot: {str(e)}")
-    finally:
-        # Always cleanup memory
-        cleanup_plot_memory()
 
 
 def plot_capacity_pie(
@@ -311,94 +308,86 @@ def plot_capacity_pie(
     value_type: 'cumulative' or 'annual'
     scenario: optional scenario for forecast years (None uses default logic)
     """
-    # Close any existing figures first
-    plt.close('all')
-    
     if not filepath:
         filepath = DEFAULT_DATA_FILE
 
-    try:
-        # Clean country name
-        country = _sanitize_country(country)
+    # Clean country name
+    country = _sanitize_country(country)
 
-        # Load data
-        df = pd.read_excel(filepath, sheet_name=sheet)
-        available_countries = sorted(df['Country'].unique())
-        if country not in available_countries:
-            raise ValueError(
-                f"Sorry, '{country}' is not available in our dataset. "
-                "Our PV market data focuses primarily on European countries. "
-                f"Available examples include: {', '.join(available_countries[:10])}..."
-            )
-
-        # Determine column and title
-        if value_type is None:
-            value_type = "cumulative"
-        value_type = value_type.lower()
-        if value_type == "cumulative":
-            value_column = "Cumulative Market"
-            title_prefix = "Cumulative Installed Capacity"
-        elif value_type == "annual":
-            value_column = "Annual Market"
-            title_prefix = "Annual Installed Capacity"
-        else:
-            raise ValueError("value_type must be either 'cumulative' or 'annual'")
-
-        # Filter dataframe using scenario logic
-        df_country = df[df['Country'] == country]
-        df_scenario = _filter_scenario(df_country, scenario=scenario)
-        df_filtered = df_scenario[
-            (df_scenario['Year'] == year)
-            & (df_scenario['Market Segment'].isin(['Distributed', 'Centralised']))
-        ]
-
-        if df_filtered.empty:
-            raise ValueError(f"No {value_type} data found for {country} in {year}.")
-
-        df_agg = df_filtered.groupby('Market Segment')[value_column].sum()
-
-        # Clear any existing plots to prevent state issues
-        plt.close('all')
-
-        # Plot
-        plt.figure(figsize=(6, 6), dpi=50)
-        wedges, texts, autotexts = plt.pie(
-            df_agg,
-            labels=df_agg.index,
-            autopct='%1.1f%%',
-            startangle=90,
-            colors=[BI_COLORS["gold"], BI_COLORS["orange"]],
+    # Load data
+    df = pd.read_excel(filepath, sheet_name=sheet)
+    available_countries = sorted(df['Country'].unique())
+    if country not in available_countries:
+        raise ValueError(
+            f"Sorry, '{country}' is not available in our dataset. "
+            "Our PV market data focuses primarily on European countries. "
+            f"Available examples include: {', '.join(available_countries[:10])}..."
         )
-        plt.title(
-            f"{title_prefix} by Segment in {country} ({year})\nTotal: {df_agg.sum()/1000:.1f} GW"
-        )
-        # Scenario legend patch if forecast year
-        if year > 2024:
-            import matplotlib.patches as mpatches
-            scenario_label = None
-            forecast_scenarios = df_filtered['Scenario'].unique()
-            if len(forecast_scenarios) > 0:
-                scenario_label = forecast_scenarios[0]
-            if not scenario_label:
-                scenario_label = (scenario or 'Most Probable').title()
-            dummy = mpatches.Patch(facecolor='none', edgecolor='none', label=f'{scenario_label} Scenario')
-            plt.legend(handles=[dummy], loc='upper right')
-        plt.tight_layout()
 
-        if save_path:
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            plt.savefig(save_path, dpi=50, bbox_inches="tight")
-            plt.close()
-        else:
-            plt.show()
+    # Determine column and title
+    if value_type is None:
+        value_type = "cumulative"
+    value_type = value_type.lower()
+    if value_type == "cumulative":
+        value_column = "Cumulative Market"
+        title_prefix = "Cumulative Installed Capacity"
+    elif value_type == "annual":
+        value_column = "Annual Market"
+        title_prefix = "Annual Installed Capacity"
+    else:
+        raise ValueError("value_type must be either 'cumulative' or 'annual'")
 
-        return save_path
-    
-    except Exception as e:
-        raise Exception(f"Error generating pie chart: {str(e)}")
-    finally:
-        # Always cleanup memory
+    # Filter dataframe using scenario logic
+    df_country = df[df['Country'] == country]
+    df_scenario = _filter_scenario(df_country, scenario=scenario)
+    df_filtered = df_scenario[
+        (df_scenario['Year'] == year)
+        & (df_scenario['Market Segment'].isin(['Distributed', 'Centralised']))
+    ]
+
+    if df_filtered.empty:
+        raise ValueError(f"No {value_type} data found for {country} in {year}.")
+
+    df_agg = df_filtered.groupby('Market Segment')[value_column].sum()
+
+    # Clear any existing plots to prevent state issues
+    plt.close('all')
+
+    # Plot
+    plt.figure(figsize=(6, 6), dpi=80)
+    wedges, texts, autotexts = plt.pie(
+        df_agg,
+        labels=df_agg.index,
+        autopct='%1.1f%%',
+        startangle=90,
+        colors=[BI_COLORS["gold"], BI_COLORS["orange"]],
+    )
+    plt.title(
+        f"{title_prefix} by Segment in {country} ({year})\nTotal: {df_agg.sum()/1000:.1f} GW"
+    )
+    # Scenario legend patch if forecast year
+    if year > 2024:
+        import matplotlib.patches as mpatches
+        scenario_label = None
+        forecast_scenarios = df_filtered['Scenario'].unique()
+        if len(forecast_scenarios) > 0:
+            scenario_label = forecast_scenarios[0]
+        if not scenario_label:
+            scenario_label = (scenario or 'Most Probable').title()
+        dummy = mpatches.Patch(facecolor='none', edgecolor='none', label=f'{scenario_label} Scenario')
+        plt.legend(handles=[dummy], loc='upper right')
+    plt.tight_layout()
+
+    if save_path:
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        plt.savefig(save_path, dpi=80, bbox_inches="tight")
+        plt.close()
+        # Clean up memory after plot generation
         cleanup_plot_memory()
+    else:
+        plt.show()
+
+    return save_path
 
 # ------------- NEW HELPER: total market bar chart ----------------
 
@@ -465,7 +454,7 @@ def plot_total_market(
     df_total_grouped = df_total.groupby('Year')[value_column].sum().reset_index()
 
     # Plot
-    plt.figure(figsize=(10, 6), dpi=50)
+    plt.figure(figsize=(10, 6), dpi=80)
     plt.bar(df_total_grouped['Year'], df_total_grouped[value_column], color=BI_COLORS["gold"], label=segment)
     suffix = f" (Up to {max_year})" if max_year else ""
     plot_label = f"{title_prefix} {'Total' if segment=='Total' else segment} Market in {country}{suffix}"
@@ -496,7 +485,7 @@ def plot_total_market(
 
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=50, bbox_inches="tight")
+        plt.savefig(save_path, dpi=80, bbox_inches="tight")
         plt.close()
         # Clean up memory after plot generation
         cleanup_plot_memory()
@@ -548,7 +537,7 @@ def plot_yoy_growth(
     )
     df_grouped["YoY Growth (%)"] = df_grouped["Annual Market"].pct_change() * 100
 
-    plt.figure(figsize=(10, 6), dpi=50)
+    plt.figure(figsize=(10, 6), dpi=80)
     plt.plot(
         df_grouped["Year"],
         df_grouped["YoY Growth (%)"],
@@ -591,7 +580,7 @@ def plot_yoy_growth(
 
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=50, bbox_inches="tight")
+        plt.savefig(save_path, dpi=80, bbox_inches="tight")
         plt.close()
         # Clean up memory after plot generation
         cleanup_plot_memory()
@@ -650,7 +639,7 @@ def plot_country_installation_share(
     ]
     colors = palette[:len(df_grouped)]
 
-    plt.figure(figsize=(8, 8), dpi=50)
+    plt.figure(figsize=(8, 8), dpi=80)
     wedges, texts, autotexts = plt.pie(
         df_grouped,
         labels=df_grouped.index,
@@ -666,7 +655,7 @@ def plot_country_installation_share(
 
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=50, bbox_inches="tight")
+        plt.savefig(save_path, dpi=80, bbox_inches="tight")
         plt.close()
         # Clean up memory after plot generation
         cleanup_plot_memory()
@@ -723,7 +712,7 @@ def plot_capacity_trend(
         .reset_index()
     )
 
-    plt.figure(figsize=(10, 6), dpi=50)
+    plt.figure(figsize=(10, 6), dpi=80)
     plt.plot(
         pivot["Year"],
         pivot[value_column],
@@ -757,7 +746,7 @@ def plot_capacity_trend(
 
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=50, bbox_inches="tight")
+        plt.savefig(save_path, dpi=80, bbox_inches="tight")
         plt.close()
         # Clean up memory after plot generation
         cleanup_plot_memory()
@@ -827,7 +816,7 @@ def plot_multi_scenario_capacity_trend(
         "Low": "-."
     }
 
-    plt.figure(figsize=(12, 8), dpi=50)
+    plt.figure(figsize=(12, 8), dpi=80)
     
     # Plot each scenario
     for scenario in pivot["Scenario"].unique():
@@ -863,7 +852,7 @@ def plot_multi_scenario_capacity_trend(
 
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=50, bbox_inches='tight')
+        plt.savefig(save_path, dpi=80, bbox_inches='tight')
         plt.close()
         # Clean up memory after plot generation
         cleanup_plot_memory()
@@ -995,38 +984,546 @@ class PydanticWeaviateAgent:
 
     def _setup_pydantic_agent(self):
         try:
-            # Create the agent first
-            system_prompt = """
-You are a data analyst for PV market analysis using PandasAI. For any market data query, use the 'analyze_market_data' tool. For plotting, use the appropriate plotting tool. Return results as clearly as possible.
+            # === Factory Functions for Plot Generation ===
+            async def plot_factory(
+                ctx: RunContext[None],
+                country: str,
+                max_year: int,
+                min_year: int | None = None,
+                scenario: str | None = None,
+            ) -> str:
+                """Market share stacked bar chart generator."""
+                try:
+                    file_name = f"market_share_{_unique()}.png"
+                    save_path = f"static/plots/{file_name}"
+                    url_path = f"/static/plots/{file_name}"
+                    
+                    plot_market_share_per_segment(
+                        filepath=DEFAULT_DATA_FILE,
+                        sheet="Market Search Data",
+                        country=country,
+                        max_year=max_year,
+                        scenario=scenario,
+                        save_path=save_path,
+                        min_year=min_year
+                    )
+                    return f"PLOT_GENERATED|{url_path}|"
+                except Exception as e:
+                    return f"Error generating market share plot: {str(e)}"
 
-For plotting requests, use these tools:
-- plot_market_share_tool: For market share analysis by segment
-- plot_capacity_pie_tool: For capacity pie charts
-- plot_total_market_tool: For total market analysis
-- plot_yoy_growth_tool: For year-over-year growth analysis
-- plot_country_installation_share_tool: For country installation share
-- plot_capacity_trend_tool: For capacity trends over time
-- plot_multi_scenario_capacity_trend_tool: For multi-scenario capacity trends
-- plot_country_comparison_capacity_trend_tool: For comparing two countries
-- plot_multi_country_capacity_trend_tool: For multi-country capacity trends
+            async def pie_factory(
+                ctx: RunContext[None],
+                country: str,
+                year: int,
+                value_type: str,
+                scenario: str | None = None,
+            ) -> str:
+                """Capacity pie chart generator."""
+                try:
+                    file_name = f"capacity_pie_{_unique()}.png"
+                    save_path = f"static/plots/{file_name}"
+                    url_path = f"/static/plots/{file_name}"
+                    
+                    plot_capacity_pie(
+                        filepath=DEFAULT_DATA_FILE,
+                        sheet="Market Search Data",
+                        country=country,
+                        year=year,
+                        value_type=value_type,
+                        scenario=scenario,
+                        save_path=save_path
+                    )
+                    return f"PLOT_GENERATED|{url_path}|"
+                except Exception as e:
+                    return f"Error generating capacity pie plot: {str(e)}"
 
-When plotting, ensure to:
-- Use appropriate scenarios (Historical, Most Probable, High, Low)
-- Specify correct segments (Total, Distributed, Centralised)
-- Use proper value types (cumulative, annual)
-- Return plot results in the format: PLOT_GENERATED|{url_path}|
-"""
-            self.data_analysis_agent = Agent(
+            async def total_market_factory(
+                ctx: RunContext[None],
+                country: str,
+                value_type: str,
+                segment: str = "Total",
+                max_year: int | None = None,
+                scenario: str | None = None,
+                min_year: int | None = None,
+            ) -> str:
+                """Total market bar chart generator."""
+                try:
+                    file_name = f"total_market_{_unique()}.png"
+                    save_path = f"static/plots/{file_name}"
+                    url_path = f"/static/plots/{file_name}"
+                    
+                    plot_total_market(
+                        filepath=DEFAULT_DATA_FILE,
+                        sheet="Market Search Data",
+                        country=country,
+                        value_type=value_type,
+                        segment=segment,
+                        max_year=max_year,
+                        scenario=scenario,
+                        save_path=save_path,
+                        min_year=min_year
+                    )
+                    return f"PLOT_GENERATED|{url_path}|"
+                except Exception as e:
+                    return f"Error generating total market plot: {str(e)}"
+
+            async def yoy_growth_factory(
+                ctx: RunContext[None],
+                country: str,
+                segment: str = "Total",
+                max_year: int | None = None,
+                scenario: str | None = None,
+                min_year: int | None = None,
+            ) -> str:
+                """Year-over-year growth chart generator."""
+                try:
+                    file_name = f"yoy_growth_{_unique()}.png"
+                    save_path = f"static/plots/{file_name}"
+                    url_path = f"/static/plots/{file_name}"
+                    
+                    plot_yoy_growth(
+                        filepath=DEFAULT_DATA_FILE,
+                        sheet="Market Search Data",
+                        country=country,
+                        segment=segment,
+                        max_year=max_year,
+                        scenario=scenario,
+                        save_path=save_path,
+                        min_year=min_year
+                    )
+                    return f"PLOT_GENERATED|{url_path}|"
+                except Exception as e:
+                    return f"Error generating YoY growth plot: {str(e)}"
+
+            async def country_share_factory(
+                ctx: RunContext[None],
+                year: int,
+                countries: list[str] | None = None,
+                scenario: str | None = None,
+            ) -> str:
+                """Country installation share donut chart generator."""
+                try:
+                    file_name = f"installation_share_{_unique()}.png"
+                    save_path = f"static/plots/{file_name}"
+                    url_path = f"/static/plots/{file_name}"
+                    
+                    plot_country_installation_share(
+                        filepath=DEFAULT_DATA_FILE,
+                        sheet="Market Search Data",
+                        year=year,
+                        countries=countries,
+                        scenario=scenario,
+                        save_path=save_path
+                    )
+                    return f"PLOT_GENERATED|{url_path}|"
+                except Exception as e:
+                    return f"Error generating installation share plot: {str(e)}"
+
+            async def capacity_trend_factory(
+                ctx: RunContext[None],
+                country: str,
+                value_type: str = "cumulative",
+                segment: str | None = None,
+                max_year: int | None = None,
+                scenario: str | None = None,
+                min_year: int | None = None,
+            ) -> str:
+                """Capacity trend line chart generator."""
+                try:
+                    file_name = f"capacity_trend_{_unique()}.png"
+                    save_path = f"static/plots/{file_name}"
+                    url_path = f"/static/plots/{file_name}"
+                    
+                    plot_capacity_trend(
+                        filepath=DEFAULT_DATA_FILE,
+                        sheet="Market Search Data",
+                        country=country,
+                        value_type=value_type,
+                        segment=segment,
+                        max_year=max_year,
+                        scenario=scenario,
+                        save_path=save_path,
+                        min_year=min_year
+                    )
+                    return f"PLOT_GENERATED|{url_path}|"
+                except Exception as e:
+                    return f"Error generating capacity trend plot: {str(e)}"
+
+            async def multi_scenario_capacity_trend_factory(
+                ctx: RunContext[None],
+                country: str,
+                value_type: str = "cumulative",
+                segment: str | None = None,
+                max_year: int | None = None,
+                scenarios: list[str] | None = None,
+                min_year: int | None = None,
+            ) -> str:
+                """Multi-scenario capacity trend line chart generator."""
+                try:
+                    file_name = f"multi_scenario_trend_{_unique()}.png"
+                    save_path = f"static/plots/{file_name}"
+                    url_path = f"/static/plots/{file_name}"
+                    
+                    plot_multi_scenario_capacity_trend(
+                        filepath=DEFAULT_DATA_FILE,
+                        sheet="Market Search Data",
+                        country=country,
+                        value_type=value_type,
+                        segment=segment,
+                        max_year=max_year,
+                        scenarios=scenarios,
+                        save_path=save_path,
+                        min_year=min_year
+                    )
+                    return f"PLOT_GENERATED|{url_path}|"
+                except Exception as e:
+                    return f"Error generating multi-scenario plot: {str(e)}"
+
+            async def country_comparison_capacity_trend_factory(
+                ctx: RunContext[None],
+                country_a: str,
+                country_b: str,
+                value_type: str = "cumulative",
+                segment: str | None = None,
+                max_year: int | None = None,
+                min_year: int | None = None,
+                scenario: str | None = None,
+            ) -> str:
+                """Country-vs-country capacity trend line chart generator."""
+                try:
+                    file_name = f"country_comparison_{_unique()}.png"
+                    save_path = f"static/plots/{file_name}"
+                    url_path = f"/static/plots/{file_name}"
+                    
+                    plot_country_comparison_capacity_trend(
+                        filepath=DEFAULT_DATA_FILE,
+                        sheet="Market Search Data",
+                        country_a=country_a,
+                        country_b=country_b,
+                        value_type=value_type,
+                        segment=segment,
+                        max_year=max_year,
+                        scenario=scenario,
+                        save_path=save_path,
+                        min_year=min_year
+                    )
+                    return f"PLOT_GENERATED|{url_path}|"
+                except Exception as e:
+                    return f"Error generating country comparison plot: {str(e)}"
+
+            async def multi_country_capacity_trend_factory(
+                ctx: RunContext[None],
+                countries: list[str],
+                value_type: str = "cumulative",
+                segment: str | None = None,
+                max_year: int | None = None,
+                scenario: str | None = None,
+                min_year: int | None = None,
+            ) -> str:
+                """Multi-country capacity trend comparison chart generator."""
+                try:
+                    file_name = f"multi_country_trend_{_unique()}.png"
+                    save_path = f"static/plots/{file_name}"
+                    url_path = f"/static/plots/{file_name}"
+                    
+                    plot_multi_country_capacity_trend(
+                        filepath=DEFAULT_DATA_FILE,
+                        sheet="Market Search Data",
+                        countries=countries,
+                        value_type=value_type,
+                        segment=segment,
+                        max_year=max_year,
+                        scenario=scenario,
+                        save_path=save_path,
+                        min_year=min_year
+                    )
+                    return f"PLOT_GENERATED|{url_path}|"
+                except Exception as e:
+                    return f"Error generating multi-country plot: {str(e)}"
+
+            async def chat_response(ctx: RunContext[None], message: str) -> str:
+                """Simple chat response for greetings and general conversation."""
+                return "Hello! I'm your PV market analysis assistant. I can help you with photovoltaic market data analysis and create visualizations. What would you like to know about the solar market?"
+
+            async def respond_to_greeting(ctx: RunContext[None], message: str) -> str:
+                """Handle basic greetings and conversational messages - let LLM respond naturally"""
+                # Let the LLM generate a natural response based on the user's message
+                # This tool is called when the main agent determines it's a greeting/casual conversation
+                # The LLM will generate an appropriate response
+                pass
+
+            # === Create Plot Generation Agent ===
+            plot_generation_agent = Agent(
                 model="openai:gpt-4o",
-                system_prompt=system_prompt,
+                output_type=[plot_factory, pie_factory, total_market_factory, yoy_growth_factory, country_share_factory, capacity_trend_factory, multi_scenario_capacity_trend_factory, country_comparison_capacity_trend_factory, multi_country_capacity_trend_factory, chat_response],
+                system_prompt=(
+                    "You are a plotting assistant.\n\n"
+                    "Tool-selection rules:\n"
+                    "• If the user asks for *market share* over a period (phrases like 'up to 2024', 'from 2010-2023', 'over the years'), call `plot_factory`.\n"
+                    "• If the user asks for *stacked chart*, *stacked bar*, *segments by year*, *breakdown by segment*, or *distributed vs centralised* over time, call `plot_factory`.\n"
+                    "  This shows Distributed vs Centralised bars stacked by year.\n"
+                    "• If the user asks for a *pie* or uses wording such as 'in 2024', 'for 2024', or clearly references a **single** year, call `pie_factory`.\n"
+                    "• If the user asks for *total market* (mentions 'total market', 'overall market size', etc.), call `total_market_factory`.\n"
+                    "• If the user asks for *growth*, *YoY*, or *year-on-year* trends, call `yoy_growth_factory`.\n"
+                    "• If the user asks to *show capacity trend / line over time*, call `capacity_trend_factory`.\n"
+                    "• If the user asks for *country share* of installations for a single year (donut), call `country_share_factory`.\n"
+                    "• If the user asks for *multiple scenarios*, *all scenarios*, *all the scenarios*, *compare scenarios*, *different scenarios*, *three scenarios*, or *forecasting for all*, call `multi_scenario_capacity_trend_factory`.\n"
+                    "• If the user asks to *compare capacity trends* between two countries, call `country_comparison_capacity_trend_factory`.\n"
+                    "• If the user asks to *compare capacity trends* between multiple countries, call `multi_country_capacity_trend_factory`.\n\n"
+                    "Parameter extraction:\n"
+                    "• Extract max_year from phrases like 'up to 2024', 'from 2020 to 2024', 'until 2025', 'through 2023', 'by 2030'.\n"
+                    "• If no max_year is specified but the request is for multiple years, use 2030 as default.\n"
+                    "• Extract segment from phrases like 'distributed', 'centralised', 'rooftop', 'utility-scale', 'total market'.\n"
+                    "• Extract value_type from phrases like 'cumulative', 'annual', 'yearly installations'.\n"
+                    "• If no value_type is specified, use 'cumulative' as default.\n"
+                    "• If no segment is specified, use 'Total' as default.\n"
+                    "• For multi-scenario requests, extract scenarios list from phrases like 'High and Low', 'all three scenarios', 'High, Low, Most Probable'.\n\n"
+                    "Scenario parameter handling:\n"
+                    "• If the command mentions a scenario (e.g., 'using the High scenario', 'in the Low scenario', 'Most Probable scenario'), extract the scenario name and pass it to the appropriate factory function.\n"
+                    "• Valid scenarios are: 'High', 'Low', 'Most Probable' (or variations like 'Most Probable').\n"
+                    "• If no scenario is mentioned, pass None to use default scenario logic.\n"
+                    "• For multi-scenario requests, pass a list of scenarios or None for all scenarios.\n\n"
+                    "Return ONLY the tool output you receive. Do NOT add extra commentary or markdown."
+                ),
             )
-            
-            # Now register all tools
-            async def chat_response(ctx: RunContext[None], chat_response: str) -> str:
+
+            # === Tool Wrappers for Main Agent ===
+            async def plot_market_share_tool(
+                ctx: RunContext[None],
+                country: str,
+                max_year: int,
+                min_year: int | None = None,
+                scenario: str | None = None,
+            ) -> str:
+                """Wrapper that delegates plotting to the nested plot_generation_agent."""
+                cmd = f"Generate a market share bar chart for {country} from {min_year} to {max_year}."
+                if scenario:
+                    cmd = cmd.rstrip('.') + f" in the {scenario} scenario."
+                response = await plot_generation_agent.run(cmd, usage=ctx.usage)
+                return response.output
+
+            async def plot_capacity_pie_tool(
+                ctx: RunContext[None],
+                country: str,
+                year: int,
+                value_type: str,
+                scenario: str | None = None,
+            ) -> str:
+                """Wrapper that delegates pie chart generation to nested agent."""
+                cmd = f"Generate a {value_type} capacity pie chart for {country} in {year}"
+                if scenario:
+                    cmd += f" using the {scenario} scenario"
+                cmd += "."
+                response = await plot_generation_agent.run(cmd, usage=ctx.usage)
+                return response.output
+
+            async def plot_total_market_tool(
+                ctx: RunContext[None],
+                country: str,
+                segment: str | None = None,
+                value_type: str | None = None,
+                max_year: int | None = None,
+                min_year: int | None = None,
+                scenario: str | None = None,
+            ) -> str:
+                """Wrapper delegating total market bar chart generation."""
+                segment_norm = _normalize_segment(segment)
+                vt_text = value_type if value_type else "cumulative"
+                cmd = (
+                    f"Generate a {vt_text} total market bar chart for the {segment_norm} segment in {country}"
+                    + (f' from {min_year} to {max_year or "2030"}.' if max_year is not None else '.')
+                )
+                if scenario:
+                    cmd = cmd.rstrip('.') + f" in the {scenario} scenario."
+                response = await plot_generation_agent.run(cmd, usage=ctx.usage)
+                return response.output
+
+            async def plot_yoy_growth_tool(
+                ctx: RunContext[None],
+                country: str,
+                segment: str = "Total",
+                max_year: int | None = None,
+                min_year: int | None = None,
+                scenario: str | None = None,
+            ) -> str:
+                """Wrapper delegating YoY growth chart generation."""
+                cmd_base = f"Generate a YoY growth chart for {segment} in {country}"
+                if min_year is not None and max_year is not None:
+                    cmd = f"{cmd_base} from {min_year} to {max_year}."
+                elif max_year is not None:
+                    cmd = f"{cmd_base} up to {max_year}."
+                elif min_year is not None:
+                    cmd = f"{cmd_base} starting {min_year}."
+                else:
+                    cmd = cmd_base + "."
+                if scenario:
+                    cmd = cmd.rstrip('.') + f" ({scenario} scenario)."
+                response = await plot_generation_agent.run(cmd, usage=ctx.usage)
+                return response.output
+
+            async def plot_country_installation_share_tool(
+                ctx: RunContext[None],
+                year: int,
+                countries: str | None = None,
+                scenario: str | None = None,
+            ) -> str:
+                """Wrapper delegating country share donut chart generation."""
+                if countries:
+                    country_list = [c.strip() for c in countries.split(",")]
+                    country_str = ", ".join(country_list)
+                    cmd = f"Generate a country share donut chart for year {year} including {country_str}."
+                else:
+                    cmd = f"Generate a country share donut chart for year {year}."
+                if scenario:
+                    cmd = cmd.rstrip('.') + f" ({scenario} scenario)."
+                response = await plot_generation_agent.run(cmd, usage=ctx.usage)
+                return response.output
+
+            async def plot_capacity_trend_tool(
+                ctx: RunContext[None],
+                country: str,
+                value_type: str = "cumulative",
+                segment: str | None = None,
+                max_year: int | None = None,
+                min_year: int | None = None,
+                scenario: str | None = None,
+            ) -> str:
+                """Wrapper that delegates capacity trend generation to nested agent."""
+                cmd_base = f"Generate a {value_type} capacity trend line for the {segment or 'Total'} segment in {country}"
+                if min_year is not None and max_year is not None:
+                    cmd = f"{cmd_base} from {min_year} to {max_year}."
+                elif max_year is not None:
+                    cmd = f"{cmd_base} up to {max_year}."
+                elif min_year is not None:
+                    cmd = f"{cmd_base} starting {min_year}."
+                else:
+                    cmd = cmd_base + "."
+                if scenario:
+                    cmd = cmd.rstrip('.') + f" ({scenario} scenario)."
+                response = await plot_generation_agent.run(cmd, usage=ctx.usage)
+                return response.output
+
+            async def plot_multi_scenario_capacity_trend_tool(
+                ctx: RunContext[None],
+                country: str,
+                value_type: str = "cumulative",
+                segment: str | None = None,
+                max_year: int | None = None,
+                scenarios: str | None = None,
+                min_year: int | None = None,
+            ) -> str:
+                """Wrapper that delegates multi-scenario capacity trend generation to nested agent."""
+                cmd_base = f"Generate a {value_type} capacity trend line for the {segment or 'Total'} segment in {country}"
+                if min_year is not None and max_year is not None:
+                    cmd = f"{cmd_base} from {min_year} to {max_year}."
+                elif max_year is not None:
+                    cmd = f"{cmd_base} up to {max_year}."
+                elif min_year is not None:
+                    cmd = f"{cmd_base} starting {min_year}."
+                else:
+                    cmd = cmd_base + "."
+                if scenarios:
+                    scenario_list = [s.strip() for s in scenarios.split(",")]
+                    scenario_str = ", ".join(scenario_list)
+                    cmd = cmd.rstrip('.') + f" for scenarios: {scenario_str}."
+                else:
+                    cmd = cmd.rstrip('.') + " for all scenarios."
+                response = await plot_generation_agent.run(cmd, usage=ctx.usage)
+                return response.output
+
+            async def plot_country_comparison_capacity_trend_tool(
+                ctx: RunContext[None],
+                country_a: str,
+                country_b: str,
+                value_type: str = "cumulative",
+                segment: str | None = None,
+                max_year: int | None = None,
+                min_year: int | None = None,
+                scenario: str | None = None,
+            ) -> str:
+                """Wrapper delegating country vs country capacity trend generation."""
+                cmd_base = f"Generate a {value_type} capacity trend line comparing {country_a} and {country_b}"
+                if min_year is not None and max_year is not None:
+                    cmd = f"{cmd_base} from {min_year} to {max_year}."
+                elif max_year is not None:
+                    cmd = f"{cmd_base} up to {max_year}."
+                elif min_year is not None:
+                    cmd = f"{cmd_base} starting {min_year}."
+                else:
+                    cmd = cmd_base + "."
+                if segment and segment != "Total":
+                    cmd = cmd.rstrip('.') + f" for the {segment} segment."
+                if scenario:
+                    cmd = cmd.rstrip('.') + f" ({scenario} scenario)."
+                response = await plot_generation_agent.run(cmd, usage=ctx.usage)
+                return response.output
+
+            async def plot_multi_country_capacity_trend_tool(
+                ctx: RunContext[None],
+                countries: str,
+                value_type: str = "cumulative",
+                segment: str | None = None,
+                max_year: int | None = None,
+                scenario: str | None = None,
+                min_year: int | None = None,
+            ) -> str:
+                """Wrapper delegating multi-country capacity trend generation."""
+                country_list = [c.strip() for c in countries.split(",")]
+                cmd_base = f"Generate a {value_type} capacity trend line comparing {', '.join(country_list)}"
+                if min_year is not None and max_year is not None:
+                    cmd = f"{cmd_base} from {min_year} to {max_year}."
+                elif max_year is not None:
+                    cmd = f"{cmd_base} up to {max_year}."
+                elif min_year is not None:
+                    cmd = f"{cmd_base} starting {min_year}."
+                else:
+                    cmd = cmd_base + "."
+                if segment and segment != "Total":
+                    cmd = cmd.rstrip('.') + f" for the {segment} segment."
+                if scenario:
+                    cmd = cmd.rstrip('.') + f" ({scenario} scenario)."
+                response = await plot_generation_agent.run(cmd, usage=ctx.usage)
+                return response.output
+
+            # === Data Analysis Tool - REMOVED (Now a tool instead of output type) ===
+
+            async def chat_response_tool(ctx: RunContext[None], chat_response: str) -> str:
+                """Handle greetings, general questions, and casual conversation"""
                 return chat_response
 
+            # === Create Main Agent ===
+            self.data_analysis_agent = Agent(
+                model="openai:gpt-4o",
+                output_type=[chat_response_tool, plot_market_share_tool, plot_capacity_pie_tool, plot_total_market_tool, plot_yoy_growth_tool, plot_country_installation_share_tool, plot_capacity_trend_tool, plot_multi_scenario_capacity_trend_tool, plot_country_comparison_capacity_trend_tool, plot_multi_country_capacity_trend_tool],
+                system_prompt=(
+                    "You are a helpful PV (photovoltaic) market analysis assistant.\n\n"
+                    "**CRITICAL ROUTING RULES:**\n\n"
+                    "**USE `chat_response_tool` FOR:**\n"
+                    "- Greetings (hello, hi, hey)\n"
+                    "- Questions about who you are or what you do\n"
+                    "- General conversation\n"
+                    "- Casual questions\n"
+                    "→ Use this tool to respond naturally and helpfully\n\n"
+                    "**USE `analyze_market_data` tool FOR:**\n"
+                    "- Specific data queries about solar capacity, MW, installations\n"
+                    "- Questions about market size, countries, years, segments\n"
+                    "- Requests for specific numerical data\n"
+                    "→ Then analyze the results and provide a helpful response\n\n"
+                    "**USE PLOTTING TOOLS ONLY FOR:**\n"
+                    "- Explicit visualization requests (plot, chart, graph, show, visualize)\n"
+                    "- When user asks to 'create', 'generate', or 'display' charts\n\n"
+                    "**Available plotting tools:**\n"
+                    "• plot_market_share_tool • plot_capacity_pie_tool • plot_total_market_tool\n"
+                    "• plot_yoy_growth_tool • plot_country_installation_share_tool\n"
+                    "• plot_capacity_trend_tool • plot_multi_scenario_capacity_trend_tool\n"
+                    "• plot_country_comparison_capacity_trend_tool • plot_multi_country_capacity_trend_tool\n\n"
+                    "**Remember:** Process tool results and provide helpful analysis and insights!"
+                ),
+            )
+
+            # Register analyze_market_data as a regular tool (not output type)
             @self.data_analysis_agent.tool(name="analyze_market_data")
-            async def analyze_market_data(ctx: RunContext[None], query: str) -> str:
+            async def analyze_market_data_tool(ctx: RunContext[None], query: str) -> str:
                 try:
                     logger.info(f"Executing market data query: {query}")
                     response = self.market_data.chat(query)
@@ -1035,14 +1532,12 @@ When plotting, ensure to:
                         df = response.value
                     elif isinstance(response, pd.DataFrame):
                         df = response
+                    
                     if df is not None and not df.empty:
                         self.last_dataframe = df
-                        if len(df) > 10:
-                            display_text = df.head(10).to_string()
-                            total_rows = len(df)
-                            return f"{display_text}\n\n... and {total_rows - 10} more rows. Full data available in table below."
-                        else:
-                            return df.to_string()
+                        # Return just the data for the agent to process
+                        return df.to_string()
+                        
                     elif response is None:
                         return "No data found for your query."
                     elif hasattr(response, 'empty') and response.empty:
@@ -1056,181 +1551,12 @@ When plotting, ensure to:
                     logger.error(error_msg)
                     return error_msg
 
-            @self.data_analysis_agent.tool(name="plot_market_share_tool")
-            async def plot_market_share_tool(ctx: RunContext[None], country: str, max_year: int, scenario: str = None, min_year: int = None) -> str:
-                try:
-                    save_path = f"static/plots/market_share_{_unique()}.png"
-                    plot_market_share_per_segment(
-                        filepath=DEFAULT_DATA_FILE,
-                        sheet="Market Search Data",
-                        country=country,
-                        max_year=max_year,
-                        scenario=scenario,
-                        save_path=save_path,
-                        min_year=min_year
-                    )
-                    return f"PLOT_GENERATED|{save_path}|"
-                except Exception as e:
-                    return f"Error generating market share plot: {str(e)}"
-
-            @self.data_analysis_agent.tool(name="plot_capacity_pie_tool")
-            async def plot_capacity_pie_tool(ctx: RunContext[None], country: str, year: int, value_type: str, scenario: str = None) -> str:
-                try:
-                    save_path = f"static/plots/capacity_pie_{_unique()}.png"
-                    plot_capacity_pie(
-                        filepath=DEFAULT_DATA_FILE,
-                        sheet="Market Search Data",
-                        country=country,
-                        year=year,
-                        value_type=value_type,
-                        scenario=scenario,
-                        save_path=save_path
-                    )
-                    return f"PLOT_GENERATED|{save_path}|"
-                except Exception as e:
-                    return f"Error generating capacity pie plot: {str(e)}"
-
-            @self.data_analysis_agent.tool(name="plot_total_market_tool")
-            async def plot_total_market_tool(ctx: RunContext[None], country: str, value_type: str, segment: str = "Total", max_year: int = None, scenario: str = None, min_year: int = None) -> str:
-                try:
-                    save_path = f"static/plots/total_market_{_unique()}.png"
-                    plot_total_market(
-                        filepath=DEFAULT_DATA_FILE,
-                        sheet="Market Search Data",
-                        country=country,
-                        value_type=value_type,
-                        segment=segment,
-                        max_year=max_year,
-                        scenario=scenario,
-                        save_path=save_path,
-                        min_year=min_year
-                    )
-                    return f"PLOT_GENERATED|{save_path}|"
-                except Exception as e:
-                    return f"Error generating total market plot: {str(e)}"
-
-            @self.data_analysis_agent.tool(name="plot_yoy_growth_tool")
-            async def plot_yoy_growth_tool(ctx: RunContext[None], country: str, segment: str = "Total", max_year: int = None, scenario: str = None, min_year: int = None) -> str:
-                try:
-                    save_path = f"static/plots/yoy_growth_{_unique()}.png"
-                    plot_yoy_growth(
-                        filepath=DEFAULT_DATA_FILE,
-                        sheet="Market Search Data",
-                        country=country,
-                        segment=segment,
-                        max_year=max_year,
-                        scenario=scenario,
-                        save_path=save_path,
-                        min_year=min_year
-                    )
-                    return f"PLOT_GENERATED|{save_path}|"
-                except Exception as e:
-                    return f"Error generating YoY growth plot: {str(e)}"
-
-            @self.data_analysis_agent.tool(name="plot_country_installation_share_tool")
-            async def plot_country_installation_share_tool(ctx: RunContext[None], year: int, countries: str = None, scenario: str = None) -> str:
-                try:
-                    save_path = f"static/plots/installation_share_{_unique()}.png"
-                    country_list = [c.strip() for c in countries.split(",")] if countries else None
-                    plot_country_installation_share(
-                        filepath=DEFAULT_DATA_FILE,
-                        sheet="Market Search Data",
-                        year=year,
-                        countries=country_list,
-                        scenario=scenario,
-                        save_path=save_path
-                    )
-                    return f"PLOT_GENERATED|{save_path}|"
-                except Exception as e:
-                    return f"Error generating installation share plot: {str(e)}"
-
-            @self.data_analysis_agent.tool(name="plot_capacity_trend_tool")
-            async def plot_capacity_trend_tool(ctx: RunContext[None], country: str, value_type: str = "cumulative", segment: str = None, max_year: int = None, scenario: str = None, min_year: int = None) -> str:
-                try:
-                    save_path = f"static/plots/capacity_trend_{_unique()}.png"
-                    plot_capacity_trend(
-                        filepath=DEFAULT_DATA_FILE,
-                        sheet="Market Search Data",
-                        country=country,
-                        value_type=value_type,
-                        segment=segment,
-                        max_year=max_year,
-                        scenario=scenario,
-                        save_path=save_path,
-                        min_year=min_year
-                    )
-                    return f"PLOT_GENERATED|{save_path}|"
-                except Exception as e:
-                    return f"Error generating capacity trend plot: {str(e)}"
-
-            @self.data_analysis_agent.tool(name="plot_multi_scenario_capacity_trend_tool")
-            async def plot_multi_scenario_capacity_trend_tool(ctx: RunContext[None], country: str, value_type: str = "cumulative", segment: str = None, max_year: int = None, scenarios: str = None, min_year: int = None) -> str:
-                try:
-                    save_path = f"static/plots/multi_scenario_trend_{_unique()}.png"
-                    scenario_list = [s.strip() for s in scenarios.split(",")] if scenarios else None
-                    plot_multi_scenario_capacity_trend(
-                        filepath=DEFAULT_DATA_FILE,
-                        sheet="Market Search Data",
-                        country=country,
-                        value_type=value_type,
-                        segment=segment,
-                        max_year=max_year,
-                        scenarios=scenario_list,
-                        save_path=save_path,
-                        min_year=min_year
-                    )
-                    return f"PLOT_GENERATED|{save_path}|"
-                except Exception as e:
-                    return f"Error generating multi-scenario trend plot: {str(e)}"
-
-            @self.data_analysis_agent.tool(name="plot_country_comparison_capacity_trend_tool")
-            async def plot_country_comparison_capacity_trend_tool(ctx: RunContext[None], country_a: str, country_b: str, value_type: str = "cumulative", segment: str = None, max_year: int = None, scenario: str = None, min_year: int = None) -> str:
-                try:
-                    save_path = f"static/plots/country_comparison_{_unique()}.png"
-                    plot_country_comparison_capacity_trend(
-                        filepath=DEFAULT_DATA_FILE,
-                        sheet="Market Search Data",
-                        country_a=country_a,
-                        country_b=country_b,
-                        value_type=value_type,
-                        segment=segment,
-                        max_year=max_year,
-                        scenario=scenario,
-                        save_path=save_path,
-                        min_year=min_year
-                    )
-                    return f"PLOT_GENERATED|{save_path}|"
-                except Exception as e:
-                    return f"Error generating country comparison plot: {str(e)}"
-
-            @self.data_analysis_agent.tool(name="plot_multi_country_capacity_trend_tool")
-            async def plot_multi_country_capacity_trend_tool(ctx: RunContext[None], countries: str, value_type: str = "cumulative", segment: str = None, max_year: int = None, scenario: str = None, min_year: int = None) -> str:
-                try:
-                    save_path = f"static/plots/multi_country_trend_{_unique()}.png"
-                    country_list = [c.strip() for c in countries.split(",")]
-                    plot_multi_country_capacity_trend(
-                        filepath=DEFAULT_DATA_FILE,
-                        sheet="Market Search Data",
-                        countries=country_list,
-                        value_type=value_type,
-                        segment=segment,
-                        max_year=max_year,
-                        scenario=scenario,
-                        save_path=save_path,
-                        min_year=min_year
-                    )
-                    return f"PLOT_GENERATED|{save_path}|"
-                except Exception as e:
-                    return f"Error generating multi-country trend plot: {str(e)}"
-
-            # Register chat_response tool as well
-            self.data_analysis_agent.tool(chat_response)
-            logger.info("Pydantic-AI agent with PandasAI integration and conversation memory setup complete")
+            logger.info("Pydantic-AI agent with nested plot generation and conversation memory setup complete")
         except Exception as e:
             logger.error(f"Failed to setup Pydantic-AI agent: {e}")
             self.data_analysis_agent = None
     
-    def process_query(self, user_message: str, conversation_id: str = None) -> str:
+    def process_query(self, user_message: str, conversation_id: str = None):
         """Process user query through the Pydantic-AI agent with conversation memory"""
         try:
             print(f"\n🎯 USER QUERY RECEIVED: '{user_message}'")
@@ -1264,7 +1590,7 @@ When plotting, ensure to:
                     return await self.data_analysis_agent.run(
                         user_message,
                         message_history=message_history,
-                        usage_limits=UsageLimits(request_limit=5, total_tokens_limit=5000),
+                        usage_limits=UsageLimits(request_limit=10, total_tokens_limit=10000),
                     )
                 
                 result = loop.run_until_complete(run_agent())
@@ -1278,7 +1604,7 @@ When plotting, ensure to:
                 loop.close()
             
             print(f"✅ Agent execution completed")
-            print(f"📤 Agent response length: {len(str(result.output))} characters")
+            print(f"📤 Agent response type: {type(result.output)}")
             print(f"📝 Agent response preview: {str(result.output)[:200]}...")
             
             # Store the new messages for future conversation context
@@ -1291,8 +1617,8 @@ When plotting, ensure to:
                 print(f"💾 Updated conversation memory: {len(self.conversation_memory[conversation_id])} messages")
                 logger.info(f"Updated conversation memory for {conversation_id} with {len(self.conversation_memory[conversation_id])} messages")
             
-            # Return the agent's response
-            return str(result.output)
+            # Return the structured result object instead of converting to string
+            return result
             
         except Exception as e:
             print(f"❌ ERROR in process_query: {str(e)}")
@@ -1421,7 +1747,7 @@ def plot_country_comparison_capacity_trend(
     pivot_a = df_a.groupby("Year")[value_column].sum().reset_index()
     pivot_b = df_b.groupby("Year")[value_column].sum().reset_index()
 
-    plt.figure(figsize=(10, 6), dpi=50)
+    plt.figure(figsize=(10, 6), dpi=80)
     plt.plot(pivot_a["Year"], pivot_a[value_column], marker="o", color=BI_COLORS["navy"], label=country_a)
     plt.plot(pivot_b["Year"], pivot_b[value_column], marker="o", color=BI_COLORS["gold"], label=country_b)
     plt.title(f"{title_prefix} {segment_norm} Capacity: {country_a} vs {country_b}")
@@ -1458,7 +1784,7 @@ def plot_country_comparison_capacity_trend(
 
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=50, bbox_inches="tight")
+        plt.savefig(save_path, dpi=80, bbox_inches="tight")
         plt.close()
         # Clean up memory after plot generation
         cleanup_plot_memory()
@@ -1502,7 +1828,7 @@ def plot_multi_country_capacity_trend(
 
     # Build a colour cycle
     colour_cycle = [BI_COLORS["navy"], BI_COLORS["gold"], BI_COLORS["orange"], BI_COLORS["sky"], "#145DA0", "#FFB000", "#003f88"]
-    plt.figure(figsize=(12, 7), dpi=50)
+    plt.figure(figsize=(12, 7), dpi=80)
 
     for idx, c in enumerate(countries):
         c_clean = _sanitize_country(c)
@@ -1543,7 +1869,7 @@ def plot_multi_country_capacity_trend(
 
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=50, bbox_inches="tight")
+        plt.savefig(save_path, dpi=80, bbox_inches="tight")
         plt.close()
         # Clean up memory after plot generation
         cleanup_plot_memory()
@@ -1564,3 +1890,53 @@ async def _run_plot_with_timeout(agent, cmd: str, ctx: RunContext[None]):
         class Dummy:
             output = f"Sorry, plot generation exceeded {PLOT_TIMEOUT} seconds. Please refine your request and try again."
         return Dummy()
+
+# Memory cleanup function
+def cleanup_plot_memory():
+    """Aggressive memory cleanup after plot generation"""
+    try:
+        # Verify we're using the Agg backend
+        current_backend = matplotlib.get_backend()
+        if current_backend != 'Agg':
+            logger.warning(f"Matplotlib backend is {current_backend}, not Agg. This may cause memory issues.")
+            # Force Agg backend
+            matplotlib.use('Agg', force=True)
+            logger.info("Forced matplotlib to use Agg backend")
+        
+        # Close all matplotlib figures
+        plt.close('all')
+        
+        # Clear matplotlib cache
+        plt.clf()
+        plt.cla()
+        
+        # Clear matplotlib's internal caches
+        try:
+            import matplotlib.cbook as cbook
+            cbook._lock_held = False
+        except:
+            pass
+        
+        # Clear any remaining matplotlib objects
+        try:
+            import matplotlib._pylab_helpers as pylab_helpers
+            pylab_helpers.Gcf.destroy_all()
+        except:
+            pass
+        
+        # Force garbage collection multiple times
+        collected = 0
+        for _ in range(3):
+            collected += gc.collect()
+        
+        logger.info(f"Memory cleanup: {collected} objects collected")
+        
+        # Get current memory usage
+        process = psutil.Process()
+        memory_mb = process.memory_info().rss / 1024 / 1024
+        logger.info(f"Current memory usage: {memory_mb:.1f}MB")
+        
+        return memory_mb
+    except Exception as e:
+        logger.error(f"Error during memory cleanup: {e}")
+        return None

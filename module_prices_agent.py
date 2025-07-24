@@ -6,59 +6,8 @@ A Pydantic AI agent for analyzing solar component prices using PandasAI.
 Similar to the market data agent but focused on component pricing data.
 """
 
-# Configure matplotlib for headless environment BEFORE any imports
-import os
-os.environ['MPLBACKEND'] = 'Agg'
-os.environ['MPLCONFIGDIR'] = '/tmp/matplotlib'
-
-def configure_matplotlib_for_render():
-    """Configure matplotlib for Render deployment to prevent crashes"""
-    import matplotlib
-    matplotlib.use('Agg', force=True)
-    
-    # Disable font manager to reduce memory usage
-    matplotlib.rcParams['font.size'] = 10
-    matplotlib.rcParams['figure.max_open_warning'] = 0
-    
-    # Use minimal memory settings
-    matplotlib.rcParams['agg.path.chunksize'] = 10000
-    matplotlib.rcParams['path.simplify'] = True
-    matplotlib.rcParams['path.simplify_threshold'] = 0.1
-
-def cleanup_plot_memory():
-    """Aggressive memory cleanup after plot generation"""
-    try:
-        import matplotlib.pyplot as plt
-        import matplotlib
-        import gc
-        
-        # Close all matplotlib figures
-        plt.close('all')
-        
-        # Clear matplotlib cache
-        plt.clf()
-        plt.cla()
-        
-        # Clear any remaining matplotlib objects
-        try:
-            import matplotlib._pylab_helpers as pylab_helpers
-            pylab_helpers.Gcf.destroy_all()
-        except:
-            pass
-        
-        # Force garbage collection multiple times
-        for _ in range(3):
-            gc.collect()
-        
-        print("Module prices agent memory cleanup completed")
-        
-    except Exception as e:
-        print(f"Error during module prices agent memory cleanup: {e}")
-
-# Call configuration immediately
-configure_matplotlib_for_render()
-
 import asyncio
+import os
 import logging
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass
@@ -66,6 +15,7 @@ import pandas as pd
 import uuid
 from datetime import datetime
 import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -91,14 +41,56 @@ if not OPENAI_API_KEY:
 class ModulePricesConfig:
     """Configuration for the module prices agent"""
     model: str = "openai:gpt-4o"
+    llm_model: str = "openai:gpt-4o"  # Add this for compatibility
     request_limit: int = 10
-    total_tokens_limit: int = 5000
+    total_tokens_limit: int = 15000  # Increased from 5000
     verbose: bool = True
 
 class ModulePricesAgent:
     """
-    Solar component prices analysis agent using PandasAI
+    Enhanced Pydantic-AI agent for analyzing solar module prices.
     """
+    
+    SYSTEM_PROMPT = """
+You are a solar module price analysis assistant specialized in photovoltaic component pricing.
+
+**CRITICAL TOOL USAGE RULES:**
+
+**For greetings and general conversation:** Use `chat_response_tool`
+
+**For data queries (finding, listing, showing data):** Use `analyze_prices_data` tool ONLY:
+- "What modules available in India" → analyze_prices_data
+- "Show me prices for X" → analyze_prices_data  
+- "List components in region Y" → analyze_prices_data
+- "Find prices between dates" → analyze_prices_data
+→ Process the summary and provide helpful analysis
+
+**For visualization requests (creating charts/plots):** Use plotting tools with CORRECT parameters:
+- "Plot modules prices in China" → plot_price_trends_tool(item="Module", region="China")
+- "Chart wafer prices in EU" → plot_price_trends_tool(item="Wafer", region="EU")
+- "Show cell prices" → plot_price_trends_tool(item="Cell")
+- "Plot prices in India" → plot_price_trends_tool(region="India")
+
+**NEVER use both data and plotting tools in the same response.**
+
+**IMPORTANT DATA HANDLING:**
+- Use EXACT region names from the data (China, EU, US, India, Overseas, Australia)
+- Report exactly what the data shows without assumptions
+- When describing findings, stick to the actual data values
+
+**PARAMETER EXTRACTION FOR PLOTTING:**
+- Extract item: Module, Cell, Wafer, Polysilicon, EVA, PV glass, Silver, Copper, Aluminium
+- Extract region: China, EU, US, India, Overseas, Australia
+- Pass exact parameters to plotting tools, don't rely on natural language interpretation
+
+**Data Context:**
+- Prices are in US$/Wp
+- Data includes various module types (mono-Si, multi-Si, etc.)
+- Regions: China, EU, US, India, Overseas, Australia (use exact names)
+- Always specify currency and units in responses
+
+Remember: Extract and pass exact parameters to plotting tools for accurate filtering.
+"""
     
     def __init__(self, config: Optional[ModulePricesConfig] = None):
         self.config = config or ModulePricesConfig()
@@ -204,9 +196,6 @@ class ModulePricesAgent:
         Returns:
             True if successful, False otherwise
         """
-        # Close any existing figures first
-        plt.close('all')
-        
         try:
             # Make a copy to avoid modifying original data
             plot_df = df.copy()
@@ -232,7 +221,7 @@ class ModulePricesAgent:
                 return False
             
             # Create the plot
-            plt.figure(figsize=(12, 6), dpi=50)
+            plt.figure(figsize=(14, 8))
             
             # Group by description if available, otherwise plot all data
             if 'description' in plot_df.columns and len(plot_df['description'].unique()) > 1:
@@ -276,9 +265,9 @@ class ModulePricesAgent:
             
             # Save the plot to both paths
             if save_path:
-                plt.savefig(save_path, dpi=50, bbox_inches='tight')
+                plt.savefig(save_path, dpi=300, bbox_inches='tight')
             if export_path:
-                plt.savefig(export_path, dpi=50, bbox_inches='tight')
+                plt.savefig(export_path, dpi=300, bbox_inches='tight')
             
             plt.close()  # Important: close the figure to free memory
             
@@ -287,10 +276,8 @@ class ModulePricesAgent:
             
         except Exception as e:
             logger.error(f"Error creating module price plot: {e}")
+            plt.close()  # Ensure figure is closed even on error
             return False
-        finally:
-            # Always cleanup memory
-            cleanup_plot_memory()
     
     def _ensure_list(self, val):
         """Helper method to ensure a value is a list, handling comma-separated strings"""
@@ -385,7 +372,7 @@ class ModulePricesAgent:
             logger.info(f"Available {x_axis}s in filtered data: {available_categories}")
             
             # Create the plot
-            plt.figure(figsize=(12, 6), dpi=50)
+            plt.figure(figsize=(12, 6))
             sns.boxplot(data=filtered_df, x=x_axis, y='base_price')
             title_parts = [f"Distribution of Prices by {x_axis.title()}"]
             if item != "all":
@@ -400,7 +387,7 @@ class ModulePricesAgent:
             plt.xticks(rotation=45)
             plt.tight_layout()
             if save_path:
-                plt.savefig(save_path, dpi=50, bbox_inches='tight')
+                plt.savefig(save_path, dpi=300, bbox_inches='tight')
                 plt.close()
                 logger.info(f"Boxplot saved to {save_path}")
                 return True
@@ -462,7 +449,7 @@ class ModulePricesAgent:
                 return False
             avg_by_desc = filtered_df.groupby('description')['base_price'].mean().sort_values()
             logger.info(f"Average prices by description: {avg_by_desc.to_dict()}")
-            plt.figure(figsize=(12, 6), dpi=50)
+            plt.figure(figsize=(12, 6))
             avg_by_desc.plot(kind='barh')
             title_parts = [f"Average Prices by Description"]
             if item != "all":
@@ -474,7 +461,7 @@ class ModulePricesAgent:
             plt.ylabel('Description')
             plt.tight_layout()
             if save_path:
-                plt.savefig(save_path, dpi=50, bbox_inches='tight')
+                plt.savefig(save_path, dpi=300, bbox_inches='tight')
                 plt.close()
                 logger.info(f"Average price chart saved to {save_path}")
                 return True
@@ -532,23 +519,23 @@ class ModulePricesAgent:
                 return False
 
             # --- Plotting ---
-            plt.figure(figsize=(12, 5), dpi=50)
+            plt.figure(figsize=(14, 6))
             for (desc, region_val), group in df.groupby(['description', 'region']):
                 group_avg = group.groupby('date')['base_price'].mean().reset_index()
                 label = f"{desc} ({region_val})"
                 plt.plot(group_avg['date'], group_avg['base_price'], label=label)
 
-            plt.title('Price Trends Over Time by Description and Region', fontsize=16, fontweight='bold')
-            plt.xlabel('Date', fontsize=12)
-            plt.ylabel('Base Price (US$/Wp)', fontsize=12)
+            plt.title('Price Trends Over Time by Description and Region')
+            plt.xlabel('Date')
+            plt.ylabel('Base Price (US$/Wp)')
             plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
             plt.xticks(rotation=45)
             plt.grid(True)
             plt.tight_layout()
             if save_path:
-                plt.savefig(save_path, dpi=50, bbox_inches='tight')
+                plt.savefig(save_path, dpi=300, bbox_inches='tight')
             if export_path:
-                plt.savefig(export_path, dpi=50, bbox_inches='tight')
+                plt.savefig(export_path, dpi=300, bbox_inches='tight')
             plt.close()
             logger.info(f"Module price plot saved to {save_path}")
             return True
@@ -584,548 +571,394 @@ class ModulePricesAgent:
             raise
     
     def _initialize_agent(self):
-        """Initialize the Pydantic AI agent"""
-        system_prompt="""You are a data analyst querying solar component prices using PandasAI.
-        You are analyzing a dataset of solar component prices. Each row represents the price of a specific solar PV component on a certain date and in a specific region. The dataset includes the following fields:
-
-        Item: The general category of the solar component. Possible values include Aluminium, Cell, Copper, EVA, Module, PV glass, Polysilicon, Silver, and Wafer.
-
-        Description: A more detailed description of the component, such as its technology or subtype (e.g., "n-type mono-Si HJT").
-
-        Date: The date on which the price was recorded. Dates are in the format MM/DD/YYYY.
-
-        Frequency: How often the price is reported (typically "Weekly").
-
-        Base Price: The price of the component, expressed as a floating-point number in USD.
-
-        Unit: The unit in which the price is reported (e.g., US$/Wp, US$/kg).
-
-        Region: The geographical area associated with the price, such as China or Overseas.
-
-        Source: The origin of the price data. Some records may have this field missing.
-        
-        Available tools:
-        1. 'analyze_component_prices' - Use this to query and analyze solar component price data
-        2. 'plot_module_price_trends' - Use this to create charts/graphs/plots of price trends over time
-        3. 'plot_price_boxplot' - Use this to create boxplots showing price distributions by region, item, or description
-        4. 'plot_avg_prices_by_description' - Use this to create horizontal bar charts showing average prices by description
-        
-        IMPORTANT: When users ask for visualizations, use the appropriate tool:
-        - For time series trends: use 'plot_module_price_trends'
-        - For boxplots/distributions: use 'plot_price_boxplot'
-        - For average price comparisons: use 'plot_avg_prices_by_description'
-        
-        MULTI-VALUE SUPPORT: All plotting tools support multiple values for items, regions, and descriptions:
-        - Use comma-separated values: "Module,Cell,Wafer" or "China,US,EU" or "n-type mono-Si HJT,mono-Si PERC"
-        - This allows comparing multiple components, regions, or technologies in a single plot
-        
-        Examples:
-        - "plot the modules prices in india" → plot_module_price_trends(item="Module", region="India")
-        - "show me a chart of wafer prices" → plot_module_price_trends(item="Wafer")
-        - "create a graph of cell prices in China" → plot_module_price_trends(item="Cell", region="China")
-        - "show box plots for modules" → plot_price_boxplot(item="Module")
-        - "show average prices by description" → plot_avg_prices_by_description()
-        - "boxplot of prices by region" → plot_price_boxplot(x_axis="region")
-        - "compare Module and Cell prices in China and US" → plot_module_price_trends(item="Module,Cell", region="China,US")
-        - "show boxplots for all regions" → plot_price_boxplot(region_filter="China,US,EU,India,Overseas")
-        - "average prices for n-type and p-type technologies" → plot_avg_prices_by_description(description_filter="n-type mono-Si HJT,mono-Si PERC")
-        
-        The plotting tools will load the data internally, so you don't need to query data first.
-        
-        CRITICAL: If any plotting tool returns a response starting with "PLOT_GENERATED|", return that response exactly as-is. Do NOT convert it to markdown or add any additional text. Do NOT wrap it in any formatting. Return the raw string exactly as received from the tool.
-        """,
-
-        
-        self.agent = Agent(
-            model=self.config.model,
-            system_prompt=system_prompt,
-        )
-        
-        # Create nested plotting agent (like market agent)
-        async def price_trend_factory(ctx: RunContext[None], item: str = None, region: str = None, descriptions_csv: str = None) -> str:
-            """Factory function for creating price trend plots."""
-            try:
-                # Parse descriptions if provided
-                descriptions = None
-                if descriptions_csv:
-                    descriptions = [desc.strip() for desc in descriptions_csv.split(',')]
-                
-                # Parse item if it's a comma-separated list
-                item_list = None
-                if item and ',' in item:
-                    item_list = [item.strip() for item in item.split(',')]
-                elif item:
-                    item_list = item
-                
-                # Parse region if it's a comma-separated list
-                region_list = None
-                if region and ',' in region:
-                    region_list = [region.strip() for region in region.split(',')]
-                elif region:
-                    region_list = region
-                
-                # Generate unique filename
-                filename_parts = ["module_prices"]
-                if item_list:
-                    if isinstance(item_list, list):
-                        filename_parts.append("_".join([i.lower().replace(' ', '_') for i in item_list]))
-                    else:
-                        filename_parts.append(item_list.lower().replace(' ', '_'))
-                if region_list:
-                    if isinstance(region_list, list):
-                        filename_parts.append("_".join([r.lower().replace(' ', '_') for r in region_list]))
-                    else:
-                        filename_parts.append(region_list.lower().replace(' ', '_'))
-                filename_parts.append(f"{uuid.uuid4().hex[:8]}")
-                
-                file_name = "_".join(filename_parts) + ".png"
-                save_path = os.path.join(self.PLOTS_DIR, file_name)
-                url_path = f"/static/plots/{file_name}"
-                export_path = os.path.join(self.CHARTS_EXPORT_DIR, file_name)
-                
-                # Create the plot using the entire dataset (like market agent)
-                plot_result = self._plot_module_price_trends_from_dataset(
-                    item=item_list,
-                    region=region_list,
-                    descriptions=descriptions,
-                    save_path=save_path,
-                    export_path=export_path
-                )
-                
-                if plot_result:
-                    return f"PLOT_GENERATED|{url_path}|"
-                else:
-                    return "Failed to generate plot. Please check if the data contains the requested filters."
+        """Initialize the Pydantic AI agent following market agent pattern"""
+        try:
+            # === Factory Functions for Plot Generation ===
+            async def price_trend_factory(
+                ctx: RunContext[None],
+                item: str = None,
+                region: str = None,
+                descriptions_csv: str = None,
+            ) -> str:
+                """Price trend chart generator."""
+                try:
+                    # Parse descriptions if provided
+                    descriptions = None
+                    if descriptions_csv:
+                        descriptions = [desc.strip() for desc in descriptions_csv.split(',')]
                     
-            except Exception as e:
-                error_msg = f"Error creating plot: {str(e)}"
-                logger.error(error_msg)
-                return error_msg
-        
-        # Create nested plotting agent
-        async def price_boxplot_factory(ctx: RunContext[None], item: str = "all", description: str = "all", region_filter: str = "all", x_axis: str = "region") -> str:
-            try:
-                # Parse item if it's a comma-separated list
-                item_list = "all"
-                if item != "all" and ',' in item:
-                    item_list = [item.strip() for item in item.split(',')]
-                elif item != "all":
-                    item_list = item
-                
-                # Parse description if it's a comma-separated list
-                description_list = "all"
-                if description != "all" and ',' in description:
-                    description_list = [desc.strip() for desc in description.split(',')]
-                elif description != "all":
-                    description_list = description
-                
-                # Parse region if it's a comma-separated list
-                region_list = "all"
-                if region_filter != "all" and ',' in region_filter:
-                    region_list = [region.strip() for region in region_filter.split(',')]
-                elif region_filter != "all":
-                    region_list = region_filter
-                
-                # Create descriptive filename
-                filename_parts = ["boxplot"]
-                if item_list != "all":
-                    if isinstance(item_list, list):
-                        filename_parts.append("_".join([i.lower().replace(' ', '_') for i in item_list]))
-                    else:
-                        filename_parts.append(item_list.lower().replace(' ', '_'))
-                if description_list != "all":
-                    if isinstance(description_list, list):
-                        filename_parts.append("_".join([d.lower().replace(' ', '_').replace('-', '_') for d in description_list]))
-                    else:
-                        filename_parts.append(description_list.lower().replace(' ', '_').replace('-', '_'))
-                if region_list != "all":
-                    if isinstance(region_list, list):
-                        filename_parts.append("_".join([r.lower().replace(' ', '_') for r in region_list]))
-                    else:
-                        filename_parts.append(region_list.lower().replace(' ', '_'))
-                filename_parts.append(f"by_{x_axis}")
-                filename_parts.append(f"{uuid.uuid4().hex[:8]}")
-                
-                filename = "_".join(filename_parts) + ".png"
-                save_path = os.path.join(self.PLOTS_DIR, filename)
-                url_path = f"/static/plots/{filename}"
-                
-                result = self._plot_price_distribution_boxplot(item_list, description_list, region_list, x_axis, save_path)
-                if result:
-                    return f"PLOT_GENERATED|{url_path}|"
-                else:
-                    return "Failed to generate boxplot. Please check if the data contains the requested filters."
-            except Exception as e:
-                logger.error(f"Error in boxplot factory: {e}")
-                return f"Error creating boxplot: {str(e)}"
-
-        # Create nested plotting agent
-        async def avg_price_factory(ctx: RunContext[None], item: str = "all", description_filter: str = "all", region_filter: str = "all") -> str:
-            try:
-                # Parse item if it's a comma-separated list
-                item_list = "all"
-                if item != "all" and ',' in item:
-                    item_list = [item.strip() for item in item.split(',')]
-                elif item != "all":
-                    item_list = item
-                
-                # Parse description if it's a comma-separated list
-                description_list = "all"
-                if description_filter != "all" and ',' in description_filter:
-                    description_list = [desc.strip() for desc in description_filter.split(',')]
-                elif description_filter != "all":
-                    description_list = description_filter
-                
-                # Parse region if it's a comma-separated list
-                region_list = "all"
-                if region_filter != "all" and ',' in region_filter:
-                    region_list = [region.strip() for region in region_filter.split(',')]
-                elif region_filter != "all":
-                    region_list = region_filter
-                
-                # Create descriptive filename
-                filename_parts = ["avg_price"]
-                if item_list != "all":
-                    if isinstance(item_list, list):
-                        filename_parts.append("_".join([i.lower().replace(' ', '_') for i in item_list]))
-                    else:
-                        filename_parts.append(item_list.lower().replace(' ', '_'))
-                if description_list != "all":
-                    if isinstance(description_list, list):
-                        filename_parts.append("_".join([d.lower().replace(' ', '_').replace('-', '_') for d in description_list]))
-                    else:
-                        filename_parts.append(description_list.lower().replace(' ', '_').replace('-', '_'))
-                if region_list != "all":
-                    if isinstance(region_list, list):
-                        filename_parts.append("_".join([r.lower().replace(' ', '_') for r in region_list]))
-                    else:
-                        filename_parts.append(region_list.lower().replace(' ', '_'))
-                filename_parts.append(f"{uuid.uuid4().hex[:8]}")
-                
-                filename = "_".join(filename_parts) + ".png"
-                save_path = os.path.join(self.PLOTS_DIR, filename)
-                url_path = f"/static/plots/{filename}"
-                
-                result = self._plot_avg_prices_by_description(item_list, description_list, region_list, save_path)
-                if result:
-                    return f"PLOT_GENERATED|{url_path}|"
-                else:
-                    return "Failed to generate average price chart. Please check if the data contains the requested filters."
-            except Exception as e:
-                logger.error(f"Error in avg price factory: {e}")
-                return f"Error creating average price chart: {str(e)}"
-
-        # Create the nested plotting agent
-        self.plot_generation_agent = Agent(
-            model="openai:gpt-4o",
-            output_type=[price_trend_factory, price_boxplot_factory, avg_price_factory],
-            system_prompt=(
-                "You are a plotting assistant for solar component prices.\n\n"
-                "Tool-selection rules:\n"
-                "• When users ask for price trends, charts, graphs, or visualizations over time, call `price_trend_factory`.\n"
-                "• When users ask for a boxplot, distribution, or comparison of price distributions by region, call `price_boxplot_factory`.\n"
-                "• When users ask for average prices, mean prices, or price comparisons by description, call `avg_price_factory`.\n"
-                "• Extract item from phrases like 'module prices', 'cell prices', 'wafer prices', 'polysilicon prices'.\n"
-                "• Extract region from phrases like 'in India', 'in China', 'in US', 'in Europe'.\n"
-                "• Extract descriptions from specific technology mentions like 'n-type mono-Si HJT', 'mono-Si PERC'.\n\n"
-                "Parameter extraction:\n"
-                "• Extract item from: Module, Cell, Wafer, Polysilicon, EVA, PV glass, Silver, Copper, Aluminium.\n"
-                "• Extract region from: US, China, EU, India, Overseas, Australia.\n"
-                "• Region mapping: 'EU' → 'EU', 'Europe' → 'EU', 'USA' → 'US', 'United States' → 'US'.\n"
-                "• For boxplots, you can use 'all' for any parameter to show all available data:\n"
-                "  - 'all' for item: shows all component types\n"
-                "  - 'all' for description: shows all technologies/descriptions\n"
-                "  - 'all' for region_filter: shows all regions\n"
-                "• x_axis parameter controls what's plotted on x-axis:\n"
-                "  - 'region': boxes represent different regions (default)\n"
-                "  - 'item': boxes represent different component types (Module, Cell, etc.)\n"
-                "  - 'description': boxes represent different technologies (n-type mono-Si HJT, etc.)\n"
-                "• x_axis values must be lowercase: 'region', 'item', 'description'.\n"
-                "• For average price charts, use 'all' for any parameter to show all available data.\n"
-                "• If no item is specified, pass 'all' to show all components.\n"
-                "• If no region is specified, pass 'all' to show all regions.\n"
-                "• If no description is specified, pass 'all' to show all descriptions.\n"
-                "• If no x_axis is specified, pass 'region' (default).\n\n"
-                "Return ONLY the tool output you receive. Do NOT add extra commentary or markdown."
-            ),
-        )
-        
-        # Register the component prices analysis tool
-        @self.agent.tool(name="analyze_component_prices")
-        async def analyze_component_prices(ctx: RunContext[None], query: str) -> str:
-            """
-            Analyze solar component prices using PandasAI
-
-            Available item types in the dataset:
-            - Aluminium
-            - Cell
-            - Copper
-            - EVA
-            - Module
-            - PV glass
-            - Polysilicon
-            - Silver
-            - Wafer
-
-            Args:
-                query: Natural language query about component prices
-                
-            Returns:
-                Analysis result as string
-            """
-            try:
-                logger.info(f"Executing component prices query: {query}")
-                # Prepend exact item names to help LLM use correct spelling
-                item_list = (
-                    "Available items in the dataset (use exact spelling): "
-                    "Aluminium, Cell, Copper, EVA, Module, PV glass, Polysilicon, Silver, Wafer.\n\n"
-                )
-                enriched_query = item_list + query
-                response = self.component_prices.chat(enriched_query)
-
-                print("--- PANDASAI RAW RESPONSE ---")
-                print(f"Type: {type(response)}")
-                print(f"Content:\n{response}")
-                print("-----------------------------")
-
-                # Check if the response is a DataFrame to save it
-                df_to_save = None
-                if hasattr(response, 'value') and isinstance(response.value, pd.DataFrame):
-                    df_to_save = response.value
-                    print(f"DEBUG: Found DataFrame in response.value with shape {df_to_save.shape}")
-                elif isinstance(response, pd.DataFrame):
-                    df_to_save = response
-                    print(f"DEBUG: Found DataFrame directly with shape {df_to_save.shape}")
-
-                if df_to_save is not None and not df_to_save.empty:
-                    # Store DataFrame for table rendering and potential download
-                    self.last_dataframe = df_to_save
-                    print(f"DEBUG: DataFrame stored for table rendering and download")
-                else:
-                    print(f"DEBUG: No DataFrame detected or DataFrame is empty")
-                    self.last_dataframe = None
-                
-                # Handle other response types
-                if response is None:
-                    return "No data found for your query."
-                elif hasattr(response, 'empty') and response.empty:
-                    return "No data found for your query."
-                elif hasattr(response, 'to_string'):
-                    # For DataFrames, limit size to avoid token limits
-                    if df_to_save is not None and len(df_to_save) > 10:
-                        # Show first 10 rows + summary for large DataFrames
-                        display_text = df_to_save.head(10).to_string()
-                        total_rows = len(df_to_save)
-                        return f"{display_text}\n\n... and {total_rows - 10} more rows. Full data available in table below."
-                    else:
-                        # For small DataFrames, show all
-                        return response.to_string()
-                else:
-                    # It's a string, number, or other type
-                    return str(response)
-
-            except Exception as e:
-                error_msg = f"Error analyzing component prices: {str(e)}"
-                logger.error(error_msg)
-                return error_msg
-
-        # Register the plotting tool (wrapper that delegates to nested agent)
-        @self.agent.tool(name="plot_module_price_trends")
-        async def plot_module_price_trends(ctx: RunContext[None], item: str = None, region: str = None, descriptions_csv: str = None) -> str:
-            """
-            Create a plot showing module/component price trends over time
-            
-            Use this tool when the user asks for a chart, graph, plot, or visualization of price trends.
-            
-            Args:
-                item: Component type (e.g., 'Module', 'Cell', 'Wafer', 'Polysilicon', 'EVA', 'PV glass', 'Silver', 'Copper', 'Aluminium') or comma-separated list
-                region: Region filter (e.g., 'US', 'China', 'Europe', 'Overseas') or comma-separated list
-                descriptions_csv: Comma-separated list of descriptions to include (e.g., 'n-type mono-Si HJT,mono-Si PERC')
-                
-            Returns:
-                Status message about the plot generation
-            """
-            try:
-                # Parse descriptions if provided
-                descriptions = None
-                if descriptions_csv:
-                    descriptions = [desc.strip() for desc in descriptions_csv.split(',')]
-                
-                # Parse item if it's a comma-separated list
-                item_list = None
-                if item and ',' in item:
-                    item_list = [item.strip() for item in item.split(',')]
-                elif item:
-                    item_list = item
-                
-                # Parse region if it's a comma-separated list
-                region_list = None
-                if region and ',' in region:
-                    region_list = [region.strip() for region in region.split(',')]
-                elif region:
-                    region_list = region
-                
-                # Generate unique filename
-                filename_parts = ["module_prices"]
-                if item_list:
-                    if isinstance(item_list, list):
-                        filename_parts.append("_".join([i.lower().replace(' ', '_') for i in item_list]))
-                    else:
-                        filename_parts.append(item_list.lower().replace(' ', '_'))
-                if region_list:
-                    if isinstance(region_list, list):
-                        filename_parts.append("_".join([r.lower().replace(' ', '_') for r in region_list]))
-                    else:
-                        filename_parts.append(region_list.lower().replace(' ', '_'))
-                filename_parts.append(f"{uuid.uuid4().hex[:8]}")
-                
-                file_name = "_".join(filename_parts) + ".png"
-                save_path = os.path.join(self.PLOTS_DIR, file_name)
-                url_path = f"/static/plots/{file_name}"
-                export_path = os.path.join(self.CHARTS_EXPORT_DIR, file_name)
-                
-                logger.info(f"PLOT TOOL CALLED: item={item}, region={region}, descriptions={descriptions_csv}")
-                
-                # Create the plot directly (like market agent)
-                plot_result = self._plot_module_price_trends_from_dataset(
-                    item=item_list,
-                    region=region_list,
-                    descriptions=descriptions,
-                    save_path=save_path,
-                    export_path=export_path
-                )
-                
-                if plot_result:
-                    return f"PLOT_GENERATED|{url_path}|"
-                else:
-                    return "Failed to generate plot. Please check if the data contains the requested filters."
+                    # Parse item if it's a comma-separated list
+                    item_list = None
+                    if item and ',' in item:
+                        item_list = [item.strip() for item in item.split(',')]
+                    elif item:
+                        item_list = item
                     
-            except Exception as e:
-                error_msg = f"Error creating plot: {str(e)}"
-                logger.error(error_msg)
-                return error_msg
+                    # Parse region if it's a comma-separated list
+                    region_list = None
+                    if region and ',' in region:
+                        region_list = [region.strip() for region in region.split(',')]
+                    elif region:
+                        region_list = region
+                    
+                    # Generate unique filename
+                    filename_parts = ["module_prices"]
+                    if item_list:
+                        if isinstance(item_list, list):
+                            filename_parts.append("_".join([i.lower().replace(' ', '_') for i in item_list]))
+                        else:
+                            filename_parts.append(item_list.lower().replace(' ', '_'))
+                    if region_list:
+                        if isinstance(region_list, list):
+                            filename_parts.append("_".join([r.lower().replace(' ', '_') for r in region_list]))
+                        else:
+                            filename_parts.append(region_list.lower().replace(' ', '_'))
+                    filename_parts.append(f"{uuid.uuid4().hex[:8]}")
+                    
+                    file_name = "_".join(filename_parts) + ".png"
+                    save_path = os.path.join(self.PLOTS_DIR, file_name)
+                    url_path = f"/static/plots/{file_name}"
+                    export_path = os.path.join(self.CHARTS_EXPORT_DIR, file_name)
+                    
+                    # Create the plot using the entire dataset
+                    plot_result = self._plot_module_price_trends_from_dataset(
+                        item=item_list,
+                        region=region_list,
+                        descriptions=descriptions,
+                        save_path=save_path,
+                        export_path=export_path
+                    )
+                    
+                    if plot_result:
+                        return f"PLOT_GENERATED|{url_path}|"
+                    else:
+                        return "Failed to generate plot. Please check if the data contains the requested filters."
+                        
+                except Exception as e:
+                    error_msg = f"Error creating plot: {str(e)}"
+                    logger.error(error_msg)
+                    return error_msg
 
-        # Register as a tool on the main agent
-        @self.agent.tool(name="plot_price_boxplot")
-        async def plot_price_boxplot(ctx: RunContext[None], item: str = "all", description: str = "all", region_filter: str = "all", x_axis: str = "region") -> str:
-            try:
-                # Parse item if it's a comma-separated list
-                item_list = "all"
-                if item != "all" and ',' in item:
-                    item_list = [item.strip() for item in item.split(',')]
-                elif item != "all":
-                    item_list = item
-                
-                # Parse description if it's a comma-separated list
-                description_list = "all"
-                if description != "all" and ',' in description:
-                    description_list = [desc.strip() for desc in description.split(',')]
-                elif description != "all":
-                    description_list = description
-                
-                # Parse region if it's a comma-separated list
-                region_list = "all"
-                if region_filter != "all" and ',' in region_filter:
-                    region_list = [region.strip() for region in region_filter.split(',')]
-                elif region_filter != "all":
-                    region_list = region_filter
-                
-                # Create descriptive filename
-                filename_parts = ["boxplot"]
-                if item_list != "all":
-                    if isinstance(item_list, list):
-                        filename_parts.append("_".join([i.lower().replace(' ', '_') for i in item_list]))
+            async def boxplot_factory(
+                ctx: RunContext[None],
+                item: str = "all",
+                description: str = "all",
+                region_filter: str = "all",
+                x_axis: str = "region"
+            ) -> str:
+                """Boxplot chart generator."""
+                try:
+                    # Parse item if it's a comma-separated list
+                    item_list = "all"
+                    if item != "all" and ',' in item:
+                        item_list = [item.strip() for item in item.split(',')]
+                    elif item != "all":
+                        item_list = item
+                    
+                    # Parse description if it's a comma-separated list
+                    description_list = "all"
+                    if description != "all" and ',' in description:
+                        description_list = [desc.strip() for desc in description.split(',')]
+                    elif description != "all":
+                        description_list = description
+                    
+                    # Parse region if it's a comma-separated list
+                    region_list = "all"
+                    if region_filter != "all" and ',' in region_filter:
+                        region_list = [region.strip() for region in region_filter.split(',')]
+                    elif region_filter != "all":
+                        region_list = region_filter
+                    
+                    # Create descriptive filename
+                    filename_parts = ["boxplot"]
+                    if item_list != "all":
+                        if isinstance(item_list, list):
+                            filename_parts.append("_".join([i.lower().replace(' ', '_') for i in item_list]))
+                        else:
+                            filename_parts.append(item_list.lower().replace(' ', '_'))
+                    if description_list != "all":
+                        if isinstance(description_list, list):
+                            filename_parts.append("_".join([d.lower().replace(' ', '_').replace('-', '_') for d in description_list]))
+                        else:
+                            filename_parts.append(description_list.lower().replace(' ', '_').replace('-', '_'))
+                    if region_list != "all":
+                        if isinstance(region_list, list):
+                            filename_parts.append("_".join([r.lower().replace(' ', '_') for r in region_list]))
+                        else:
+                            filename_parts.append(region_list.lower().replace(' ', '_'))
+                    filename_parts.append(f"by_{x_axis}")
+                    filename_parts.append(f"{uuid.uuid4().hex[:8]}")
+                    
+                    filename = "_".join(filename_parts) + ".png"
+                    save_path = os.path.join(self.PLOTS_DIR, filename)
+                    url_path = f"/static/plots/{filename}"
+                    
+                    result = self._plot_price_distribution_boxplot(item_list, description_list, region_list, x_axis, save_path)
+                    if result:
+                        return f"PLOT_GENERATED|{url_path}|"
                     else:
-                        filename_parts.append(item_list.lower().replace(' ', '_'))
-                if description_list != "all":
-                    if isinstance(description_list, list):
-                        filename_parts.append("_".join([d.lower().replace(' ', '_').replace('-', '_') for d in description_list]))
-                    else:
-                        filename_parts.append(description_list.lower().replace(' ', '_').replace('-', '_'))
-                if region_list != "all":
-                    if isinstance(region_list, list):
-                        filename_parts.append("_".join([r.lower().replace(' ', '_') for r in region_list]))
-                    else:
-                        filename_parts.append(region_list.lower().replace(' ', '_'))
-                filename_parts.append(f"by_{x_axis}")
-                filename_parts.append(f"{uuid.uuid4().hex[:8]}")
-                
-                filename = "_".join(filename_parts) + ".png"
-                save_path = os.path.join(self.PLOTS_DIR, filename)
-                url_path = f"/static/plots/{filename}"
-                
-                result = self._plot_price_distribution_boxplot(item_list, description_list, region_list, x_axis, save_path)
-                if result:
-                    return f"PLOT_GENERATED|{url_path}|"
-                else:
-                    return "Failed to generate boxplot. Please check if the data contains the requested filters."
-            except Exception as e:
-                logger.error(f"Error in boxplot tool: {e}")
-                return f"Error creating boxplot: {str(e)}"
+                        return "Failed to generate boxplot. Please check if the data contains the requested filters."
+                except Exception as e:
+                    logger.error(f"Error in boxplot factory: {e}")
+                    return f"Error creating boxplot: {str(e)}"
 
-        # Register as a tool on the main agent
-        @self.agent.tool(name="plot_avg_prices_by_description")
-        async def plot_avg_prices_by_description(ctx: RunContext[None], item: str = "all", description_filter: str = "all", region_filter: str = "all") -> str:
-            try:
-                # Parse item if it's a comma-separated list
-                item_list = "all"
-                if item != "all" and ',' in item:
-                    item_list = [item.strip() for item in item.split(',')]
-                elif item != "all":
-                    item_list = item
-                
-                # Parse description if it's a comma-separated list
-                description_list = "all"
-                if description_filter != "all" and ',' in description_filter:
-                    description_list = [desc.strip() for desc in description_filter.split(',')]
-                elif description_filter != "all":
-                    description_list = description_filter
-                
-                # Parse region if it's a comma-separated list
-                region_list = "all"
-                if region_filter != "all" and ',' in region_filter:
-                    region_list = [region.strip() for region in region_filter.split(',')]
-                elif region_filter != "all":
-                    region_list = region_filter
-                
-                # Create descriptive filename
-                filename_parts = ["avg_price"]
-                if item_list != "all":
-                    if isinstance(item_list, list):
-                        filename_parts.append("_".join([i.lower().replace(' ', '_') for i in item_list]))
+            async def avg_price_factory(
+                ctx: RunContext[None],
+                item: str = "all",
+                description_filter: str = "all",
+                region_filter: str = "all"
+            ) -> str:
+                """Average price chart generator."""
+                try:
+                    # Parse item if it's a comma-separated list
+                    item_list = "all"
+                    if item != "all" and ',' in item:
+                        item_list = [item.strip() for item in item.split(',')]
+                    elif item != "all":
+                        item_list = item
+                    
+                    # Parse description if it's a comma-separated list
+                    description_list = "all"
+                    if description_filter != "all" and ',' in description_filter:
+                        description_list = [desc.strip() for desc in description_filter.split(',')]
+                    elif description_filter != "all":
+                        description_list = description_filter
+                    
+                    # Parse region if it's a comma-separated list
+                    region_list = "all"
+                    if region_filter != "all" and ',' in region_filter:
+                        region_list = [region.strip() for region in region_filter.split(',')]
+                    elif region_filter != "all":
+                        region_list = region_filter
+                    
+                    # Create descriptive filename
+                    filename_parts = ["avg_price"]
+                    if item_list != "all":
+                        if isinstance(item_list, list):
+                            filename_parts.append("_".join([i.lower().replace(' ', '_') for i in item_list]))
+                        else:
+                            filename_parts.append(item_list.lower().replace(' ', '_'))
+                    if description_list != "all":
+                        if isinstance(description_list, list):
+                            filename_parts.append("_".join([d.lower().replace(' ', '_').replace('-', '_') for d in description_list]))
+                        else:
+                            filename_parts.append(description_list.lower().replace(' ', '_').replace('-', '_'))
+                    if region_list != "all":
+                        if isinstance(region_list, list):
+                            filename_parts.append("_".join([r.lower().replace(' ', '_') for r in region_list]))
+                        else:
+                            filename_parts.append(region_list.lower().replace(' ', '_'))
+                    filename_parts.append(f"{uuid.uuid4().hex[:8]}")
+                    
+                    filename = "_".join(filename_parts) + ".png"
+                    save_path = os.path.join(self.PLOTS_DIR, filename)
+                    url_path = f"/static/plots/{filename}"
+                    
+                    result = self._plot_avg_prices_by_description(item_list, description_list, region_list, save_path)
+                    if result:
+                        return f"PLOT_GENERATED|{url_path}|"
                     else:
-                        filename_parts.append(item_list.lower().replace(' ', '_'))
-                if description_list != "all":
-                    if isinstance(description_list, list):
-                        filename_parts.append("_".join([d.lower().replace(' ', '_').replace('-', '_') for d in description_list]))
+                        return "Failed to generate average price chart. Please check if the data contains the requested filters."
+                except Exception as e:
+                    logger.error(f"Error in avg price factory: {e}")
+                    return f"Error creating average price chart: {str(e)}"
+
+            # === Create Plot Generation Agent ===
+            plot_generation_agent = Agent(
+                model="openai:gpt-4o",
+                output_type=[price_trend_factory, boxplot_factory, avg_price_factory],
+                system_prompt=(
+                    "You are a plotting assistant for solar component prices.\n\n"
+                    "When users ask for price trends/charts, call `price_trend_factory`.\n"
+                    "When users ask for boxplots/distributions, call `boxplot_factory`.\n"
+                    "When users ask for average prices, call `avg_price_factory`.\n\n"
+                    "Extract parameters from the command:\n"
+                    "• item: Module, Cell, Wafer, etc. (if mentioned)\n"
+                    "• region: China, EU, US, India, etc. (if mentioned)\n"
+                    "• descriptions_csv: specific tech types (if mentioned)\n\n"
+                    "For boxplots, x_axis must be one of: 'region', 'item', 'description'\n"
+                    "• 'different modules' or 'module types' → x_axis='description'\n"
+                    "• 'by region' or 'across regions' → x_axis='region'\n"
+                    "• 'by item' or 'different items' → x_axis='item'\n"
+                    "• Default: x_axis='region'\n\n"
+                    "For multiple regions: 'EU,China' format\n\n"
+                    "Return ONLY the tool output."
+                ),
+            )
+
+            # === Tool Wrappers for Main Agent ===
+            async def plot_price_trends_tool(
+                ctx: RunContext[None],
+                item: str = None,
+                region: str = None,
+                descriptions_csv: str = None,
+            ) -> str:
+                """Wrapper that delegates price trend plotting to nested agent."""
+                cmd = f"Generate a price trend chart"
+                if item:
+                    cmd += f" for {item}"
+                if region:
+                    cmd += f" in {region}"
+                if descriptions_csv:
+                    cmd += f" for descriptions: {descriptions_csv}"
+                cmd += "."
+                response = await plot_generation_agent.run(cmd, usage=ctx.usage)
+                return response.output
+
+            async def plot_boxplot_tool(
+                ctx: RunContext[None],
+                item: str = "all",
+                description: str = "all",
+                region_filter: str = "all",
+                x_axis: str = "region"
+            ) -> str:
+                """Wrapper that delegates boxplot generation to nested agent."""
+                cmd = f"Generate a boxplot showing price distribution by {x_axis}"
+                if item != "all":
+                    cmd += f" for item {item}"
+                if description != "all":
+                    cmd += f" for description {description}"
+                if region_filter != "all":
+                    cmd += f" for region {region_filter}"
+                cmd += "."
+                response = await plot_generation_agent.run(cmd, usage=ctx.usage)
+                return response.output
+
+            async def plot_avg_prices_tool(
+                ctx: RunContext[None],
+                item: str = "all",
+                description_filter: str = "all",
+                region_filter: str = "all"
+            ) -> str:
+                """Wrapper that delegates average price chart generation to nested agent."""
+                cmd = f"Generate an average price chart by description"
+                if item != "all":
+                    cmd += f" for item {item}"
+                if description_filter != "all":
+                    cmd += f" for description {description_filter}"
+                if region_filter != "all":
+                    cmd += f" for region {region_filter}"
+                cmd += "."
+                response = await plot_generation_agent.run(cmd, usage=ctx.usage)
+                return response.output
+
+            async def chat_response_tool(ctx: RunContext[None], chat_response: str) -> str:
+                """Handle greetings, general questions, and casual conversation"""
+                return chat_response
+
+            # === Create Main Agent ===
+            self.agent = Agent(
+                model=self.config.model,
+                output_type=[chat_response_tool, plot_price_trends_tool, plot_boxplot_tool, plot_avg_prices_tool],
+                system_prompt=self.SYSTEM_PROMPT,
+            )
+
+            # Register data analysis as a regular tool (not output type)
+            @self.agent.tool(name="analyze_prices_data")
+            async def analyze_prices_data_tool(ctx: RunContext[None], query: str) -> str:
+                """Tool for querying module price data"""
+                try:
+                    logger.info(f"Executing price data query: {query}")
+                    
+                    # Prepend dataset schema information to help PandasAI use exact values
+                    dataset_info = """
+Available items in the dataset (use exact spelling):
+- Aluminium, Cell, Copper, EVA, Module, PV glass, Polysilicon, Silver, Wafer
+
+Available regions in the dataset (use exact names):
+- China, EU, US, India, Overseas, Australia
+
+Available columns:
+- item, description, date, frequency, base_price, unit, region, source
+
+Query: """
+                    
+                    enriched_query = dataset_info + query
+                    response = self.component_prices.chat(enriched_query)
+                    
+                    # Handle different response types
+                    df = None
+                    if hasattr(response, 'value') and isinstance(response.value, pd.DataFrame):
+                        df = response.value
+                    elif isinstance(response, pd.DataFrame):
+                        df = response
+                    
+                    if df is not None and not df.empty:
+                        # Store the DataFrame for potential plotting and table rendering
+                        self.last_dataframe = df
+                        
+                        # Return a summary to the main agent (not the full data to avoid token limits)
+                        if 'description' in df.columns:
+                            unique_descriptions = df['description'].unique()
+                            if len(unique_descriptions) <= 5:
+                                desc_list = ', '.join(unique_descriptions)
+                                summary = f"Found {len(df)} price records with the following descriptions: {desc_list}"
+                            else:
+                                desc_list = ', '.join(unique_descriptions[:5])
+                                summary = f"Found {len(df)} price records with {len(unique_descriptions)} different descriptions including: {desc_list} and {len(unique_descriptions)-5} others"
+                        elif 'region' in df.columns:
+                            unique_regions = df['region'].unique()
+                            if len(unique_regions) <= 10:
+                                region_list = ', '.join(unique_regions)
+                                summary = f"Found {len(df)} records for the following regions: {region_list}"
+                            else:
+                                region_list = ', '.join(unique_regions[:10])
+                                summary = f"Found {len(df)} records for {len(unique_regions)} regions including: {region_list}"
+                        elif 'item' in df.columns:
+                            unique_items = df['item'].unique()
+                            if len(unique_items) <= 10:
+                                item_list = ', '.join(unique_items)
+                                summary = f"Found {len(df)} records for the following items: {item_list}"
+                            else:
+                                item_list = ', '.join(unique_items[:10])
+                                summary = f"Found {len(df)} records for {len(unique_items)} items including: {item_list}"
+                        else:
+                            summary = f"Found {len(df)} price records in the dataset"
+                        
+                        # Add date range info if available
+                        if 'date' in df.columns:
+                            try:
+                                min_date = df['date'].min()
+                                max_date = df['date'].max()
+                                summary += f" from {min_date} to {max_date}"
+                            except:
+                                pass
+                        
+                        # Add price range info if available
+                        if 'base_price' in df.columns:
+                            try:
+                                min_price = df['base_price'].min()
+                                max_price = df['base_price'].max()
+                                avg_price = df['base_price'].mean()
+                                summary += f". Prices range from ${min_price:.3f} to ${max_price:.3f} (avg: ${avg_price:.3f})"
+                            except:
+                                pass
+                        
+                        return summary
                     else:
-                        filename_parts.append(description_list.lower().replace(' ', '_').replace('-', '_'))
-                if region_list != "all":
-                    if isinstance(region_list, list):
-                        filename_parts.append("_".join([r.lower().replace(' ', '_') for r in region_list]))
-                    else:
-                        filename_parts.append(region_list.lower().replace(' ', '_'))
-                filename_parts.append(f"{uuid.uuid4().hex[:8]}")
-                
-                filename = "_".join(filename_parts) + ".png"
-                save_path = os.path.join(self.PLOTS_DIR, filename)
-                url_path = f"/static/plots/{filename}"
-                
-                result = self._plot_avg_prices_by_description(item_list, description_list, region_list, save_path)
-                if result:
-                    return f"PLOT_GENERATED|{url_path}|"
-                else:
-                    return "Failed to generate average price chart. Please check if the data contains the requested filters."
-            except Exception as e:
-                logger.error(f"Error in avg price tool: {e}")
-                return f"Error creating average price chart: {str(e)}"
+                        # For non-DataFrame responses, return natural text
+                        if response is None:
+                            return "No data found for your query."
+                        elif hasattr(response, 'empty') and response.empty:
+                            return "No data found for your query."
+                        elif hasattr(response, 'to_string'):
+                            return response.to_string()
+                        else:
+                            return str(response)
+                        
+                except Exception as e:
+                    error_msg = f"Error analyzing price data: {str(e)}"
+                    logger.error(error_msg)
+                    return error_msg
 
-
-
+            logger.info("Module prices agent with nested plot generation setup complete")
+        except Exception as e:
+            logger.error(f"Failed to setup module prices agent: {e}")
+            self.agent = None
 
     async def analyze(self, query: str, conversation_id: str = None) -> Dict[str, Any]:
         """
-        Analyze component prices based on user query
+        Analyze component prices based on user query using the new tool-based architecture
         
         Args:
             query: Natural language query about component prices
@@ -1148,19 +981,14 @@ class ModulePricesAgent:
             if conversation_id and conversation_id in self.conversation_memory:
                 message_history = self.conversation_memory[conversation_id]
                 logger.info(f"[MEMORY DEBUG] Using conversation memory for {conversation_id} with {len(message_history)} messages")
-            logger.info(f"[MEMORY DEBUG] Conversation ID: {conversation_id}")
-            logger.info(f"[MEMORY DEBUG] Message history before agent call: {message_history}")
             
             logger.info(f"Processing query: {query}")
             result = await self.agent.run(query, message_history=message_history, usage_limits=usage_limits)
             
-            logger.info(f"[MEMORY DEBUG] New messages from agent: {result.new_messages()}")
-            
             # Store the new messages for future conversation context
             if conversation_id:
-                # Always replace with the full message history (all_messages), not just new_messages
                 self.conversation_memory[conversation_id] = result.all_messages()
-                logger.info(f"[MEMORY DEBUG] Updated conversation memory for {conversation_id}: {self.conversation_memory[conversation_id]}")
+                logger.info(f"[MEMORY DEBUG] Updated conversation memory for {conversation_id}")
             
             # Check if a DataFrame was generated and format response accordingly
             analysis_result = result.output
@@ -1182,6 +1010,7 @@ class ModulePricesAgent:
             else:
                 print(f"DEBUG: No DataFrame to format - last_dataframe is None or empty")
             
+            # Return the agent's response (either natural language or formatted DataFrame)
             return {
                 "success": True,
                 "analysis": analysis_result,

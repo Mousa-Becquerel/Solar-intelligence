@@ -1,25 +1,4 @@
-# Configure matplotlib for headless environment BEFORE any imports
 import os
-os.environ['MPLBACKEND'] = 'Agg'
-os.environ['MPLCONFIGDIR'] = '/tmp/matplotlib'
-
-def configure_matplotlib_for_render():
-    """Configure matplotlib for Render deployment to prevent crashes"""
-    import matplotlib
-    matplotlib.use('Agg', force=True)
-    
-    # Disable font manager to reduce memory usage
-    matplotlib.rcParams['font.size'] = 10
-    matplotlib.rcParams['figure.max_open_warning'] = 0
-    
-    # Use minimal memory settings
-    matplotlib.rcParams['agg.path.chunksize'] = 10000
-    matplotlib.rcParams['path.simplify'] = True
-    matplotlib.rcParams['path.simplify_threshold'] = 0.1
-
-# Call configuration immediately
-configure_matplotlib_for_render()
-
 import sys
 from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for, flash, session, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
@@ -837,99 +816,284 @@ def chat():
                     memory_logger.info(f"Module Prices Agent response: {response_text}")
                 finally:
                     loop.close()
+                
+                # Parse response to handle different formats
+                if response_text.startswith("DATAFRAME_RESULT|"):
+                    # Parse DataFrame response: DATAFRAME_RESULT|text_response|display_data|full_data
+                    try:
+                        parts = response_text.split("|", 3)
+                        if len(parts) >= 4:
+                            text_response = parts[1]
+                            display_json_data = parts[2]
+                            full_json_data = parts[3]
+                            
+                            # Parse the JSON data
+                            table_data = json.loads(display_json_data)
+                            full_data = json.loads(full_json_data)
+                            
+                            # Create table response structure
+                            response_data = [{
+                                'type': 'table',
+                                'value': text_response,
+                                'table_data': table_data,
+                                'full_data': full_data,
+                                'comment': None
+                            }]
+                        else:
+                            # Fallback to string if parsing fails
+                            response_data = [{
+                                'type': 'string',
+                                'value': response_text,
+                                'comment': None
+                            }]
+                    except Exception as e:
+                        memory_logger.error(f"Error parsing DataFrame response: {e}")
+                        # Fallback to string if JSON parsing fails
+                        response_data = [{
+                            'type': 'string',
+                            'value': response_text,
+                            'comment': None
+                        }]
+                elif response_text.startswith("PLOT_GENERATED|"):
+                    # Parse plot response: PLOT_GENERATED|path|description
+                    parts = response_text.split("|", 2)
+                    if len(parts) >= 2:
+                        plot_path = parts[1]
+                        response_data = [{
+                            'type': 'chart',
+                            'value': '',  # Remove 'Generated chart' text
+                            'artifact': plot_path,
+                            'comment': None
+                        }]
+                    else:
+                        # Fallback to string if parsing fails
+                        response_data = [{
+                            'type': 'string',
+                            'value': response_text,
+                            'comment': None
+                        }]
+                else:
+                    # Regular text response
+                    response_data = [{
+                        'type': 'string',
+                        'value': response_text,
+                        'comment': None
+                    }]
+                
+                # Continue with memory cleanup only if needed
+                if response_data and response_data[0].get('type') == 'chart':
+                    # Only cleanup if memory usage is high
+                    mem_info = get_memory_usage()
+                    if mem_info and mem_info['rss_mb'] > 450:
+                        cleanup_memory()
+                
+                # Store bot response
+                try:
+                    for resp in response_data:
+                        cleaned_resp = clean_nan_values(resp)
+                        bot_msg = Message(conversation_id=conv_id, sender='bot', content=json.dumps(cleaned_resp))
+                        db.session.add(bot_msg)
+                    db.session.commit()
+                except Exception as e:
+                    memory_logger.error(f"Database error storing bot messages: {e}")
+                    db.session.rollback()
+                    
+                # Log memory after agent call
+                log_memory_usage("After agent call")
+                
+                # Only monitor memory usage, don't automatically cleanup
+                monitor_memory_usage()
+                
+                return jsonify({'response': response_data})
+            
             else:
                 # Use Market Analysis Agent (default)
                 pydantic_agent = get_pydantic_weaviate_agent()
                 if not pydantic_agent:
                     return jsonify({'error': 'Market Analysis agent not available'}), 400
-                response_text = pydantic_agent.process_query(user_message, conversation_id=str(conv_id))
-            
-            # Debug: Log response format
-            memory_logger.info(f"Response format detection - starts with: {response_text[:50]}...")
-            
-            # Check if response contains a plot
-            if response_text.startswith("PLOT_GENERATED|"):
-                # Parse plot response: PLOT_GENERATED|path|description
-                parts = response_text.split("|", 2)
-                if len(parts) >= 3:
-                    plot_path = parts[1]
-                    description = parts[2]
+                
+                # Get structured response from the agent
+                agent_result = pydantic_agent.process_query(user_message, conversation_id=str(conv_id))
+                
+                # Debug: Log response type and content
+                memory_logger.info(f"Agent result type: {type(agent_result)}")
+                memory_logger.info(f"Agent result: {str(agent_result)[:200]}...")
+                
+                # Handle structured output from Pydantic AI
+                if hasattr(agent_result, 'output'):
+                    # Extract the actual output from the agent result
+                    output = agent_result.output
                     
-                    # Convert to web-accessible URL
-                    web_path = f"/static/plots/{os.path.basename(plot_path)}"
+                    # Check if it's a PlotResult
+                    if hasattr(output, 'plot_type') and hasattr(output, 'url_path'):
+                        if output.success:
+                            response_data = [{
+                                'type': 'chart',
+                                'value': '',  # Remove 'Generated chart' text
+                                'artifact': output.url_path,
+                                'comment': None
+                            }]
+                        else:
+                            response_data = [{
+                                'type': 'string',
+                                'value': f"Error generating plot: {output.error_message}",
+                                'comment': None
+                            }]
                     
-                    # Create chart response structure - ONLY this, no additional string response
-                    response_data = [{
-                        'type': 'chart',
-                        'value': '',  # Remove 'Generated chart' text
-                        'artifact': web_path,
-                        'comment': None
-                    }]
+                    # Check if it's a DataAnalysisResult
+                    elif hasattr(output, 'result_type') and hasattr(output, 'content'):
+                        if output.result_type == "dataframe" and output.dataframe_data:
+                            # Create table response structure
+                            response_data = [{
+                                'type': 'table',
+                                'value': output.content,
+                                'table_data': output.dataframe_data,
+                                'full_data': output.dataframe_data,
+                                'comment': None
+                            }]
+                        else:
+                            # Text response
+                            response_data = [{
+                                'type': 'string',
+                                'value': output.content,
+                                'comment': None
+                            }]
                     
-                    # Only cleanup if memory usage is high
-                    mem_info = get_memory_usage()
-                    if mem_info and mem_info['rss_mb'] > 450:
-                        cleanup_memory()
+                    # Check if output is a string (most common case now - natural responses or PLOT_GENERATED)
+                    elif isinstance(output, str):
+                        # Parse string-based responses
+                        if output.startswith("PLOT_GENERATED|"):
+                            # Parse plot response: PLOT_GENERATED|path|description
+                            parts = output.split("|", 2)
+                            if len(parts) >= 2:
+                                plot_path = parts[1]
+                                response_data = [{
+                                    'type': 'chart',
+                                    'value': '',  # Remove 'Generated chart' text
+                                    'artifact': plot_path,
+                                    'comment': None
+                                }]
+                            else:
+                                # Fallback to string if parsing fails
+                                response_data = [{
+                                    'type': 'string',
+                                    'value': output,
+                                    'comment': None
+                                }]
+                        else:
+                            # Regular natural language response from the agent
+                            response_data = [{
+                                'type': 'string',
+                                'value': output,
+                                'comment': None
+                            }]
+                    
+                    # Fallback if output structure is unexpected
+                    else:
+                        response_data = [{
+                            'type': 'string',
+                            'value': str(output),
+                            'comment': None
+                        }]
+                
+                # Fallback for old string-based responses (backward compatibility)
+                elif isinstance(agent_result, str):
+                    response_text = agent_result
+                    memory_logger.info(f"Response format detection - starts with: {response_text[:50]}...")
+                    
+                    # Check if response contains a plot
+                    if response_text.startswith("PLOT_GENERATED|"):
+                        # Parse plot response: PLOT_GENERATED|path|description
+                        parts = response_text.split("|", 2)
+                        if len(parts) >= 3:
+                            plot_path = parts[1]
+                            description = parts[2]
+                            
+                            # Convert to web-accessible URL
+                            web_path = f"/static/plots/{os.path.basename(plot_path)}"
+                            
+                            # Create chart response structure - ONLY this, no additional string response
+                            response_data = [{
+                                'type': 'chart',
+                                'value': '',  # Remove 'Generated chart' text
+                                'artifact': web_path,
+                                'comment': None
+                            }]
+                        else:
+                            # Fallback to string if parsing fails
+                            response_data = [{
+                                'type': 'string',
+                                'value': response_text,
+                                'comment': None
+                            }]
+                    elif response_text.startswith("DATAFRAME_RESULT|"):
+                        # Parse DataFrame response: DATAFRAME_RESULT|text_response|display_data|full_data
+                        try:
+                            parts = response_text.split("|", 3)
+                            if len(parts) >= 4:
+                                text_response = parts[1]
+                                display_json_data = parts[2]
+                                full_json_data = parts[3]
+                                
+                                # Parse the JSON data
+                                table_data = json.loads(display_json_data)
+                                full_data = json.loads(full_json_data)
+                                
+                                # Create table response structure
+                                response_data = [{
+                                    'type': 'table',
+                                    'value': text_response,
+                                    'table_data': table_data,
+                                    'full_data': full_data,  # Add full data for download
+                                    'comment': None
+                                }]
+                            elif len(parts) >= 3:
+                                # Fallback for old format
+                                text_response = parts[1]
+                                json_data = parts[2]
+                                
+                                # Parse the JSON data
+                                table_data = json.loads(json_data)
+                                
+                                # Create table response structure
+                                response_data = [{
+                                    'type': 'table',
+                                    'value': text_response,
+                                    'table_data': table_data,
+                                    'full_data': table_data,  # Use same data for download
+                                    'comment': None
+                                }]
+                        except Exception as e:
+                            memory_logger.error(f"Error parsing DataFrame response: {e}")
+                            # Fallback to string if JSON parsing fails
+                            response_data = [{
+                                'type': 'string',
+                                'value': response_text,
+                                'comment': None
+                            }]
+                    else:
+                        # Regular text response
+                        response_data = [{
+                            'type': 'string',
+                            'value': response_text,
+                            'comment': None
+                        }]
+                
+                # Final fallback
                 else:
-                    # Fallback to string if parsing fails
                     response_data = [{
                         'type': 'string',
-                        'value': response_text,
+                        'value': str(agent_result),
                         'comment': None
                     }]
-            elif response_text.startswith("DATAFRAME_RESULT|"):
-                # Parse DataFrame response: DATAFRAME_RESULT|text_response|display_data|full_data
-                try:
-                    parts = response_text.split("|", 3)
-                    if len(parts) >= 4:
-                        text_response = parts[1]
-                        display_json_data = parts[2]
-                        full_json_data = parts[3]
-                        
-                        # Parse the JSON data
-                        table_data = json.loads(display_json_data)
-                        full_data = json.loads(full_json_data)
-                        
-                        # Create table response structure
-                        response_data = [{
-                            'type': 'table',
-                            'value': text_response,
-                            'table_data': table_data,
-                            'full_data': full_data,  # Add full data for download
-                            'comment': None
-                        }]
-                    elif len(parts) >= 3:
-                        # Fallback for old format
-                        text_response = parts[1]
-                        json_data = parts[2]
-                        
-                        # Parse the JSON data
-                        table_data = json.loads(json_data)
-                        
-                        # Create table response structure
-                        response_data = [{
-                            'type': 'table',
-                            'value': text_response,
-                            'table_data': table_data,
-                            'full_data': table_data,  # Use same data for download
-                            'comment': None
-                        }]
-                except Exception as e:
-                    memory_logger.error(f"Error parsing DataFrame response: {e}")
-                    # Fallback to string if JSON parsing fails
-                    response_data = [{
-                        'type': 'string',
-                        'value': response_text,
-                        'comment': None
-                    }]
-            else:
-                # Create a simple response structure for regular text responses
-                response_data = [{
-                    'type': 'string',
-                    'value': response_text,
-                    'comment': None
-                }]
-
+            
+            # Continue with memory cleanup only if needed
+            if response_data and response_data[0].get('type') == 'chart':
+                # Only cleanup if memory usage is high
+                mem_info = get_memory_usage()
+                if mem_info and mem_info['rss_mb'] > 450:
+                    cleanup_memory()
+            
             # Store bot response
             try:
                 for resp in response_data:
@@ -948,7 +1112,7 @@ def chat():
             monitor_memory_usage()
             
             return jsonify({'response': response_data})
-            
+        
         except Exception as e:
             memory_logger.error(f"Error in agent processing: {e}")
             return jsonify({'error': f'Agent error: {str(e)}'}), 500
@@ -1305,78 +1469,24 @@ def admin_clear_conversation_memory():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/cleanup-plots')
-def cleanup_old_plots():
-    """Remove old plot files to free up disk space and memory"""
-    try:
-        import glob
-        import time
-        
-        plots_dir = 'static/plots'
-        if not os.path.exists(plots_dir):
-            return jsonify({'message': 'Plots directory does not exist', 'cleaned': 0})
-        
-        # Remove plots older than 1 hour (3600 seconds)
-        cleaned_count = 0
-        current_time = time.time()
-        
-        for plot_file in glob.glob(os.path.join(plots_dir, '*.png')):
-            try:
-                file_age = current_time - os.path.getmtime(plot_file)
-                if file_age > 3600:  # 1 hour
-                    os.remove(plot_file)
-                    cleaned_count += 1
-                    print(f"Removed old plot: {plot_file}")
-            except Exception as e:
-                print(f"Error removing plot {plot_file}: {e}")
-        
-        # Also cleanup matplotlib memory
-        try:
-            import matplotlib.pyplot as plt
-            import gc
-            plt.close('all')
-            gc.collect()
-        except:
-            pass
-        
-        return jsonify({
-            'message': f'Cleanup completed. Removed {cleaned_count} old plot files.',
-            'cleaned': cleaned_count
-        })
-        
-    except Exception as e:
-        return jsonify({'error': f'Cleanup failed: {str(e)}'}), 500
-
-# Memory status endpoint for monitoring
 @app.route('/memory-status')
 def memory_status():
-    """Get current memory usage information"""
+    """Get current memory status (public endpoint)"""
     try:
-        import psutil
-        import matplotlib.pyplot as plt
-        
-        process = psutil.Process()
-        memory_info = process.memory_info()
-        
-        # Count open matplotlib figures
-        open_figures = len(plt.get_fignums())
-        
-        # Count plot files
-        plots_dir = 'static/plots'
-        plot_count = 0
-        if os.path.exists(plots_dir):
-            plot_count = len([f for f in os.listdir(plots_dir) if f.endswith('.png')])
+        mem_info = get_memory_usage()
+        if not mem_info:
+            return jsonify({'error': 'Could not retrieve memory information'}), 500
         
         return jsonify({
-            'memory_rss_mb': round(memory_info.rss / 1024 / 1024, 1),
-            'memory_vms_mb': round(memory_info.vms / 1024 / 1024, 1),
-            'memory_percent': process.memory_percent(),
-            'open_matplotlib_figures': open_figures,
-            'plot_files_count': plot_count,
-            'system_memory_available_gb': round(psutil.virtual_memory().available / 1024 / 1024 / 1024, 1)
+            'success': True,
+            'memory_mb': mem_info['rss_mb'],
+            'memory_percent': mem_info['memory_percent'],
+            'available_gb': mem_info['available_memory_gb'],
+            'status': 'critical' if mem_info['rss_mb'] > 500 else 'warning' if mem_info['rss_mb'] > 400 else 'normal',
+            'timestamp': datetime.utcnow().isoformat()
         })
     except Exception as e:
-        return jsonify({'error': f'Memory status check failed: {str(e)}'}), 500
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/memory-cleanup', methods=['POST'])
 def memory_cleanup():
