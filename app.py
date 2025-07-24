@@ -467,7 +467,18 @@ with open('zotero_news_full.json', encoding='utf-8') as f:
 
 # === GLOBAL SINGLETON FOR MODULE PRICES AGENT ===
 from module_prices_agent import ModulePricesAgent, ModulePricesConfig
-module_prices_agent = ModulePricesAgent(ModulePricesConfig(verbose=False))
+
+# 512MB optimized configuration
+module_prices_config = ModulePricesConfig(
+    verbose=False,                          # Reduce logging overhead
+    low_memory_mode=True,                   # Enable all memory optimizations
+    max_conversation_messages=10,           # Limit conversation history
+    enable_gc_after_operations=True,        # Force garbage collection
+    total_tokens_limit=8000,                # Reduce from default 15000
+    request_limit=5                         # Reduce from default 10
+)
+
+module_prices_agent = ModulePricesAgent(module_prices_config)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

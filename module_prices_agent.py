@@ -45,6 +45,10 @@ class ModulePricesConfig:
     request_limit: int = 10
     total_tokens_limit: int = 15000  # Increased from 5000
     verbose: bool = True
+    # Memory optimization settings
+    low_memory_mode: bool = False  # Enable for 512MB deployments
+    max_conversation_messages: int = 20  # Limit conversation history
+    enable_gc_after_operations: bool = False  # Force garbage collection
 
 class ModulePricesAgent:
     """
@@ -66,10 +70,23 @@ You are a solar module price analysis assistant specialized in photovoltaic comp
 → Process the summary and provide helpful analysis
 
 **For visualization requests (creating charts/plots):** Use plotting tools with CORRECT parameters:
+
+**SINGLE REGION/ITEM EXAMPLES:**
 - "Plot modules prices in China" → plot_price_trends_tool(item="Module", region="China")
 - "Chart wafer prices in EU" → plot_price_trends_tool(item="Wafer", region="EU")
 - "Show cell prices" → plot_price_trends_tool(item="Cell")
 - "Plot prices in India" → plot_price_trends_tool(region="India")
+
+**MULTIPLE REGIONS EXAMPLES (CRITICAL - Use comma-separated values):**
+- "Plot modules in China and EU" → plot_price_trends_tool(item="Module", region="China,EU")
+- "Chart prices in EU and US" → plot_price_trends_tool(region="EU,US")
+- "Show wafers in China, EU, and US" → plot_price_trends_tool(item="Wafer", region="China,EU,US")
+- "Plot in both China and EU" → plot_price_trends_tool(region="China,EU")
+
+**BOXPLOT EXAMPLES:**
+- "Show box plots of different modules in China" → plot_boxplot_tool(item="Module", region_filter="China", x_axis="description")
+- "Box plots by region for modules" → plot_boxplot_tool(item="Module", x_axis="region")
+- "Price distribution of modules in EU and US" → plot_boxplot_tool(item="Module", region_filter="EU,US", x_axis="description")
 
 **NEVER use both data and plotting tools in the same response.**
 
@@ -81,7 +98,10 @@ You are a solar module price analysis assistant specialized in photovoltaic comp
 **PARAMETER EXTRACTION FOR PLOTTING:**
 - Extract item: Module, Cell, Wafer, Polysilicon, EVA, PV glass, Silver, Copper, Aluminium
 - Extract region: China, EU, US, India, Overseas, Australia
-- Pass exact parameters to plotting tools, don't rely on natural language interpretation
+- **FOR MULTIPLE REGIONS: Combine with commas (NO SPACES after commas)**
+  - "China and EU" → "China,EU"
+  - "EU, US, and China" → "EU,US,China"
+  - "both India and China" → "India,China"
 
 **Data Context:**
 - Prices are in US$/Wp
@@ -89,7 +109,7 @@ You are a solar module price analysis assistant specialized in photovoltaic comp
 - Regions: China, EU, US, India, Overseas, Australia (use exact names)
 - Always specify currency and units in responses
 
-Remember: Extract and pass exact parameters to plotting tools for accurate filtering.
+Remember: Extract and pass exact parameters to plotting tools for accurate filtering. For multiple regions, use comma-separated format without spaces.
 """
     
     def __init__(self, config: Optional[ModulePricesConfig] = None):
@@ -981,14 +1001,33 @@ Query: """
             if conversation_id and conversation_id in self.conversation_memory:
                 message_history = self.conversation_memory[conversation_id]
                 logger.info(f"[MEMORY DEBUG] Using conversation memory for {conversation_id} with {len(message_history)} messages")
+                
+                # Memory optimization: Limit conversation history length
+                if self.config.low_memory_mode and len(message_history) > self.config.max_conversation_messages:
+                    # Keep only the most recent messages
+                    message_history = message_history[-self.config.max_conversation_messages:]
+                    logger.info(f"[MEMORY OPTIMIZATION] Trimmed conversation history to {len(message_history)} messages")
             
             logger.info(f"Processing query: {query}")
             result = await self.agent.run(query, message_history=message_history, usage_limits=usage_limits)
             
             # Store the new messages for future conversation context
             if conversation_id:
-                self.conversation_memory[conversation_id] = result.all_messages()
+                new_messages = result.all_messages()
+                
+                # Memory optimization: Limit stored conversation history
+                if self.config.low_memory_mode and len(new_messages) > self.config.max_conversation_messages:
+                    new_messages = new_messages[-self.config.max_conversation_messages:]
+                    logger.info(f"[MEMORY OPTIMIZATION] Limited stored messages to {len(new_messages)}")
+                
+                self.conversation_memory[conversation_id] = new_messages
                 logger.info(f"[MEMORY DEBUG] Updated conversation memory for {conversation_id}")
+            
+            # Memory optimization: Force garbage collection after operations
+            if self.config.enable_gc_after_operations:
+                import gc
+                gc.collect()
+                logger.info("[MEMORY OPTIMIZATION] Forced garbage collection")
             
             # Check if a DataFrame was generated and format response accordingly
             analysis_result = result.output
@@ -997,8 +1036,9 @@ Query: """
                 # Format the DataFrame for frontend (dates, prices, etc.)
                 formatted_df = self._format_dataframe_for_frontend(self.last_dataframe)
                 
-                # Create table-ready response with formatted data
-                display_df = formatted_df.head(50) if len(formatted_df) > 50 else formatted_df
+                # Memory optimization: Limit display rows for low memory mode
+                max_display_rows = 25 if self.config.low_memory_mode else 50
+                display_df = formatted_df.head(max_display_rows) if len(formatted_df) > max_display_rows else formatted_df
                 table_data = display_df.to_json(orient='records')
                 
                 # Use the full formatted data for download (not just display subset)
@@ -1007,6 +1047,11 @@ Query: """
                 # Format as DATAFRAME_RESULT for frontend detection: text|display_data|full_data
                 analysis_result = f"DATAFRAME_RESULT|{result.output}|{table_data}|{full_data}"
                 print(f"DEBUG: Created DATAFRAME_RESULT with {len(display_df)} rows for display, {len(formatted_df)} rows for download")
+                
+                # Memory optimization: Clear large DataFrame after use in low memory mode
+                if self.config.low_memory_mode:
+                    self.last_dataframe = None
+                    logger.info("[MEMORY OPTIMIZATION] Cleared last_dataframe to free memory")
             else:
                 print(f"DEBUG: No DataFrame to format - last_dataframe is None or empty")
             
