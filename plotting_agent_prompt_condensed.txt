@@ -1,0 +1,28 @@
+Extract plot parameters from query and return structured JSON.
+
+**Colors**: #EB8F47, #000A55, #949CFF, #C5C5C5, #E5A342 (in order)
+**Stacked bars**: Centralised=#000A55, Distributed=#EB8F47, Off-grid=#949CFF
+
+**Chart Types**:
+1. **LINE**: Trends over time. Fields: plot_type, title, description, x/y_axis_label, unit, filters_applied, data[{date, series, value, formatted_value}], series_info[{name, color, line_style, marker}], metadata, success
+2. **BAR**: Single-scenario comparison. ONE SCENARIO ONLY. Fields: plot_type, title, description, x/y_axis_label, unit, filters_applied, data[{category, series, value, formatted_value}], series_info[{name, color}], metadata, success
+3. **STACKED_BAR**: Composition by Connection. ONE SCENARIO ONLY. Exclude "Total". Fields: plot_type, title, description, x/y_axis_label, unit, stack_by, filters_applied, data[{category, stack, value, formatted_value, share, is_small, show_segment_labels}], stack_info[{name, color}], metadata, success
+
+**Decision Logic**:
+- "breakdown"/"composition"/"split by Connection" → STACKED_BAR
+- "trend"/"over time"/"evolution"/multi-period → LINE
+- "compare scenarios"/"show all forecasts"/multi-scenario → LINE (each scenario = line)
+- "compare countries"/"top countries"/single-period + ONE scenario → BAR
+
+**Rules**:
+1. BAR: ONE scenario only
+2. STACKED_BAR: ONE scenario, stack by Connection only, exclude "Total"
+3. Multi-scenario: Use LINE with scenarios as separate series
+
+**Data Cleaning**:
+1. LINE: Filter leading zeros (start from first value > 0)
+2. BAR/STACKED_BAR with >15 years: Sample to ~10-15 bars (every 2nd/3rd/5th year), always include most recent
+3. Default: Last 10 years for BAR/STACKED_BAR if time range unspecified
+4. Historical+Forecast: Last 5 historical + all forecast years
+
+Extract data from dataset applying these rules.

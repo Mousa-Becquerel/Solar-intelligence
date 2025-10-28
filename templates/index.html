@@ -3,19 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Becquerel Institute PV Market Chat</title>
+    <title>Solar Intelligence - AI Market Analysis</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logos/new_logo.svg') }}">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
+
+    <!-- Google Analytics -->
+    {% if config.get('GOOGLE_ANALYTICS_ID') %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ config['GOOGLE_ANALYTICS_ID'] }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ config["GOOGLE_ANALYTICS_ID"] }}');
+    </script>
+    {% endif %}
 </head>
 <body>
-    <!-- Main application container -->
-    <div class="main-layout">
+    <!-- Main application container - CSS Grid Layout -->
+    <div class="app-container">
         <!-- Sidebar Container -->
-        <div class="sidebar">
+        <aside class="sidebar" id="sidebar" data-expanded="false">
+            <!-- Sidebar Toggle Button -->
+            <button class="sidebar-toggle-btn" id="sidebar-toggle" aria-label="Toggle sidebar" title="Toggle sidebar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                </svg>
+            </button>
+
             <div class="sidebar-collapsed-icons">
-                <button class="sidebar-icon-btn" id="new-chat-collapsed" title="New Chat">
+                <button class="sidebar-icon-btn" id="new-chat-collapsed" title="New Chat" aria-label="New Chat">
                     <!-- Plus icon SVG -->
-                    <svg width="22" height="22" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="22" height="22" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <circle cx="11" cy="11" r="10" stroke="#2563eb" fill="#fff"/>
                         <path d="M11 7v8M7 11h8"/>
                     </svg>
@@ -41,10 +62,10 @@
             <div class="sidebar-section-title">Recent</div>
             <ul id="conversation-list" class="conversation-list"></ul>
             <div class="sidebar-footer footer">
-                <div class="sidebar-copyright">&copy; 2024 BecqSight</div>
-                <a href="https://datahub.becquerelinstitute.eu/Home" target="_blank" rel="noopener" class="sidebar-link-btn">
-                    <span class="icon-solar" aria-label="Data Hub">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <div class="sidebar-copyright">&copy; 2025 Solar Intelligence</div>
+                <a href="https://datahub.becquerelinstitute.eu/Home" target="_blank" rel="noopener" class="sidebar-link-btn" aria-label="Visit PV Data Hub">
+                    <span class="icon-solar">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <rect x="3" y="11" width="18" height="7" rx="2" fill="#fbbf24" stroke="#2563eb"/>
                             <rect x="7" y="4" width="10" height="7" rx="2" fill="#fff" stroke="#2563eb"/>
                             <path d="M12 11V4" stroke="#2563eb"/>
@@ -53,88 +74,149 @@
                     <span class="sidebar-link-btn-text">PV Data Hub</span>
                 </a>
             </div>
-        </div>
+        </aside>
 
-        <!-- Main Content Container -->
-        <div class="main-content">
-            <!-- App Title Bar -->
-    <div class="app-title-bar">
+        <!-- Workspace: Contains Header + Messages + Input -->
+        <div class="workspace">
+            <!-- App Header -->
+            <header class="app-header">
                 <div class="title-section">
-        <div class="app-title">BecqSight</div>
+                    <div class="app-title">
+                        <span class="beta-indicator" title="Beta Version - Features under active development"></span>
+                        Solar Intelligence
+                    </div>
         <div class="agent-selector">
-            <select id="agent-select" class="agent-select">
-                <option value="market">Market Analysis Agent</option>
-                <option value="price">Module Prices Agent</option>
-                <option value="news" disabled>News Agent (Coming Soon)</option>
-                <option value="research" disabled>Research Agent (Coming Soon)</option>
+            <label for="agent-select" class="sr-only">Select AI Agent</label>
+            <select id="agent-select" class="agent-select" aria-label="Select AI Agent">
+                <option value="market">Alex - PV Capacity</option>
+                <option value="market_intel">Titan - Market Intelligence</option>
+                <option value="price">Maya - Price Analysis</option>
+                <!-- <option value="om">Leo - O&M Expert</option> -->
+                <option value="news">Emma - News Analyst</option>
+                <option value="digitalization">Nova - Digitalization Expert</option>
             </select>
         </div>
+        <a href="/agents" class="back-to-agents-btn" title="Back to Agent Selection">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back to Agents
+        </a>
     </div>
     <div class="user-section">
-        <div class="user-info" id="user-info">
+        <!-- Export Controls - Temporarily Disabled -->
+        <div class="export-controls" style="display: none;">
+            <button class="export-toggle-btn" id="export-toggle-btn" title="Toggle Export Mode">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 3h6l6 18h6"></path>
+                    <path d="M14 3h7"></path>
+                </svg>
+                <span>Export</span>
+            </button>
+            <button class="export-download-btn" id="export-download-btn" title="Download Selected Messages" style="display: none;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7,10 12,15 17,10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Download</span>
+            </button>
+            <button class="export-ppt-btn" id="export-ppt-btn" title="Generate PowerPoint Presentation" style="display: none;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="16" rx="2" ry="2"></rect>
+                    <polyline points="7,8 17,8"></polyline>
+                    <polyline points="7,12 17,12"></polyline>
+                    <polyline points="7,16 13,16"></polyline>
+                </svg>
+                <span>Generate PPT</span>
+            </button>
+        </div>
+        
+        <a href="/profile" class="user-info" id="user-info" title="View Profile" style="text-decoration: none; cursor: pointer;">
             <span class="user-name" id="user-name">Loading...</span>
             <span class="user-role" id="user-role"></span>
-        </div>
-        <a href="{{ url_for('admin_users') }}" class="admin-btn" id="admin-btn" title="User Management" style="display: none;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        </a>
+        <a href="{{ url_for('admin_users') }}" class="admin-btn" id="admin-btn" title="User Management" aria-label="User Management" style="display: none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                 <circle cx="9" cy="7" r="4"></circle>
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
             </svg>
         </a>
-        <button class="logout-btn" id="logout-btn" title="Logout">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <a href="/profile" class="profile-btn" id="profile-btn" title="Profile" aria-label="Profile">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+        </a>
+        <button class="logout-btn" id="logout-btn" title="Logout" aria-label="Logout">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                 <polyline points="16,17 21,12 16,7"></polyline>
                 <line x1="21" y1="12" x2="9" y2="12"></line>
             </svg>
     </button>
     </div>
-    </div>
+        </header>
 
-            <!-- Chat Messages Container -->
-                <div id="chat-messages" class="chat-container">
+        <!-- Chat Messages Container (Grid Area: messages) - ONLY THIS SCROLLS -->
+        <main id="chat-messages" class="chat-messages">
+                <!-- Welcome Message (shown before first message) -->
+                <div id="welcome-message" class="welcome-message">
+                    <h1 class="welcome-title">Solar Intelligence</h1>
+                    <p class="welcome-subtitle">Your AI-powered assistant for photovoltaic market insights, price analysis, and industry intelligence</p>
+                </div>
+
                 <div class="chat-messages-wrapper">
-                    <div id="welcome-message" class="welcome-message" style="position: fixed !important; top: 20px !important; display: flex !important; margin-top: 0 !important; transition: left 0.3s cubic-bezier(.4,2,.6,1) !important;">
-                        <div class="welcome-background"></div>
-                        <div class="welcome-content">
-                            <h1 class="welcome-title">PV Market Intelligence</h1>
-                            <p class="welcome-subtitle">
-                                Unlock comprehensive insights into photovoltaic markets worldwide with AI-powered analysis
-                            </p>
-                        </div>
-                    </div>
                     <!-- Messages will be added here -->
                 </div>
-                    </div>
+        </main>
 
+        <!-- Input Section Container (Grid Area: input) - ALWAYS VISIBLE -->
+        <footer class="chat-input">
             <!-- Error Message Container -->
             <div id="error-message" class="error-message" style="display:none;"></div>
 
-            <!-- Input Section Container -->
-            <div class="main-input-wrapper">
+            <div class="input-content-wrapper">
+                <!-- Suggested Queries -->
+                <div id="suggested-queries-container" class="suggested-queries-container">
+                    <div class="suggested-queries-wrapper">
+                        <!-- Queries will be dynamically inserted here -->
+                    </div>
+                </div>
+
                 <div class="input-wrapper">
                     <div class="input-bar-content">
                         <div class="input-row">
                             <div class="input-container">
-                                <div class="autocomplete-overlay" id="autocomplete-overlay"></div>
-                                <input type="text" id="user-input" placeholder="Ask about PV market data...">
-                </div>
-                            <button id="send-btn" class="send-btn" onclick="sendMessage()">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <!-- REMOVED: autocomplete-overlay div as it's no longer needed -->
+                                <!-- MAIN FIX: Added autocomplete attributes to disable browser autocomplete -->
+                                <input type="text"
+                                       id="user-input"
+                                       placeholder="Ask about PV market data..."
+                                       autocomplete="off"
+                                       autocapitalize="off"
+                                       autocorrect="off"
+                                       spellcheck="false">
+                            </div>
+                            <button id="send-btn" class="send-btn" onclick="sendMessage()" aria-label="Send message">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <line x1="22" y1="2" x2="11" y2="13"></line>
                                     <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
                                 </svg>
                             </button>
             </div>
-    </div>
                 </div>
             </div>
-        </div>
-                </div>
+        </footer>
+        </div><!-- Close workspace -->
+    </div><!-- Close app-container -->
 
-    <!-- Fixed Position Elements (outside main layout) -->
+    <!-- Fixed Position Elements (outside layout) -->
+    <!-- CSRF Token for JavaScript -->
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
     <!-- Help Button -->
     <button id="help-btn" class="help-icon-btn" title="User Guide" tabindex="0">
         ?
@@ -149,6 +231,251 @@
         <div class="news-card-desc"></div>
         <a class="news-card-link" href="#" target="_blank" style="display:none;"></a>
                 </div>
+
+    <!-- User Profiling Survey Modal - SECOND Survey (shown after Stage 2) -->
+    <div id="survey-modal" class="modal">
+        <div class="modal-content survey-modal-content">
+            <button class="survey-close" onclick="closeSurveyModal()">&times;</button>
+
+            <!-- Survey Header -->
+            <div class="survey-header">
+                <h2 class="survey-title">Unlock 5 More Queries!</h2>
+                <p class="survey-subtitle">Help us understand your needs better to tailor insights for your sector</p>
+
+                <!-- Progress Indicator -->
+                <div class="survey-progress">
+                    <div class="survey-progress-bar">
+                        <div class="survey-progress-fill" id="survey-progress-fill"></div>
+                    </div>
+                    <div class="survey-progress-text">
+                        <span id="survey-current-step">1</span> of <span id="survey-total-steps">5</span>
+                    </div>
+                </div>
+            </div>
+
+            <form id="user-survey-form" class="survey-form">
+                <!-- Error Message Container -->
+                <div id="survey-error" class="survey-error-message"></div>
+
+                <!-- Step 1: Role -->
+                <div class="survey-step" data-step="1">
+                    <div class="survey-question">
+                        <label class="survey-label">What best describes your role? <span class="required">*</span></label>
+                        <select name="role" class="survey-select" required>
+                            <option value="">Select your role...</option>
+                            <option value="developer_epc">Developer / EPC</option>
+                            <option value="researcher">Researcher / Academic</option>
+                            <option value="manufacturer">Manufacturer / Supplier</option>
+                            <option value="policy">Policy / Regulatory Body</option>
+                            <option value="investor">Investor / Financial Analyst</option>
+                            <option value="om_operator">O&M Operator</option>
+                            <option value="consultant">Consultant</option>
+                            <option value="asset_manager">Asset Manager</option>
+                            <option value="service_provider">Service Provider</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <input type="text" name="role_other" class="survey-input" placeholder="Please specify..." style="display: none; margin-top: 10px;">
+                    </div>
+                </div>
+
+                <!-- Step 2: Region -->
+                <div class="survey-step" data-step="2" style="display: none;">
+                    <div class="survey-question">
+                        <label class="survey-label">What region or market are you primarily interested in? <span class="required">*</span></label>
+                        <div class="survey-checkbox-group">
+                            <label class="survey-checkbox"><input type="checkbox" name="region" value="europe"> Europe</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="region" value="north_america"> North America</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="region" value="south_america"> South America</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="region" value="africa"> Africa</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="region" value="asia"> Asia</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="region" value="australia"> Australia</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Familiarity -->
+                <div class="survey-step" data-step="3" style="display: none;">
+                    <div class="survey-question">
+                        <label class="survey-label">How familiar are you with solar market analytics? <span class="required">*</span></label>
+                        <select name="familiarity" class="survey-select" required>
+                            <option value="">Select level...</option>
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                            <option value="expert">Expert</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Step 4: Insights Interest -->
+                <div class="survey-step" data-step="4" style="display: none;">
+                    <div class="survey-question">
+                        <label class="survey-label">What kind of insights are you most interested in? <span class="required">*</span></label>
+                        <div class="survey-checkbox-group">
+                            <label class="survey-checkbox"><input type="checkbox" name="insights" value="market_data"> Market data and forecasts</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="insights" value="policy"> Policy and regulation</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="insights" value="technology"> Technology and R&D</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="insights" value="prices"> Prices (components or systems)</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="insights" value="supply_chain"> Supply chain</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="insights" value="business_models"> Business models / Finance</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="insights" value="legal"> Legal aspects</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="insights" value="other"> Other</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Tailored Responses -->
+                <div class="survey-step" data-step="5" style="display: none;">
+                    <div class="survey-question">
+                        <label class="survey-label">Would you like SolarIntelligence.ai to tailor responses based on your organization's interests?</label>
+                        <div class="survey-radio-group">
+                            <label class="survey-radio">
+                                <input type="radio" name="tailored" value="yes">
+                                <span>Yes</span>
+                            </label>
+                            <label class="survey-radio">
+                                <input type="radio" name="tailored" value="no" checked>
+                                <span>No</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="survey-actions">
+                    <button type="button" class="survey-btn survey-btn-secondary" id="survey-prev-btn" onclick="prevSurveyStep()" style="display: none;">
+                        Previous
+                    </button>
+                    <button type="button" class="survey-btn survey-btn-primary" id="survey-next-btn" onclick="nextSurveyStep()">
+                        Next
+                    </button>
+                    <button type="submit" class="survey-btn survey-btn-primary" id="survey-submit-btn" style="display: none;">
+                        Submit & Get 5 Extra Queries
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stage 2 Survey Modal - Market Activity & Behaviour - FIRST Survey (shown first) -->
+    <div id="survey-stage2-modal" class="modal">
+        <div class="modal-content survey-modal-content">
+            <button class="survey-close" onclick="closeSurveyStage2Modal()">&times;</button>
+
+            <!-- Survey Header -->
+            <div class="survey-header">
+                <h2 class="survey-title">Unlock 5 Extra Queries!</h2>
+                <p class="survey-subtitle">Help us understand your market activity for better insights</p>
+
+                <!-- Progress Indicator -->
+                <div class="survey-progress">
+                    <div class="survey-progress-bar">
+                        <div class="survey-progress-fill" id="survey-stage2-progress-fill"></div>
+                    </div>
+                    <div class="survey-progress-text">
+                        <span id="survey-stage2-current-step">1</span> of <span id="survey-stage2-total-steps">5</span>
+                    </div>
+                </div>
+            </div>
+
+            <form id="user-survey-stage2-form" class="survey-form">
+                <!-- Error Message Container -->
+                <div id="survey-stage2-error" class="survey-error-message"></div>
+
+                <!-- Step 1: Work Focus -->
+                <div class="survey-step" data-step="1">
+                    <div class="survey-question">
+                        <label class="survey-label">What is the main focus of your current work or projects? <span class="required">*</span></label>
+                        <select name="work_focus" class="survey-select" required>
+                            <option value="">Select your focus...</option>
+                            <option value="pv_development">PV project development</option>
+                            <option value="pv_deployment">PV project deployment</option>
+                            <option value="pv_management">PV project management</option>
+                            <option value="manufacturing">PV manufacturing or component supply</option>
+                            <option value="research">Research and innovation</option>
+                            <option value="investment">Investment or financial analysis</option>
+                            <option value="policy_monitoring">Policy / market monitoring</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <input type="text" name="work_focus_other" class="survey-input" placeholder="Please specify..." style="display: none; margin-top: 10px;">
+                    </div>
+                </div>
+
+                <!-- Step 2: PV Segments -->
+                <div class="survey-step" data-step="2" style="display: none;">
+                    <div class="survey-question">
+                        <label class="survey-label">Which PV segments are most relevant to you? <span class="required">*</span></label>
+                        <div class="survey-checkbox-group">
+                            <label class="survey-checkbox"><input type="checkbox" name="pv_segment" value="utility_scale"> Utility-scale</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="pv_segment" value="commercial_industrial"> Commercial & Industrial</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="pv_segment" value="residential"> Residential</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="pv_segment" value="agri_pv"> Agri-PV</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="pv_segment" value="floating_pv"> Floating PV</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="pv_segment" value="other"> Other</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Technologies -->
+                <div class="survey-step" data-step="3" style="display: none;">
+                    <div class="survey-question">
+                        <label class="survey-label">Which technologies are you most interested in tracking? <span class="required">*</span></label>
+                        <div class="survey-checkbox-group">
+                            <label class="survey-checkbox"><input type="checkbox" name="technology" value="crystalline_si"> Crystalline Si (PERC / TOPCon / HJT / xBC)</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="technology" value="tandem_perovskites"> Tandem / Perovskites</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="technology" value="bipv_agripv"> BIPV / Agri-PV</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="technology" value="storage"> Storage integration</label>
+                            <label class="survey-checkbox"><input type="checkbox" name="technology" value="other"> Other</label>
+                        </div>
+                        <input type="text" name="technologies_other" class="survey-input" placeholder="Specify other technologies..." style="display: none; margin-top: 10px;">
+                    </div>
+                </div>
+
+                <!-- Step 4: Top 3 Challenges -->
+                <div class="survey-step" data-step="4" style="display: none;">
+                    <div class="survey-question">
+                        <label class="survey-label">What are your top 3 challenges right now? <span class="required">*</span></label>
+                        <div class="challenge-counter" id="challenge-counter">Select up to 3 challenges (0 selected)</div>
+                        <div class="survey-checkbox-group">
+                            <label class="survey-checkbox challenge-checkbox"><input type="checkbox" name="challenge" value="financing"> Financing</label>
+                            <label class="survey-checkbox challenge-checkbox"><input type="checkbox" name="challenge" value="scouting_permitting"> Scouting and permitting</label>
+                            <label class="survey-checkbox challenge-checkbox"><input type="checkbox" name="challenge" value="grid_connection"> Grid connection</label>
+                            <label class="survey-checkbox challenge-checkbox"><input type="checkbox" name="challenge" value="competition"> Competition</label>
+                            <label class="survey-checkbox challenge-checkbox"><input type="checkbox" name="challenge" value="policy_uncertainty"> Policy uncertainty</label>
+                            <label class="survey-checkbox challenge-checkbox"><input type="checkbox" name="challenge" value="recruitment_skills"> Recruitment and skill gap</label>
+                            <label class="survey-checkbox challenge-checkbox"><input type="checkbox" name="challenge" value="normative_legal"> Normative and legal</label>
+                            <label class="survey-checkbox challenge-checkbox"><input type="checkbox" name="challenge" value="supply_chain"> Supply chain disruptions</label>
+                            <label class="survey-checkbox challenge-checkbox"><input type="checkbox" name="challenge" value="technology_selection"> Technology selection</label>
+                            <label class="survey-checkbox challenge-checkbox"><input type="checkbox" name="challenge" value="market_access"> Market access</label>
+                            <label class="survey-checkbox challenge-checkbox"><input type="checkbox" name="challenge" value="other"> Other</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Weekly Insight Preference -->
+                <div class="survey-step" data-step="5" style="display: none;">
+                    <div class="survey-question">
+                        <label class="survey-label">If SolarIntelligence.ai could give you one insight every week, what would it be about?</label>
+                        <p class="survey-helper-text">Tell us what would be most valuable to you (optional)</p>
+                        <textarea name="weekly_insight" class="survey-textarea" placeholder="E.g., Weekly price trends in European markets, policy updates in my region, emerging technology developments..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="survey-actions">
+                    <button type="button" class="survey-btn survey-btn-secondary" id="survey-stage2-prev-btn" onclick="prevSurveyStage2Step()" style="display: none;">
+                        Previous
+                    </button>
+                    <button type="button" class="survey-btn survey-btn-primary" id="survey-stage2-next-btn" onclick="nextSurveyStage2Step()">
+                        Next
+                    </button>
+                    <button type="submit" class="survey-btn survey-btn-primary" id="survey-stage2-submit-btn" style="display: none;">
+                        Submit & Get 5 More Queries
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Modal Elements -->
     <!-- User Guide Modal -->
@@ -185,8 +512,125 @@
         </div>
     </div>
 
+    <!-- Title Customization Modal -->
+    <div id="title-customization-modal" class="confirm-modal">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-header">
+                <div class="confirm-modal-icon">📊</div>
+                <h3 class="confirm-modal-title">Customize Plot Titles</h3>
+            </div>
+            <div class="confirm-modal-body">
+                <p class="confirm-modal-message">
+                    Customize titles for your plots before exporting:
+                </p>
+                <div id="title-customization-list" class="title-list">
+                    <!-- Plot title inputs will be dynamically added here -->
+                </div>
+                <div class="confirm-modal-actions">
+                    <button class="confirm-btn confirm-btn-cancel" id="title-cancel">Cancel</button>
+                    <button class="confirm-btn confirm-btn-delete" id="title-confirm">Apply & Export</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- External Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="/static/js/suggested_queries.js"></script>
+
+    <!-- Initialize hired agents before main.js -->
+    <script>
+        // Pass hired agents from backend to frontend
+        window.hiredAgents = {{ hired_agents | tojson }};
+
+        // Agent metadata for display names
+        const agentDisplayNames = {
+            market: 'Alex - PV Capacity',
+            price: 'Maya - Price Analysis',
+            news: 'Emma - News Analyst',
+            digitalization: 'Nova - Digitalization Expert'
+        };
+
+        // Initialize agent selector with only hired agents
+        document.addEventListener('DOMContentLoaded', function() {
+            const agentSelect = document.getElementById('agent-select');
+
+            // If user has no hired agents, redirect to agents page
+            if (!window.hiredAgents || window.hiredAgents.length === 0) {
+                window.location.href = '/agents';
+                return;
+            }
+
+            // Clear existing options
+            agentSelect.innerHTML = '';
+
+            // Add only hired agents
+            window.hiredAgents.forEach(agentType => {
+                const option = document.createElement('option');
+                option.value = agentType;
+                option.textContent = agentDisplayNames[agentType] || agentType;
+                agentSelect.appendChild(option);
+            });
+
+            // Set first hired agent as selected
+            if (window.hiredAgents.length > 0) {
+                agentSelect.value = window.hiredAgents[0];
+                // Trigger change event to update suggested queries
+                agentSelect.dispatchEvent(new Event('change'));
+            }
+        });
+    </script>
+
     <script src="/static/js/main.js"></script>
+
+    <style>
+        /* Additional CSS to ensure autocomplete is completely disabled */
+        #user-input {
+            -webkit-autofill: none !important;
+            -webkit-autocomplete: off !important;
+        }
+        
+        /* Hide any remaining autocomplete dropdowns */
+        #user-input::-webkit-contacts-auto-fill-button,
+        #user-input::-webkit-credentials-auto-fill-button {
+            display: none !important;
+        }
+        
+        /* Prevent yellow background on autofill */
+        #user-input:-webkit-autofill,
+        #user-input:-webkit-autofill:hover,
+        #user-input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+            -webkit-text-fill-color: inherit !important;
+        }
+        
+        /* Back to Agents Button */
+        .back-to-agents-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #1f2937;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(251, 191, 36, 0.2);
+        }
+        
+        .back-to-agents-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(251, 191, 36, 0.3);
+            color: #1f2937;
+            text-decoration: none;
+        }
+    </style>
+
+    <!-- GDPR Cookie Consent -->
+    <script src="{{ url_for('static', filename='js/cookie-consent.js') }}"></script>
 </body>
-</html> 
+</html>

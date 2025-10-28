@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Solar Intelligence</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logos/new_logo.svg') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Text', sans-serif;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(251, 191, 36, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(4, 11, 89, 0.4) 0%, transparent 70%),
+                linear-gradient(135deg, #0a1850 0%, #1e1b4b 30%, #312e81 60%, #3730a3 100%);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #ffffff;
+        }
+
+        /* Header */
+        .header {
+            padding: 24px 0;
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo {
+            height: 50px;
+            width: auto;
+            filter: brightness(0) invert(1);
+            opacity: 0.95;
+        }
+
+        .header-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 32px;
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        /* Page Title */
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 300;
+            color: #ffffff;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .page-subtitle {
+            font-size: 1.125rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 24px;
+        }
+
+        /* Input Fields */
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(233, 165, 68, 0.5);
+            box-shadow: 0 0 0 3px rgba(233, 165, 68, 0.1);
+        }
+
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Buttons */
+        .btn-primary {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #E9A544 0%, #E8BF4F 100%);
+            color: #ffffff;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(233, 165, 68, 0.3);
+        }
+
+        .btn-secondary {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-danger {
+            padding: 12px 24px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        /* Stats Grid */
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .stat-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #E9A544 0%, #E8BF4F 100%);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        /* Plan Badge */
+        .plan-badge {
+            background: linear-gradient(135deg, #E9A544 0%, #E8BF4F 100%);
+            padding: 24px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(233, 165, 68, 0.2);
+        }
+
+        .plan-type {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-transform: capitalize;
+            margin-bottom: 8px;
+        }
+
+        .plan-status {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Label */
+        .label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 8px;
+        }
+
+        .value {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 400;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            border: 1px solid;
+        }
+
+        .alert-success {
+            background: rgba(34, 197, 94, 0.15);
+            border-color: rgba(34, 197, 94, 0.3);
+            color: #86efac;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        /* Activity Item */
+        .activity-item {
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .activity-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateX(4px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div style="max-width: 1400px; margin: 0 auto; padding: 0 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <a href="/agents">
+                    <img src="{{ url_for('static', filename='logos/new_logo.svg') }}" alt="Solar Intelligence" class="logo">
+                </a>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <a href="/agents" class="header-btn">Dashboard</a>
+                    <a href="/logout" class="header-btn">Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main style="max-width: 1400px; margin: 0 auto; padding: 40px 24px 80px;">
+        <!-- Page Header -->
+        <div style="margin-bottom: 48px;">
+            <h1 class="page-title">My Profile</h1>
+            <p class="page-subtitle">Manage your account settings and view usage statistics</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alert-container"></div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <!-- Left Column -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <!-- Account Information -->
+                <div class="glass-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+                        <h2 class="section-title" style="margin: 0;">Account Information</h2>
+                        <button id="edit-profile-btn" class="btn-secondary" style="padding: 8px 16px; font-size: 0.8125rem;">
+                            Edit
+                        </button>
+                    </div>
+
+                    <div style="display: grid; gap: 24px;">
+                        <div>
+                            <span class="label">Username</span>
+                            <p class="value">{{ user.username }}</p>
+                        </div>
+                        <div>
+                            <span class="label">Full Name</span>
+                            <p id="display-full-name" class="value">{{ user.full_name }}</p>
+                            <input type="text" id="edit-full-name" class="input-field" value="{{ user.full_name }}" style="display: none;">
+                        </div>
+                        <div>
+                            <span class="label">Role</span>
+                            <p class="value" style="text-transform: capitalize;">{{ user.role }}</p>
+                        </div>
+                        <div>
+                            <span class="label">Member Since</span>
+                            <p class="value">{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}</p>
+                        </div>
+                        <div id="save-profile-container" style="display: none; padding-top: 8px;">
+                            <button id="save-profile-btn" class="btn-primary" style="margin-right: 12px;">Save Changes</button>
+                            <button id="cancel-edit-btn" class="btn-secondary">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Change Password -->
+                <div class="glass-card">
+                    <h2 class="section-title">Change Password</h2>
+
+                    <form id="change-password-form" style="display: grid; gap: 20px;">
+                        <div>
+                            <label for="current-password" class="label">Current Password</label>
+                            <input type="password" id="current-password" name="current_password" required class="input-field">
+                        </div>
+                        <div>
+                            <label for="new-password" class="label">New Password</label>
+                            <input type="password" id="new-password" name="new_password" required class="input-field">
+                            <p style="margin-top: 6px; font-size: 0.75rem; color: rgba(255, 255, 255, 0.5);">Minimum 8 characters</p>
+                        </div>
+                        <div>
+                            <label for="confirm-password" class="label">Confirm New Password</label>
+                            <input type="password" id="confirm-password" name="confirm_password" required class="input-field">
+                        </div>
+                        <button type="submit" class="btn-primary" style="width: 100%; margin-top: 8px;">
+                            Update Password
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Data & Privacy -->
+                <div class="glass-card">
+                    <h2 class="section-title">Data & Privacy</h2>
+                    <p style="font-size: 0.875rem; color: rgba(255, 255, 255, 0.6); margin-bottom: 24px;">
+                        Download a copy of your data or request account deletion.
+                    </p>
+                    <div style="display: flex; gap: 12px;">
+                        <button id="export-data-btn" class="btn-primary">
+                            Export My Data
+                        </button>
+                        <a href="/gdpr/request-deletion" class="btn-danger" style="text-decoration: none; display: inline-block;">
+                            Delete Account
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <!-- Current Plan -->
+                <div class="plan-badge">
+                    <p class="plan-type">{{ plan_info.type }}</p>
+                    <p class="plan-status">{{ plan_info.status }}</p>
+                    {% if plan_info.type == 'free' %}
+                    <button id="upgrade-plan-btn" style="margin-top: 20px; width: 100%; padding: 12px; background: #ffffff; color: #E9A544; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                        Upgrade to Premium
+                    </button>
+                    {% else %}
+                    <p style="margin-top: 16px; font-size: 0.875rem; color: rgba(255, 255, 255, 0.8);">
+                        Expires: {{ plan_info.end_date.strftime('%B %d, %Y') if plan_info.end_date else 'N/A' }}
+                    </p>
+                    {% endif %}
+                </div>
+
+                <!-- Usage Statistics -->
+                <div class="glass-card">
+                    <h2 class="section-title">Usage Statistics</h2>
+
+                    <!-- Queries This Month -->
+                    <div style="margin-bottom: 28px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <span style="font-size: 0.875rem; color: rgba(255, 255, 255, 0.7); font-weight: 500;">Queries This Month</span>
+                            <span style="font-size: 0.875rem; font-weight: 700; color: #E9A544;">{{ usage_stats.monthly_queries }} / {{ usage_stats.query_limit }}</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ (usage_stats.monthly_queries / usage_stats.query_limit * 100) if usage_stats.query_limit > 0 else 0 }}%"></div>
+                        </div>
+                        <p style="margin-top: 8px; font-size: 0.75rem; color: rgba(255, 255, 255, 0.5);">
+                            {{ usage_stats.queries_remaining }} queries remaining
+                        </p>
+                    </div>
+
+                    <!-- Stats List -->
+                    <div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Queries</span>
+                            <span class="stat-value">{{ usage_stats.total_queries }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Conversations</span>
+                            <span class="stat-value">{{ usage_stats.total_conversations }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Messages Sent</span>
+                            <span class="stat-value">{{ usage_stats.total_messages }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Account Age</span>
+                            <span class="stat-value">{{ usage_stats.account_age_days }} days</span>
+                        </div>
+                    </div>
+
+                    {% if usage_stats.last_query_date %}
+                    <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                        <p style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.5);">
+                            Last activity: {{ usage_stats.last_query_date.strftime('%b %d, %Y at %I:%M %p') }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Recent Activity -->
+                {% if recent_conversations %}
+                <div class="glass-card">
+                    <h2 class="section-title">Recent Activity</h2>
+                    <div style="display: grid; gap: 12px;">
+                        {% for conv in recent_conversations %}
+                        <div class="activity-item">
+                            <p style="font-size: 0.875rem; font-weight: 600; color: #ffffff; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                {{ conv.title or 'Untitled Conversation' }}
+                            </p>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.75rem; color: rgba(233, 165, 68, 0.9); text-transform: capitalize;">
+                                    {{ conv.agent_type }} Agent
+                                </span>
+                                <span style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.4);">
+                                    {{ conv.created_at.strftime('%b %d, %Y') if conv.created_at else 'N/A' }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/js/profile.js"></script>
+</body>
+</html>

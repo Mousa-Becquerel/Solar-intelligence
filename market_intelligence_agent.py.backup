@@ -1,0 +1,1068 @@
+"""
+Market Intelligence Agent
+=========================
+
+Single-agent workflow for PV market data analysis with code interpreter.
+Uses OpenAI Agents SDK with CodeInterpreterTool for data processing and visualization.
+"""
+
+import os
+import logging
+import re
+from typing import Optional, Dict, Any
+from dataclasses import dataclass
+from dotenv import load_dotenv
+import asyncio
+from pydantic import BaseModel
+
+# Import from openai-agents library
+from agents import Agent, Runner, CodeInterpreterTool, SQLiteSession, ModelSettings, RunConfig, trace, TResponseInputItem
+from openai.types.shared.reasoning import Reasoning
+
+# Logfire imports
+import logfire
+
+# === Configure logging ===
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# === Utility Functions ===
+def clean_citation_markers(text: str) -> str:
+    """
+    Remove OpenAI citation markers from text.
+
+    Citation format: 【citation_number:citation_index†source_file$content】
+    Example: 【7:3†news_articles_pretty.json$'s largest floating PV plant】
+
+    Args:
+        text: Text containing citation markers
+
+    Returns:
+        Cleaned text without citation markers
+    """
+    # Pattern to match citation markers: 【...】
+    # These markers include special unicode brackets 【】
+    pattern = r'【[^】]*】'
+    cleaned = re.sub(pattern, '', text)
+
+    # Also remove any orphaned opening brackets
+    cleaned = re.sub(r'【', '', cleaned)
+
+    # Clean up any extra spaces or line breaks caused by removal
+    cleaned = re.sub(r'\s+\(', ' (', cleaned)  # Fix spacing before parentheses
+    cleaned = re.sub(r'\)\s*\n\s*\)', ')', cleaned)  # Remove empty parentheses
+
+    return cleaned
+
+# === Load environment variables ===
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+if not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY environment variable is required")
+
+# Set OpenAI API key for agents library
+os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+
+# === Pydantic Models ===
+class WorkflowInput(BaseModel):
+    """Input for the market intelligence workflow"""
+    input_as_text: str
+
+@dataclass
+class MarketIntelligenceConfig:
+    """Configuration for the market intelligence agent"""
+    model: str = "gpt-5"
+    file_id: str = "file-Vm5DKf4eRxQiG1D54uaJs1"  # Market_Database_Final.csv
+    agent_name: str = "Market Intelligence Agent"
+    verbose: bool = True
+
+class MarketIntelligenceAgent:
+    """
+    Single-agent market intelligence workflow using OpenAI Agents SDK.
+    Provides expert analysis on PV market data using code interpreter.
+    """
+
+    MARKET_INTELLIGENCE_PROMPT = """You are an agent which has access to PV market data, you should answer any PV market data only from here, this is the schema of the data:
+
+dataset:
+  name: Market_Database_Final
+  version: 1.0.0
+  description: Inferred schema for Market_Database_Final.csv generated automatically
+    by profiling the dataset.
+  source: User-provided CSV
+  encoding: cp1252
+schema:
+  fields:
+  - name: CountryCode
+    type: string
+    description: Country where the data point applies (ISO common name).
+    example: ALB
+    nullable: true
+    examples:
+    - ITA
+    - FRA
+    - CHE
+    - AUT
+    - DEU
+  - name: Territory
+    type: string
+    description: Textual label or descriptor.
+    example: Albania
+    constraints:
+      required: true
+    examples:
+    - RoW
+    - Oceania
+    - World
+    - Europe
+    - EU
+  - name: Continent
+    type: boolean
+    description: True if the Territory is a Continent, False if a Country.
+    example: 'False'
+    constraints:
+      required: true
+      enum:
+      - 'False'
+      - 'True'
+    examples:
+    - 'False'
+    - 'True'
+  - name: Region
+    type: boolean
+    description: Geographic region or market grouping.
+    example: 'False'
+    constraints:
+      required: true
+      enum:
+      - 'False'
+      - 'True'
+    examples:
+    - 'False'
+    - 'True'
+  - name: EU
+    type: boolean
+    description: Is the country from EU?
+    example: 'False'
+    constraints:
+      required: true
+      enum:
+      - 'False'
+      - 'True'
+    examples:
+    - 'False'
+    - 'True'
+  - name: ASIAN
+    type: boolean
+    description: Is the Country Asian?
+    example: 'False'
+    constraints:
+      required: true
+      enum:
+      - 'False'
+      - 'True'
+    examples:
+    - 'False'
+    - 'True'
+  - name: Year
+    type: datetime
+    description: Calendar year (Gregorian).
+    example: '2023'
+    constraints:
+      required: true
+      min: '1970-01-01T00:00:00.000001992'
+      max: '1970-01-01T00:00:00.000002030'
+      enum:
+      - '1992'
+      - '1993'
+      - '1994'
+      - '1995'
+      - '1996'
+      - '1997'
+      - '1998'
+      - '1999'
+      - '2000'
+      - '2001'
+      - '2002'
+      - '2003'
+      - '2004'
+      - '2005'
+      - '2006'
+      - '2007'
+      - '2008'
+      - '2009'
+      - '2010'
+      - '2011'
+      - '2012'
+      - '2013'
+      - '2014'
+      - '2015'
+      - '2016'
+      - '2017'
+      - '2018'
+      - '2019'
+      - '2020'
+      - '2021'
+      - '2022'
+      - '2023'
+      - '2024'
+      - '2025'
+      - '2026'
+      - '2027'
+      - '2028'
+      - '2029'
+      - '2030'
+    examples:
+    - '2024'
+    - '2023'
+    - '2025'
+    - '2026'
+    - '2027'
+  - name: Scenario
+    type: string
+    description: Scenario/case name (e.g., Base, High, Low).
+    example: Historical Primary
+    constraints:
+      required: true
+      enum:
+      - Forecast - High
+      - Forecast - Low
+      - Forecast - Most probable
+      - Historical Primary
+      - Historical Secondary
+    examples:
+    - Historical Primary
+    - Forecast - High
+    - Forecast - Most probable
+    - Forecast - Low
+    - Historical Secondary
+  - name: Duration
+    type: string
+    description: Textual label or descriptor.
+    example: FY
+    constraints:
+      required: true
+      enum:
+      - FY
+      - Q1
+      - Q2
+      - Q3
+      - Q4
+    examples:
+    - FY
+    - Q1
+    - Q2
+    - Q3
+    - Q4
+  - name: Connection
+    type: string
+    description: Textual label or descriptor.
+    example: Total
+    constraints:
+      required: true
+      enum:
+      - Centralised
+      - Distributed
+      - Off-grid
+      - Total
+    examples:
+    - Total
+    - Distributed
+    - Centralised
+    - Off-grid
+  - name: Segment
+    type: string
+    description: Segment classification (e.g., residential, C&I, utility).
+    example: Total
+    constraints:
+      required: true
+      enum:
+      - AgriPV
+      - Commercial & Industrial
+      - Floating PV
+      - Ground-mounted
+      - Residential
+      - Total
+    examples:
+    - Total
+    - Commercial & Industrial
+    - Residential
+    - Ground-mounted
+    - Floating PV
+  - name: Applications
+    type: string
+    description: Application or use-case (e.g., rooftop, ground-mounted, BIPV).
+    example: Total
+    constraints:
+      required: true
+      enum:
+      - BAPV
+      - BIPV
+      - Commercial BAPV
+      - Industrial BAPV
+      - Residential BAPV
+      - Total
+    examples:
+    - Total
+    - BIPV
+    - Residential BAPV
+    - Industrial BAPV
+    - BAPV
+  - name: Type
+    type: string
+    description: Category/type label for grouping records.
+    example: Annual
+    constraints:
+      required: true
+      enum:
+      - Annual
+      - Cumulative
+    examples:
+    - Cumulative
+    - Annual
+  - name: Capacity(MW)
+    type: datetime
+    description: Power capacity. Units inferred from column name (kW/MW/GW).
+    example: 1.0
+    constraints:
+      required: true
+      min: '1969-12-31T23:59:59.999999800'
+      max: '1970-01-01T00:00:00.002260919'
+    examples:
+    - '1.0'
+    - '0.1'
+    - '2.0'
+    - '0.01'
+    - '0.2'
+  - name: AC/DC
+    type: string
+    description: Textual label or descriptor.
+    example: DC
+    nullable: true
+    examples:
+    - DC
+  - name: Estimated/Confirmed
+    type: string
+    description: Textual label or descriptor.
+    example: Estimated
+    constraints:
+      enum:
+      - Confirmed
+      - Estimated
+    nullable: true
+    examples:
+    - Confirmed
+    - Estimated
+  - name: Installed/Decomissioned
+    type: string
+    description: Textual label or descriptor.
+    example: Installed
+    constraints:
+      required: true
+    examples:
+    - Installed
+  primary_key: []
+  unique_constraints: []
+  notes: This schema was inferred. Review descriptions, enums, and constraints before
+    production use.
+profiling:
+  row_count: 42639
+  column_count: 18
+  generated_at: '2025-10-22T14:30:29'
+  null_summary:
+    CountryCode: 13311
+    Territory: 0
+    Continent: 0
+    Region: 0
+    EU: 0
+    ASEAN: 0
+    Year: 0
+    YearDate: 13311
+    Scenario: 0
+    Duration: 0
+    Connection: 0
+    Segment: 0
+    Applications: 0
+    Type: 0
+    Capacity(MW): 0
+    AC/DC: 13311
+    Estimated/Confirmed: 13311
+    Installed/Decomissioned: 0
+
+**Data Issue Summary:**
+The dataset contains "Total" rows alongside detailed rows across multiple dimensions (Connection, Segment, Applications). When summed together, these totals and details overlap, leading to double counting — especially for cumulative figures (e.g., Italy 2024 > 37 GW baseline vs > 80 GW when misaggregated). Additionally, detailed breakdowns do not always sum back to the corresponding totals, indicating missing or partial segmentation.
+
+**Recommendations:**
+1. Filter correctly:
+   - Group by one dimension while fixing others to "Total" and excluding "Total" in the active dimension.
+   - Example: Connection ≠ Total, Segment = Total, Applications = Total.
+2. Avoid mixing totals with details in aggregation queries.
+3. Quantify unallocated portions (totals − sum of details) to track missing breakdowns.
+4. Document rules in the schema: mark "Total" as a sentinel aggregation level in these categorical fields.
+
+This approach prevents double counting and ensures consistent, additive segmentation across Connection, Segment, and Application dimensions.
+
+**Response Formatting Guidelines:**
+- Use proper markdown formatting with headers (##), bullet points (-), and numbered lists
+- Break content into clear sections with descriptive headers
+- Use **bold** for key terms and important numbers
+- Add blank lines between sections for readability
+- Structure long lists as proper bullet points, not run-on sentences
+- Use concise paragraphs (2-3 sentences max)
+
+**Content Guidelines:**
+- Analyze data carefully to avoid double counting
+- Always apply proper filters when aggregating data
+- Provide specific examples and data from the dataset when available
+- If information is not in the dataset, clearly state that
+- Keep responses clear, well-structured, and actionable
+- Focus on accurate data analysis and insights
+
+**Important Guidelines:**You are an agent which has access to PV market data, you should answer any PV market data only from here, this is the schema of the data:
+
+dataset:
+  name: Market_Database_Final
+  version: 1.0.0
+  description: Inferred schema for Market_Database_Final.csv generated automatically
+    by profiling the dataset.
+  source: User-provided CSV
+  encoding: cp1252
+schema:
+  fields:
+  - name: CountryCode
+    type: string
+    description: Country where the data point applies (ISO common name).
+    example: ALB
+    nullable: true
+    examples:
+    - ITA
+    - FRA
+    - CHE
+    - AUT
+    - DEU
+  - name: Territory
+    type: string
+    description: Textual label or descriptor.
+    example: Albania
+    constraints:
+      required: true
+    examples:
+    - RoW
+    - Oceania
+    - World
+    - Europe
+    - EU
+  - name: Continent
+    type: boolean
+    description: True if the Territory is a Continent, False if a Country.
+    example: 'False'
+    constraints:
+      required: true
+      enum:
+      - 'False'
+      - 'True'
+    examples:
+    - 'False'
+    - 'True'
+  - name: Region
+    type: boolean
+    description: Geographic region or market grouping.
+    example: 'False'
+    constraints:
+      required: true
+      enum:
+      - 'False'
+      - 'True'
+    examples:
+    - 'False'
+    - 'True'
+  - name: EU
+    type: boolean
+    description: Is the country from EU?
+    example: 'False'
+    constraints:
+      required: true
+      enum:
+      - 'False'
+      - 'True'
+    examples:
+    - 'False'
+    - 'True'
+  - name: ASIAN
+    type: boolean
+    description: Is the Country Asian?
+    example: 'False'
+    constraints:
+      required: true
+      enum:
+      - 'False'
+      - 'True'
+    examples:
+    - 'False'
+    - 'True'
+  - name: Year
+    type: datetime
+    description: Calendar year (Gregorian).
+    example: '2023'
+    constraints:
+      required: true
+      min: '1970-01-01T00:00:00.000001992'
+      max: '1970-01-01T00:00:00.000002030'
+      enum:
+      - '1992'
+      - '1993'
+      - '1994'
+      - '1995'
+      - '1996'
+      - '1997'
+      - '1998'
+      - '1999'
+      - '2000'
+      - '2001'
+      - '2002'
+      - '2003'
+      - '2004'
+      - '2005'
+      - '2006'
+      - '2007'
+      - '2008'
+      - '2009'
+      - '2010'
+      - '2011'
+      - '2012'
+      - '2013'
+      - '2014'
+      - '2015'
+      - '2016'
+      - '2017'
+      - '2018'
+      - '2019'
+      - '2020'
+      - '2021'
+      - '2022'
+      - '2023'
+      - '2024'
+      - '2025'
+      - '2026'
+      - '2027'
+      - '2028'
+      - '2029'
+      - '2030'
+    examples:
+    - '2024'
+    - '2023'
+    - '2025'
+    - '2026'
+    - '2027'
+  - name: Scenario
+    type: string
+    description: Scenario/case name (e.g., Base, High, Low).
+    example: Historical Primary
+    constraints:
+      required: true
+      enum:
+      - Forecast - High
+      - Forecast - Low
+      - Forecast - Most probable
+      - Historical Primary
+      - Historical Secondary
+    examples:
+    - Historical Primary
+    - Forecast - High
+    - Forecast - Most probable
+    - Forecast - Low
+    - Historical Secondary
+  - name: Duration
+    type: string
+    description: Textual label or descriptor.
+    example: FY
+    constraints:
+      required: true
+      enum:
+      - FY
+      - Q1
+      - Q2
+      - Q3
+      - Q4
+    examples:
+    - FY
+    - Q1
+    - Q2
+    - Q3
+    - Q4
+  - name: Connection
+    type: string
+    description: Textual label or descriptor.
+    example: Total
+    constraints:
+      required: true
+      enum:
+      - Centralised
+      - Distributed
+      - Off-grid
+      - Total
+    examples:
+    - Total
+    - Distributed
+    - Centralised
+    - Off-grid
+  - name: Segment
+    type: string
+    description: Segment classification (e.g., residential, C&I, utility).
+    example: Total
+    constraints:
+      required: true
+      enum:
+      - AgriPV
+      - Commercial & Industrial
+      - Floating PV
+      - Ground-mounted
+      - Residential
+      - Total
+    examples:
+    - Total
+    - Commercial & Industrial
+    - Residential
+    - Ground-mounted
+    - Floating PV
+  - name: Applications
+    type: string
+    description: Application or use-case (e.g., rooftop, ground-mounted, BIPV).
+    example: Total
+    constraints:
+      required: true
+      enum:
+      - BAPV
+      - BIPV
+      - Commercial BAPV
+      - Industrial BAPV
+      - Residential BAPV
+      - Total
+    examples:
+    - Total
+    - BIPV
+    - Residential BAPV
+    - Industrial BAPV
+    - BAPV
+  - name: Type
+    type: string
+    description: Category/type label for grouping records.
+    example: Annual
+    constraints:
+      required: true
+      enum:
+      - Annual
+      - Cumulative
+    examples:
+    - Cumulative
+    - Annual
+  - name: Capacity(MW)
+    type: datetime
+    description: Power capacity. Units inferred from column name (kW/MW/GW).
+    example: 1.0
+    constraints:
+      required: true
+      min: '1969-12-31T23:59:59.999999800'
+      max: '1970-01-01T00:00:00.002260919'
+    examples:
+    - '1.0'
+    - '0.1'
+    - '2.0'
+    - '0.01'
+    - '0.2'
+  - name: AC/DC
+    type: string
+    description: Textual label or descriptor.
+    example: DC
+    nullable: true
+    examples:
+    - DC
+  - name: Estimated/Confirmed
+    type: string
+    description: Textual label or descriptor.
+    example: Estimated
+    constraints:
+      enum:
+      - Confirmed
+      - Estimated
+    nullable: true
+    examples:
+    - Confirmed
+    - Estimated
+  - name: Installed/Decomissioned
+    type: string
+    description: Textual label or descriptor.
+    example: Installed
+    constraints:
+      required: true
+    examples:
+    - Installed
+  primary_key: []
+  unique_constraints: []
+  notes: This schema was inferred. Review descriptions, enums, and constraints before
+    production use.
+profiling:
+  row_count: 42639
+  column_count: 18
+  generated_at: '2025-10-22T14:30:29'
+  null_summary:
+    CountryCode: 13311
+    Territory: 0
+    Continent: 0
+    Region: 0
+    EU: 0
+    ASEAN: 0
+    Year: 0
+    YearDate: 13311
+    Scenario: 0
+    Duration: 0
+    Connection: 0
+    Segment: 0
+    Applications: 0
+    Type: 0
+    Capacity(MW): 0
+    AC/DC: 13311
+    Estimated/Confirmed: 13311
+    Installed/Decomissioned: 0
+
+By default, when answering user queries, the agent must always use the dataset entries where Connection = \"Total\", Segment = \"Total\", and Applications = \"Total\". This default rule ensures that all reported figures represent consolidated totals without double counting across different categories or dimensions.
+If the user explicitly asks for a more detailed breakdown — for example, by connection type (Distributed, Centralised, Off-grid), by segment (Residential, C&I, Ground-mounted, etc.), or by application (BAPV, BIPV, etc.) — then the agent may remove the corresponding \"Total\" filter for that specific dimension while keeping the remaining dimensions fixed to \"Total\".
+In short:
+Default responses → use only total entries (Connection = Segment = Applications = \"Total\")
+Breakdown queries → release the relevant filter(s) while keeping the others set to \"Total\"
+This rule guarantees consistency and prevents double counting when generating cumulative or comparative results.
+
+
+Never give any link to the user to download anything
+"""
+
+    def __init__(self, config: Optional[MarketIntelligenceConfig] = None):
+        """
+        Initialize the Market Intelligence Agent
+
+        Args:
+            config: Configuration object for the agent
+        """
+        self.config = config or MarketIntelligenceConfig()
+        self.market_intelligence_agent = None
+        self.conversation_sessions: Dict[str, Any] = {}  # conversation_id -> session
+
+        logger.info("Using SQLite for session storage (simple and reliable)")
+
+        # Initialize agent
+        self._initialize_agent()
+
+        logger.info(f"✅ Market Intelligence Agent initialized (Memory: SQLite)")
+
+    def _initialize_agent(self):
+        """Create the market intelligence agent"""
+        try:
+            # Create code interpreter tool
+            code_interpreter = CodeInterpreterTool(tool_config={
+                "type": "code_interpreter",
+                "container": {
+                    "type": "auto",
+                    "file_ids": [self.config.file_id]
+                }
+            })
+
+            # Create market intelligence agent with code interpreter
+            self.market_intelligence_agent = Agent(
+                name=self.config.agent_name,
+                instructions=self.MARKET_INTELLIGENCE_PROMPT,
+                model=self.config.model,
+                tools=[code_interpreter],
+                model_settings=ModelSettings(
+                    store=True,
+                    reasoning=Reasoning(
+                        effort="low",
+                        summary="auto"
+                    )
+                )
+            )
+            logger.info(f"✅ Created market intelligence agent with file: {self.config.file_id}")
+
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize agent: {e}")
+            raise
+
+    async def run_workflow(self, workflow_input: WorkflowInput, conversation_id: str = None):
+        """
+        Run the market intelligence workflow
+
+        Args:
+            workflow_input: Input containing the user query
+            conversation_id: Optional conversation ID for maintaining context
+
+        Returns:
+            Dictionary with output_text containing the response
+        """
+        with trace("New workflow"):
+            # Get or create session for this conversation
+            session = None
+            if conversation_id:
+                if conversation_id not in self.conversation_sessions:
+                    session_id = f"market_intelligence_{conversation_id}"
+                    self.conversation_sessions[conversation_id] = SQLiteSession(
+                        session_id=session_id
+                    )
+                    logger.info(f"Created SQLite session for conversation {conversation_id}")
+
+                session = self.conversation_sessions[conversation_id]
+
+            # Prepare conversation history
+            workflow = workflow_input.model_dump()
+            conversation_history: list[TResponseInputItem] = [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": workflow["input_as_text"]
+                        }
+                    ]
+                }
+            ]
+
+            # Run market intelligence agent
+            market_intelligence_agent_result_temp = await Runner.run(
+                self.market_intelligence_agent,
+                input=[*conversation_history],
+                session=session,
+                run_config=RunConfig(trace_metadata={
+                    "__trace_source__": "agent-builder",
+                    "workflow_id": "wf_68f8ee69c4b08190a43a5228e4bd187f052c9fdd8dad6389"
+                })
+            )
+
+            # Update conversation history
+            conversation_history.extend([item.to_input_item() for item in market_intelligence_agent_result_temp.new_items])
+
+            # Extract final output
+            output_text = market_intelligence_agent_result_temp.final_output_as(str)
+
+            # Clean citation markers
+            output_text = clean_citation_markers(output_text)
+
+            market_intelligence_agent_result = {
+                "output_text": output_text
+            }
+
+            return market_intelligence_agent_result
+
+    async def analyze_stream(self, query: str, conversation_id: str = None):
+        """
+        Analyze query with streaming response
+
+        Args:
+            query: Natural language query
+            conversation_id: Optional conversation ID for maintaining context
+
+        Yields:
+            Text chunks as they are generated
+        """
+        try:
+            logger.info(f"Processing query (streaming): {query}")
+
+            # Get or create session for this conversation
+            session = None
+            if conversation_id:
+                if conversation_id not in self.conversation_sessions:
+                    session_id = f"market_intelligence_{conversation_id}"
+                    self.conversation_sessions[conversation_id] = SQLiteSession(
+                        session_id=session_id
+                    )
+                    logger.info(f"Created SQLite session for conversation {conversation_id}")
+
+                session = self.conversation_sessions[conversation_id]
+
+            # Run with streaming
+            result = Runner.run_streamed(self.market_intelligence_agent, query, session=session)
+
+            # Stream text deltas as they arrive
+            async for event in result.stream_events():
+                # Log all event types to understand what's available
+                if hasattr(event, 'data'):
+                    logger.info(f"Stream event type: {event.type}, data type: {type(event.data).__name__}")
+                else:
+                    logger.info(f"Stream event type: {event.type} (no data attribute)")
+
+                if event.type == "raw_response_event":
+                    # Check if it's a text delta event
+                    from openai.types.responses import ResponseTextDeltaEvent
+                    if isinstance(event.data, ResponseTextDeltaEvent):
+                        # Clean citation markers before yielding
+                        cleaned_delta = clean_citation_markers(event.data.delta)
+                        if cleaned_delta:  # Only yield if there's content after cleaning
+                            yield cleaned_delta
+
+            # After streaming completes, check for files in the result
+            # Note: result is RunResultStreaming, we can access attributes directly
+            logger.info(f"Final result type: {type(result)}")
+            logger.info(f"Final result attributes: {dir(result)}")
+
+            # Check raw_responses for file information
+            if hasattr(result, 'raw_responses'):
+                logger.info(f"Number of raw responses: {len(result.raw_responses)}")
+                for idx, resp in enumerate(result.raw_responses):
+                    logger.info(f"Raw response {idx}: type={type(resp).__name__}")
+                    if hasattr(resp, 'output'):
+                        for out_idx, output in enumerate(resp.output):
+                            logger.info(f"  Output {out_idx}: type={type(output).__name__}, content_type={output.type if hasattr(output, 'type') else 'unknown'}")
+                            # Check for files in output - content might be None for reasoning items
+                            if hasattr(output, 'content') and output.content is not None:
+                                for content_idx, content_item in enumerate(output.content):
+                                    logger.info(f"    Content {content_idx}: type={type(content_item).__name__}")
+                                    if hasattr(content_item, 'file_id'):
+                                        logger.info(f"      FILE FOUND: file_id={content_item.file_id}")
+                            # Also check for direct file attributes on output items
+                            if hasattr(output, 'file_id'):
+                                logger.info(f"  FILE IN OUTPUT: file_id={output.file_id}")
+
+            # Check new_items for file information
+            if hasattr(result, 'new_items'):
+                logger.info(f"Number of new items: {len(result.new_items)}")
+                for idx, item in enumerate(result.new_items):
+                    logger.info(f"New item {idx}: type={type(item).__name__}, item_type={item.type if hasattr(item, 'type') else 'unknown'}")
+
+        except Exception as e:
+            error_msg = f"Failed to stream query: {str(e)}"
+            logger.error(error_msg)
+            import traceback
+            logger.error(traceback.format_exc())
+            yield f"\n\n**Error:** {error_msg}"
+
+    async def analyze(self, query: str, conversation_id: str = None) -> Dict[str, Any]:
+        """
+        Analyze market intelligence query
+
+        Args:
+            query: Natural language query about PV market data
+            conversation_id: Optional conversation ID for maintaining context
+
+        Returns:
+            Dictionary with analysis results and metadata
+        """
+        # Logfire span for market intelligence agent
+        with logfire.span("market_intelligence_agent_call") as agent_span:
+            agent_span.set_attribute("agent_type", "market_intelligence")
+            agent_span.set_attribute("conversation_id", str(conversation_id))
+            agent_span.set_attribute("message_length", len(query))
+            agent_span.set_attribute("user_message", query)
+
+            try:
+                logger.info(f"Processing market intelligence query: {query}")
+
+                # Create workflow input
+                workflow_input = WorkflowInput(input_as_text=query)
+
+                # Run workflow
+                result = await self.run_workflow(workflow_input, conversation_id)
+
+                # Extract response
+                response_text = result.get("output_text", "")
+
+                # Track the response
+                agent_span.set_attribute("assistant_response", response_text)
+                agent_span.set_attribute("response_length", len(response_text))
+                agent_span.set_attribute("success", True)
+
+                logger.info(f"✅ Market intelligence agent response: {response_text[:100]}...")
+
+                return {
+                    "success": True,
+                    "analysis": response_text,
+                    "usage": None,  # Usage info not directly available in this architecture
+                    "query": query
+                }
+
+            except Exception as e:
+                error_msg = f"Failed to analyze market intelligence query: {str(e)}"
+                logger.error(error_msg)
+                agent_span.set_attribute("success", False)
+                agent_span.set_attribute("error", str(e))
+                return {
+                    "success": False,
+                    "error": error_msg,
+                    "analysis": None,
+                    "usage": None,
+                    "query": query
+                }
+
+    def clear_conversation_memory(self, conversation_id: str = None):
+        """Clear conversation memory by removing session"""
+        if conversation_id:
+            if conversation_id in self.conversation_sessions:
+                del self.conversation_sessions[conversation_id]
+                logger.info(f"Cleared conversation session for {conversation_id}")
+        else:
+            # Clear all sessions
+            self.conversation_sessions.clear()
+            logger.info("Cleared all conversation sessions")
+
+    def get_conversation_memory_info(self) -> Dict[str, Any]:
+        """Get information about conversation memory usage"""
+        return {
+            "total_conversations": len(self.conversation_sessions),
+            "conversation_ids": list(self.conversation_sessions.keys()),
+        }
+
+    def cleanup(self):
+        """Cleanup resources"""
+        try:
+            logger.info("Market intelligence agent ready for cleanup if needed")
+        except Exception as e:
+            logger.error(f"Error during cleanup: {e}")
+
+# Global agent instance
+_market_intelligence_agent = None
+
+def get_market_intelligence_agent() -> Optional[MarketIntelligenceAgent]:
+    """Get or create the global market intelligence agent instance"""
+    global _market_intelligence_agent
+    if _market_intelligence_agent is None:
+        try:
+            config = MarketIntelligenceConfig()
+            _market_intelligence_agent = MarketIntelligenceAgent(config)
+            logger.info("✅ Global market intelligence agent created")
+        except Exception as e:
+            logger.error(f"❌ Failed to create market intelligence agent: {e}")
+            return None
+    return _market_intelligence_agent
+
+def close_market_intelligence_agent():
+    """Close the global market intelligence agent"""
+    global _market_intelligence_agent
+    if _market_intelligence_agent:
+        _market_intelligence_agent.cleanup()
+        _market_intelligence_agent = None
+        logger.info("✅ Global market intelligence agent closed")
+
+# Test function
+async def test_market_intelligence_agent():
+    """Test the market intelligence agent"""
+    try:
+        agent = get_market_intelligence_agent()
+        if agent:
+            result = await agent.analyze(
+                "What is the total installed PV capacity in Europe for 2024?",
+                conversation_id="test-1"
+            )
+            print("Market Intelligence Agent response received successfully")
+            print(f"Response length: {len(result.get('analysis', ''))}")
+            print(f"\nResponse:\n{result.get('analysis', '')}")
+            return result
+        else:
+            print("Market Intelligence Agent not available")
+            return None
+    except Exception as e:
+        print(f"Market Intelligence Agent error: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+    finally:
+        close_market_intelligence_agent()
+
+if __name__ == "__main__":
+    asyncio.run(test_market_intelligence_agent())

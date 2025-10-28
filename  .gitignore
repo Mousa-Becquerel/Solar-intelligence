@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Environment / Secrets
+.env
+.env.*
+
+# Node
+node_modules/
+
+# Build / Dist
+dist/
+build/
+
+# Flask/Instance data
+instance/*.db
+instance/*.sqlite
+flask_session/
+memory_dumps/
+
+# Large binaries and exports
+exports/**
+!exports/.gitkeep
+static/plots/**
+!static/plots/.gitkeep
+
+# Datasets (keep metadata, ignore heavy data)
+datasets/**/*.parquet
+datasets/**/*.backup
+
+# Logs
+*.log
+
+# Poetry
+poetry.lock
+functional_env/
+
+# Local runtime
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+

@@ -1,0 +1,23 @@
+{
+  "name": "full_data_dh_bot",
+  "version": "1.0.0",
+  "description": "This is a focused application that uses a **Pydantic-AI based Weaviate agent** for PV market analysis through vector database queries with **conversation memory**.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Becquerel-Institute/pydantic_pandasai.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Becquerel-Institute/pydantic_pandasai/issues"
+  },
+  "homepage": "https://github.com/Becquerel-Institute/pydantic_pandasai#readme"
+}

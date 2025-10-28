@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending User Approvals - Solar Intelligence Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: var(--becq-white);
+            min-height: 100vh;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(251, 191, 36, 0.2);
+        }
+
+        .admin-title {
+            color: var(--becq-blue);
+            font-size: 2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .admin-title i {
+            color: var(--becq-gold);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--becq-blue), #1e40af);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .pending-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .pending-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .user-info {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .user-details h3 {
+            color: var(--becq-blue);
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-details p {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .user-meta {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-approve {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn-reject {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #d1d5db;
+            margin-bottom: 1rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #166534;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Header -->
+        <div class="admin-header">
+            <h1 class="admin-title">
+                <i class="fas fa-user-clock"></i>
+                Pending User Approvals
+            </h1>
+            <div>
+                <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">
+                    <i class="fas fa-users"></i> All Users
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ pending_users|length }}</div>
+                <div class="stat-label">Pending Approvals</div>
+            </div>
+        </div>
+
+        <!-- Alert Container for JavaScript Messages -->
+        <div id="alert-container"></div>
+
+        <!-- Pending Users List -->
+        <div class="pending-users-list">
+            {% if pending_users %}
+                {% for user in pending_users %}
+                <div class="pending-card" id="user-card-{{ user.id }}">
+                    <div class="user-info">
+                        <div class="user-details">
+                            <h3>{{ user.full_name }}</h3>
+                            <p><strong>Email:</strong> {{ user.username }}</p>
+                            <p><strong>Role:</strong> {{ user.role.title() }}</p>
+                            <div class="user-meta">
+                                <span><i class="fas fa-calendar"></i> Registered: {{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                <span><i class="fas fa-user"></i> ID: {{ user.id }}</span>
+                            </div>
+                        </div>
+                        <div class="user-actions">
+                            <button class="btn btn-approve" onclick="approveUser({{ user.id }}, '{{ user.full_name }}')">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="btn btn-reject" onclick="rejectUser({{ user.id }}, '{{ user.full_name }}')">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>No Pending Approvals</h3>
+                    <p>All user registrations are up to date!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alert-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check' : 'exclamation'}-circle"></i>
+                ${message}
+            `;
+            
+            alertContainer.appendChild(alert);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.parentNode.removeChild(alert);
+                }
+            }, 5000);
+        }
+
+        function approveUser(userId, userName) {
+            if (!confirm(`Are you sure you want to approve ${userName}?`)) {
+                return;
+            }
+
+            fetch(`/admin/users/${userId}/approve`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('success', data.message);
+                    // Remove the card from the list
+                    const card = document.getElementById(`user-card-${userId}`);
+                    if (card) {
+                        card.style.transition = 'all 0.3s ease';
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateX(100%)';
+                        setTimeout(() => {
+                            card.remove();
+                            // Check if no more pending users
+                            if (document.querySelectorAll('.pending-card').length === 0) {
+                                location.reload();
+                            }
+                        }, 300);
+                    }
+                } else {
+                    showAlert('error', data.error || 'Failed to approve user');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('error', 'Network error occurred');
+            });
+        }
+
+        function rejectUser(userId, userName) {
+            if (!confirm(`Are you sure you want to reject ${userName}? This will delete their account permanently.`)) {
+                return;
+            }
+
+            fetch(`/admin/users/${userId}/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('success', `${userName} has been rejected and removed`);
+                    // Remove the card from the list
+                    const card = document.getElementById(`user-card-${userId}`);
+                    if (card) {
+                        card.style.transition = 'all 0.3s ease';
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateX(-100%)';
+                        setTimeout(() => {
+                            card.remove();
+                            // Check if no more pending users
+                            if (document.querySelectorAll('.pending-card').length === 0) {
+                                location.reload();
+                            }
+                        }, 300);
+                    }
+                } else {
+                    showAlert('error', data.error || 'Failed to reject user');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('error', 'Network error occurred');
+            });
+        }
+    </script>
+</body>
+</html>

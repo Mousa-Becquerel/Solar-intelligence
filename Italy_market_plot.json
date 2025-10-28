@@ -1,0 +1,129 @@
+{
+  "conversation_id": 581,
+  "export_timestamp": "2025-10-13T15:35:03.893Z",
+  "total_messages": 1,
+  "total_downloaded_files": 1,
+  "export_note": "1 plot(s) were automatically downloaded as PNG files",
+  "items": [
+    {
+      "id": "1760369686946-ahqjjp",
+      "type": "plot",
+      "sender": "bot",
+      "payload": {
+        "data": [
+          {
+            "category": 2020,
+            "formatted_value": "150",
+            "is_small": false,
+            "series": "Centralised",
+            "share": 0.1910828025477707,
+            "show_segment_labels": true,
+            "value": 150
+          },
+          {
+            "category": 2020,
+            "formatted_value": "635",
+            "is_small": false,
+            "series": "Distributed",
+            "share": 0.8089171974522293,
+            "show_segment_labels": true,
+            "value": 635
+          },
+          {
+            "category": 2021,
+            "formatted_value": "54.0",
+            "is_small": false,
+            "series": "Centralised",
+            "share": 0.05722001588562351,
+            "show_segment_labels": true,
+            "value": 54.03
+          },
+          {
+            "category": 2021,
+            "formatted_value": "890",
+            "is_small": false,
+            "series": "Distributed",
+            "share": 0.9427799841143765,
+            "show_segment_labels": true,
+            "value": 890.22
+          },
+          {
+            "category": 2022,
+            "formatted_value": "355",
+            "is_small": false,
+            "series": "Centralised",
+            "share": 0.1437246963562753,
+            "show_segment_labels": true,
+            "value": 355
+          },
+          {
+            "category": 2022,
+            "formatted_value": "2.1k",
+            "is_small": false,
+            "series": "Distributed",
+            "share": 0.8562753036437247,
+            "show_segment_labels": true,
+            "value": 2115
+          },
+          {
+            "category": 2023,
+            "formatted_value": "924",
+            "is_small": false,
+            "series": "Centralised",
+            "share": 0.1758325404376784,
+            "show_segment_labels": true,
+            "value": 924
+          },
+          {
+            "category": 2023,
+            "formatted_value": "4.3k",
+            "is_small": false,
+            "series": "Distributed",
+            "share": 0.8241674595623216,
+            "show_segment_labels": true,
+            "value": 4331
+          },
+          {
+            "category": 2024,
+            "formatted_value": "2.2k",
+            "is_small": false,
+            "series": "Centralised",
+            "share": 0.33612690811134394,
+            "show_segment_labels": true,
+            "value": 2246
+          },
+          {
+            "category": 2024,
+            "formatted_value": "4.4k",
+            "is_small": false,
+            "series": "Distributed",
+            "share": 0.6638730918886561,
+            "show_segment_labels": true,
+            "value": 4436
+          }
+        ],
+        "notes": [],
+        "plot_type": "stacked",
+        "series_info": [
+          {
+            "name": "Centralised"
+          },
+          {
+            "name": "Distributed"
+          }
+        ],
+        "title": "Annual Market by Connection Type in Italy",
+        "unit": "MW",
+        "x_axis_label": "",
+        "y_axis_label": "Capacity (MW)"
+      },
+      "downloaded_files": [
+        {
+          "type": "png",
+          "filename": "annual_market_by_connection_type_in_italy_1760369686946-ahqjjp.png",
+          "description": "Plot exported as PNG image"
+        }
+      ]
+    }
+  ]
+}

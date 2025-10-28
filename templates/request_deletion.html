@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Account - Solar Intelligence</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logos/new_logo.svg') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --becq-blue: #1e3a8a;
+            --becq-gold: #f59e0b;
+            --becq-light-blue: #3b82f6;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--becq-blue) 0%, var(--becq-light-blue) 100%);
+            color: white;
+            padding: 4rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 3rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-link {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 0.75rem 1.5rem;
+            border-radius: 2rem;
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .hero-title {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .warning-icon {
+            width: 4rem;
+            height: 4rem;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-title h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, var(--becq-gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-title p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            font-weight: 300;
+            line-height: 1.7;
+        }
+
+        .main-content {
+            padding: 4rem 0;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 1.5rem;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 20%);
+            border: 1px solid var(--becq-gold);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #eff6ff 0%, #93c5fd 20%);
+            border: 1px solid var(--becq-light-blue);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .export-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 20%);
+            border: 1px solid var(--becq-gold);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .info-box h3, .export-box h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .info-box li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .check-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.75rem;
+            color: #059669;
+        }
+
+        .export-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--becq-gold) 0%, #f97316 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 0.75rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            gap: 0.5rem;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-section {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 2rem;
+            margin-top: 2rem;
+        }
+
+        .checkbox-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            cursor: pointer;
+        }
+
+        .checkbox-input {
+            width: 1rem;
+            height: 1rem;
+            margin-top: 0.25rem;
+            accent-color: var(--becq-blue);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.875rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--becq-gold) 0%, #f97316 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(251, 191, 36, 0.3);
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.95);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 3rem 0;
+            margin-top: 4rem;
+            backdrop-filter: blur(20px);
+        }
+
+        .footer-content {
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--becq-blue);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .copyright {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .hero-title h1 {
+                font-size: 2.5rem;
+            }
+
+            .content-card {
+                padding: 2rem;
+            }
+
+            .nav-header {
+                flex-direction: column;
+                gap: 1.5rem;
+                text-align: center;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <div class="nav-header">
+                    <div class="logo-section">
+                        <div class="logo">
+                            <img src="{{ url_for('static', filename='logos/new_logo.svg') }}" alt="Solar Intelligence" style="height: 60px; width: auto;">
+                        </div>
+                    </div>
+                    <a href="{{ url_for('dashboard') }}" class="back-link">
+                        ← Back to Dashboard
+                    </a>
+                </div>
+
+                <div class="hero-title">
+                    <div class="warning-icon">
+                        <svg style="width: 2rem; height: 2rem;" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <h1>Delete Account</h1>
+                    {% if already_deleted %}
+                    <p>Your account is scheduled for deletion. You have {{ days_remaining }} days remaining to cancel this request.</p>
+                    {% else %}
+                    <p>Request account deletion with a 30-day grace period. You can cancel anytime within 30 days if you change your mind.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="content-card">
+                {% if already_deleted %}
+                <!-- Account Already Scheduled for Deletion -->
+                <div class="warning-box">
+                    <svg style="width: 1.25rem; height: 1.25rem; color: var(--becq-gold);" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <h3 style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Account Deletion Scheduled</h3>
+                        <p style="color: var(--text-secondary); margin: 0;">
+                            Your account is scheduled for permanent deletion on <strong>{{ permanent_deletion_date.strftime('%B %d, %Y') }}</strong>.
+                            You have <strong>{{ days_remaining }} days</strong> remaining to cancel this request.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h3>Changed your mind?</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                        You can restore your account within the 30-day grace period. Contact support at
+                        <a href="mailto:support@becquerelinstitute.eu" style="color: var(--becq-blue); text-decoration: underline;">support@becquerelinstitute.eu</a>
+                        with your account details to cancel the deletion.
+                    </p>
+                </div>
+                {% else %}
+                <!-- Normal Deletion Request -->
+                <div class="info-box" style="background: linear-gradient(135deg, #eff6ff 0%, #93c5fd 20%); border-color: #3b82f6;">
+                    <h3>🛡️ 30-Day Safety Net</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                        We understand that sometimes people act in haste. That's why we've implemented a <strong>30-day grace period</strong>:
+                    </p>
+                    <ul>
+                        <li>
+                            <svg class="check-icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            Your account will be deactivated immediately
+                        </li>
+                        <li>
+                            <svg class="check-icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            You can cancel deletion within 30 days
+                        </li>
+                        <li>
+                            <svg class="check-icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            After 30 days, deletion becomes permanent
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="warning-box">
+                    <svg style="width: 1.25rem; height: 1.25rem; color: var(--becq-gold);" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <h3 style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">After 30 Days: Permanent Deletion</h3>
+                        <p style="color: var(--text-secondary); margin: 0;">Once the grace period expires, all of your data will be permanently removed from our servers and cannot be recovered.</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="info-box">
+                    <h3>What will be deleted:</h3>
+                    <ul>
+                        <li>
+                            <svg class="check-icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            Your user account and profile information
+                        </li>
+                        <li>
+                            <svg class="check-icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            All your conversations and chat history
+                        </li>
+                        <li>
+                            <svg class="check-icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            Generated charts and analysis reports
+                        </li>
+                        <li>
+                            <svg class="check-icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            Usage logs and technical data
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="export-box">
+                    <h3>Before you delete your account:</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Consider downloading your data first. Under GDPR, you have the right to export all your data.</p>
+                    <a href="{{ url_for('export_user_data') }}" class="export-btn">
+                        <svg style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Export My Data First
+                    </a>
+                </div>
+
+                {% if not already_deleted %}
+                <!-- Deletion Form -->
+                <form method="POST" action="{{ url_for('request_account_deletion') }}" onsubmit="return confirmDeletion()">
+                    <div class="form-section">
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                                Optional: Why are you leaving? (helps us improve)
+                            </label>
+                            <textarea name="deletion_reason" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; font-family: inherit; font-size: 0.9rem;" placeholder="e.g., Not using the service, Found alternative, Too expensive, etc."></textarea>
+                        </div>
+
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="confirm-deletion" required class="checkbox-input">
+                                <span style="color: var(--text-secondary); font-size: 0.9rem;">
+                                    I understand that my account will be deactivated immediately, with permanent deletion after 30 days.
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="confirm-gdpr" required class="checkbox-input">
+                                <span style="color: var(--text-secondary); font-size: 0.9rem;">
+                                    I acknowledge my GDPR rights and understand this deletion is performed under Article 17 (Right to Erasure).
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="button-group">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                                Cancel - Keep My Account
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                Schedule Account Deletion
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                {% else %}
+                <!-- Already Deleted - Show Back Button -->
+                <div class="form-section">
+                    <div class="button-group">
+                        <a href="{{ url_for('landing') }}" class="btn btn-secondary">
+                            Back to Home
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="{{ url_for('terms_of_service') }}">Terms of Service</a>
+                    <a href="{{ url_for('privacy_policy') }}">Privacy Policy</a>
+                    <a href="mailto:info@becquerelinstitute.eu">Contact</a>
+                </div>
+                <div class="copyright">
+                    &copy; 2025 Solar Intelligence - Becquerel Institute. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function confirmDeletion() {
+            return confirm(
+                'Are you absolutely sure you want to delete your account?\n\n' +
+                'This action cannot be undone and will permanently remove:\n' +
+                '• Your account and all personal information\n' +
+                '• All conversation history\n' +
+                '• Generated charts and reports\n' +
+                '• All associated data\n\n' +
+                'Click OK to proceed with permanent deletion, or Cancel to keep your account.'
+            );
+        }
+    </script>
+</body>
+</html>

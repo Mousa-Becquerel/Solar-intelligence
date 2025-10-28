@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Intelligence - Coming Soon</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logos/new_logo.svg') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/waitlist.css">
+
+    <!-- Google Analytics -->
+    {% if config.get('GOOGLE_ANALYTICS_ID') %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ config['GOOGLE_ANALYTICS_ID'] }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ config["GOOGLE_ANALYTICS_ID"] }}');
+    </script>
+    {% endif %}
+</head>
+<body class="waitlist-body">
+    <!-- Header -->
+    <header class="waitlist-header">
+        <div class="waitlist-logo-container">
+            <div class="waitlist-logo">
+                <div class="logo-with-subtitle">
+                    <img src="{{ url_for('static', filename='logos/new_logo.svg') }}" alt="Solar Intelligence" class="logo-image">
+                    <p class="tagline-sub">Powered by Becquerel Institute</p>
+                </div>
+                <p class="tagline-main">Reliable solar insights. In seconds.</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="#waitlist-form" class="get-access-btn">Get Early Access</a>
+            {% if show_admin_access %}
+            <a href="{{ url_for('landing') }}" class="admin-access-link">Admin Access</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="waitlist-main">
+        <div class="waitlist-content">
+            <h1 class="waitlist-title">
+                <span class="rotating-text" id="rotating-text">Next-generation AI for the photovoltaic market.</span>
+            </h1>
+            <p class="waitlist-subtitle">
+                The first true fusion of AI agents and solar expertise.
+            </p>
+            <p class="waitlist-cta">Be among the first to test Solarintelligence.ai for free!</p>
+
+            <!-- Waitlist Form -->
+            <form id="waitlist-form" class="waitlist-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <!-- Step 1: Email Input -->
+                <div class="form-step" id="step-email">
+                    <div class="form-group">
+                        <input
+                            type="email"
+                            id="waitlist-email"
+                            name="email"
+                            placeholder="Enter your email address..."
+                            required
+                            autocomplete="off"
+                            class="email-input"
+                        >
+                        <button type="button" class="submit-btn" id="next-step-btn">
+                            <span>Next</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Agent Selection -->
+                <div class="form-step" id="step-agents" style="display: none;">
+                    <p class="agent-selection-title">Which agents interest you?</p>
+                    <p class="agent-selection-subtitle">Select all that apply</p>
+
+                    <div class="agents-grid">
+                        <label class="agent-card">
+                            <input type="checkbox" name="agents" value="market">
+                            <div class="agent-card-content">
+                                <div class="agent-icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 3v18h18"/>
+                                        <path d="m19 9-5 5-4-4-3 3"/>
+                                    </svg>
+                                </div>
+                                <div class="agent-name">Market</div>
+                                <div class="agent-description">Market analysis, trends and forecasts</div>
+                            </div>
+                        </label>
+
+                        <label class="agent-card">
+                            <input type="checkbox" name="agents" value="price">
+                            <div class="agent-card-content">
+                                <div class="agent-icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="12" y1="1" x2="12" y2="23"/>
+                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                    </svg>
+                                </div>
+                                <div class="agent-name">Price</div>
+                                <div class="agent-description">Price analytics & forecasts</div>
+                            </div>
+                        </label>
+
+                        <label class="agent-card">
+                            <input type="checkbox" name="agents" value="om">
+                            <div class="agent-card-content">
+                                <div class="agent-icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                                    </svg>
+                                </div>
+                                <div class="agent-name">O&M</div>
+                                <div class="agent-description">Operations & maintenance</div>
+                            </div>
+                        </label>
+
+                        <label class="agent-card">
+                            <input type="checkbox" name="agents" value="design">
+                            <div class="agent-card-content">
+                                <div class="agent-icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                                    </svg>
+                                </div>
+                                <div class="agent-name">Design</div>
+                                <div class="agent-description">System design & optimization</div>
+                            </div>
+                        </label>
+
+                        <label class="agent-card">
+                            <input type="checkbox" name="agents" value="news">
+                            <div class="agent-card-content">
+                                <div class="agent-icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
+                                        <path d="M18 14h-8"/>
+                                        <path d="M15 18h-5"/>
+                                        <path d="M10 6h8v4h-8V6Z"/>
+                                    </svg>
+                                </div>
+                                <div class="agent-name">News</div>
+                                <div class="agent-description">Industry news & updates</div>
+                            </div>
+                        </label>
+
+                        <label class="agent-card">
+                            <input type="checkbox" name="agents" value="forecasting">
+                            <div class="agent-card-content">
+                                <div class="agent-icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                                    </svg>
+                                </div>
+                                <div class="agent-name">Forecasting</div>
+                                <div class="agent-description">Energy forecasting</div>
+                            </div>
+                        </label>
+
+                        <label class="agent-card">
+                            <input type="checkbox" name="agents" value="permitting">
+                            <div class="agent-card-content">
+                                <div class="agent-icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                        <line x1="9" y1="15" x2="15" y2="15"/>
+                                        <line x1="9" y1="11" x2="15" y2="11"/>
+                                    </svg>
+                                </div>
+                                <div class="agent-name">Permitting</div>
+                                <div class="agent-description">Regulatory & compliance</div>
+                            </div>
+                        </label>
+
+                        <label class="agent-card">
+                            <input type="checkbox" name="agents" value="technology">
+                            <div class="agent-card-content">
+                                <div class="agent-icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                                        <line x1="10" y1="10" x2="16" y2="10"/>
+                                        <line x1="10" y1="14" x2="16" y2="14"/>
+                                    </svg>
+                                </div>
+                                <div class="agent-name">Technology Knowledge</div>
+                                <div class="agent-description">Technical expertise & insights</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="back-btn" id="back-btn">
+                            <span>← Back</span>
+                        </button>
+                        <button type="submit" class="submit-btn" id="waitlist-submit-btn">
+                            <span>Join Waitlist</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Success Message -->
+            <div id="success-message" class="message success-message" style="display: none;">
+                <span>✓ Thank you! We'll notify you at launch.</span>
+            </div>
+
+            <!-- Error Message -->
+            <div id="error-message" class="message error-message" style="display: none;">
+                <span id="error-text">Something went wrong. Please try again.</span>
+            </div>
+
+            <!-- Waitlist Counter -->
+            <div class="waitlist-counter" style="display: none;">
+                <span id="waitlist-count">{{ waitlist_count }}</span> people waiting
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="waitlist-footer">
+        <p>&copy; 2025 Solar Intelligence. Powered by <a href="https://www.becquerelinstitute.eu/" target="_blank">Becquerel Institute</a>.</p>
+        <div class="footer-links">
+            <a href="{{ url_for('privacy_policy') }}">Privacy</a>
+            <a href="{{ url_for('terms_of_service') }}">Terms</a>
+        </div>
+    </footer>
+
+    <script src="/static/js/waitlist.js"></script>
+</body>
+</html>

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service - Solar Intelligence</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logos/new_logo.svg') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --becq-blue: #1e3a8a;
+            --becq-gold: #f59e0b;
+            --becq-light-blue: #3b82f6;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--becq-blue) 0%, var(--becq-light-blue) 100%);
+            color: white;
+            padding: 4rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 3rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand-text h1 {
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 0.25rem;
+            letter-spacing: 0.02em;
+        }
+
+        .brand-text p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            font-weight: 300;
+        }
+
+        .back-link {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 0.75rem 1.5rem;
+            border-radius: 2rem;
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .hero-title {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-title h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, var(--becq-gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-title p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            font-weight: 300;
+            line-height: 1.7;
+        }
+
+        .main-content {
+            padding: 4rem 0;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 1.5rem;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .terms-section {
+            margin-bottom: 3rem;
+        }
+
+        .terms-section h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--becq-blue);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid var(--becq-gold);
+            display: inline-block;
+        }
+
+        .terms-section h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            margin-top: 2rem;
+        }
+
+        .terms-section p {
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .terms-section ul {
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem;
+        }
+
+        .terms-section li {
+            margin-bottom: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 20%);
+            border: 1px solid var(--becq-gold);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fef2f2 0%, #fca5a5 20%);
+            border: 1px solid #ef4444;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #eff6ff 0%, #93c5fd 20%);
+            border: 1px solid var(--becq-light-blue);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .contact-card {
+            background: linear-gradient(135deg, var(--becq-blue) 0%, var(--becq-light-blue) 100%);
+            color: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .contact-card a {
+            color: var(--becq-gold);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .contact-card a:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.95);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 3rem 0;
+            margin-top: 4rem;
+            backdrop-filter: blur(20px);
+        }
+
+        .footer-content {
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--becq-blue);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .copyright {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .hero-title h1 {
+                font-size: 2.5rem;
+            }
+
+            .content-card {
+                padding: 2rem;
+            }
+
+            .nav-header {
+                flex-direction: column;
+                gap: 1.5rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <div class="nav-header">
+                    <div class="logo-section">
+                        <div class="logo">
+                            <img src="{{ url_for('static', filename='logos/new_logo.svg') }}" alt="Solar Intelligence" style="height: 60px; width: auto;">
+                        </div>
+                    </div>
+                    <a href="{{ url_for('waitlist_page') }}" class="back-link">
+                        ← Back to Home
+                    </a>
+                </div>
+
+                <div class="hero-title">
+                    <h1>Terms of Service</h1>
+                    <p>Clear, comprehensive terms governing the use of our solar market intelligence platform</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="content-card">
+                <div class="terms-section">
+                    <p style="color: var(--text-muted); margin-bottom: 2rem;"><strong>Last Updated:</strong> January 2025</p>
+
+                    <div class="terms-section">
+                        <h2>1. Acceptance of Terms</h2>
+                        <p>
+                            By accessing and using Solar Intelligence ("Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to these terms, you should not use our service.
+                        </p>
+                    </div>
+
+                    <div class="terms-section">
+                        <h2>2. Service Description</h2>
+                        <p>Solar Intelligence provides:</p>
+                        <ul>
+                            <li>AI-powered analysis of solar photovoltaic (PV) market data</li>
+                            <li>Interactive data visualizations and reports</li>
+                            <li>Market trend analysis and price tracking</li>
+                            <li>Access to verified solar industry datasets</li>
+                        </ul>
+                    </div>
+
+                    <div class="terms-section">
+                        <h2>3. User Accounts and Registration</h2>
+                        <h3>3.1 Account Creation</h3>
+                        <ul>
+                            <li>You must provide accurate and complete registration information</li>
+                            <li>You are responsible for maintaining the confidentiality of your account credentials</li>
+                            <li>You must be at least 18 years old to create an account</li>
+                            <li>One person may not maintain more than one account</li>
+                        </ul>
+
+                        <h3>3.2 Account Security</h3>
+                        <ul>
+                            <li>You are responsible for all activities under your account</li>
+                            <li>Notify us immediately of any unauthorized access</li>
+                            <li>Use strong, unique passwords</li>
+                        </ul>
+                    </div>
+
+                    <div class="terms-section">
+                        <h2>4. Acceptable Use Policy</h2>
+
+                        <h3>4.1 Permitted Uses</h3>
+                        <ul>
+                            <li>Market research and analysis for legitimate business purposes</li>
+                            <li>Educational and academic research</li>
+                            <li>Personal investment analysis</li>
+                        </ul>
+
+                        <h3>4.2 Prohibited Uses</h3>
+                        <div class="warning-box">
+                            <ul style="margin-bottom: 0;">
+                                <li>Attempting to gain unauthorized access to our systems</li>
+                                <li>Using the service for illegal activities</li>
+                                <li>Sharing your account credentials with others</li>
+                                <li>Attempting to reverse engineer our AI models</li>
+                                <li>Excessive automated querying that impacts service performance</li>
+                                <li>Redistributing our proprietary data without permission</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="terms-section">
+                        <h2>5. Data and Privacy</h2>
+                        <p>Our handling of your personal data is governed by our Privacy Policy. Key points:</p>
+                        <ul>
+                            <li>We process data in accordance with GDPR and EU privacy laws</li>
+                            <li>Your conversation data is stored securely and used to improve our services</li>
+                            <li>You retain ownership of data you input into our system</li>
+                            <li>You can request data export or deletion at any time</li>
+                        </ul>
+                    </div>
+
+                    <div class="terms-section">
+                        <h2>6. Intellectual Property</h2>
+
+                        <h3>6.1 Our Rights</h3>
+                        <ul>
+                            <li>Solar Intelligence platform, AI models, and algorithms are our proprietary technology</li>
+                            <li>Market data compilations and analysis methodologies are protected intellectual property</li>
+                            <li>Trademarks and branding elements belong to Becquerel Institute</li>
+                        </ul>
+
+                        <h3>6.2 Your Rights</h3>
+                        <ul>
+                            <li>You retain ownership of any original content you create using our platform</li>
+                            <li>Generated reports and analyses may be used for your business purposes</li>
+                            <li>You may not claim ownership of our underlying data or methodologies</li>
+                        </ul>
+                    </div>
+
+                    <div class="terms-section">
+                        <h2>7. Service Availability and Modifications</h2>
+                        <div class="highlight-box">
+                            <ul style="margin-bottom: 0;">
+                                <li>We strive for 99.9% uptime but cannot guarantee uninterrupted service</li>
+                                <li>We may modify features, add new capabilities, or discontinue certain functions</li>
+                                <li>Scheduled maintenance will be announced in advance when possible</li>
+                                <li>We reserve the right to suspend accounts that violate these terms</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="terms-section">
+                        <h2>8. Limitation of Liability</h2>
+                        <div class="info-box">
+                            <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 1rem;">Important Disclaimer:</p>
+                            <ul style="margin-bottom: 0;">
+                                <li>Our service provides data analysis and insights, not financial advice</li>
+                                <li>Investment decisions should not be based solely on our analysis</li>
+                                <li>We are not liable for business decisions made using our platform</li>
+                                <li>Maximum liability is limited to the amount paid for our services</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="terms-section">
+                        <h2>9. European Union Specific Terms</h2>
+                        <h3>9.1 GDPR Compliance</h3>
+                        <ul>
+                            <li>All personal data processing complies with GDPR Article 6 requirements</li>
+                            <li>You have the right to data portability, rectification, and erasure</li>
+                            <li>Data processing agreements available upon request</li>
+                        </ul>
+
+                        <h3>9.2 Consumer Rights</h3>
+                        <ul>
+                            <li>EU consumer protection laws apply where applicable</li>
+                            <li>14-day withdrawal right for new subscriptions (where legally required)</li>
+                            <li>Disputes may be resolved through EU-approved alternative dispute resolution</li>
+                        </ul>
+                    </div>
+
+                    <div class="terms-section">
+                        <h2>10. Account Termination</h2>
+
+                        <h3>10.1 By You</h3>
+                        <ul>
+                            <li>You may terminate your account at any time through account settings</li>
+                            <li>Data export is available for 30 days after account closure</li>
+                            <li>All personal data will be deleted within 30 days of termination</li>
+                        </ul>
+
+                        <h3>10.2 By Us</h3>
+                        <ul>
+                            <li>We may terminate accounts for violation of these terms</li>
+                            <li>30-day notice will be provided for termination without cause</li>
+                            <li>Immediate termination may occur for serious violations</li>
+                        </ul>
+                    </div>
+
+                    <div class="terms-section">
+                        <h2>11. Governing Law and Disputes</h2>
+                        <div class="info-box">
+                            <ul style="margin-bottom: 0; color: var(--text-primary);">
+                                <li><strong>Governing Law:</strong> Laws of the European Union and [Your EU Country]</li>
+                                <li><strong>Jurisdiction:</strong> Courts of [Your EU Location]</li>
+                                <li><strong>Language:</strong> English, with translations available upon request</li>
+                                <li><strong>Alternative Dispute Resolution:</strong> EU-approved ADR available</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="terms-section">
+                        <h2>12. Changes to Terms</h2>
+                        <p>
+                            We may update these terms periodically. Material changes will be communicated via email and platform notification at least 30 days before taking effect. Continued use after changes constitutes acceptance of new terms.
+                        </p>
+                    </div>
+
+                    <div class="terms-section">
+                        <h2>13. Contact Information</h2>
+                        <div class="contact-card">
+                            <p style="font-weight: 600; margin-bottom: 1rem;">For questions about these terms:</p>
+                            <p style="margin-bottom: 0;">
+                                <strong>Becquerel Institute</strong><br>
+                                Email: <a href="mailto:info@becquerelinstitute.eu">info@becquerelinstitute.eu</a><br>
+                                Support: <a href="mailto:info@becquerelinstitute.eu">info@becquerelinstitute.eu</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="{{ url_for('terms_of_service') }}">Terms of Service</a>
+                    <a href="{{ url_for('privacy_policy') }}">Privacy Policy</a>
+                    <a href="mailto:info@becquerelinstitute.eu">Contact</a>
+                </div>
+                <div class="copyright">
+                    &copy; 2025 Solar Intelligence - Becquerel Institute. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

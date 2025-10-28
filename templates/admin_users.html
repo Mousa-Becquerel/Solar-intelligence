@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Management - BecqSight Admin</title>
+    <title>User Management - DH Agents Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -338,7 +338,7 @@
 </head>
 <body>
     <div class="admin-container">
-        <a href="{{ url_for('home') }}" class="back-link">
+        <a href="{{ url_for('dashboard') }}" class="back-link">
             <i class="fas fa-arrow-left"></i>
             Back to Dashboard
         </a>
@@ -349,6 +349,13 @@
                 User Management
             </h1>
             <div class="admin-actions">
+                <a href="{{ url_for('admin_pending_users') }}" class="btn btn-warning" style="background: #f59e0b; position: relative;">
+                    <i class="fas fa-user-clock"></i>
+                    Pending Approvals
+                    {% if pending_users|length > 0 %}
+                    <span style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold;">{{ pending_users|length }}</span>
+                    {% endif %}
+                </a>
                 <a href="{{ url_for('admin_create_user') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i>
                     Add New User
@@ -366,6 +373,14 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
+
+        {% if pending_users|length > 0 %}
+        <div class="alert alert-warning" style="background: #fef3c7; border-color: #fbbf24; color: #92400e;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>{{ pending_users|length }} user{{ 's' if pending_users|length != 1 else '' }} pending approval!</strong>
+            <a href="{{ url_for('admin_pending_users') }}" style="color: #92400e; text-decoration: underline; margin-left: 10px;">Review now →</a>
+        </div>
+        {% endif %}
 
         <div class="users-table">
             <div class="table-header">
@@ -419,6 +434,7 @@
                 <button class="close-btn" onclick="closeModal()">&times;</button>
             </div>
             <form id="editForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" id="editUserId">
                 <div class="form-group">
                     <label class="form-label">Username</label>
@@ -469,6 +485,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
                     }
                 })
                 .then(response => response.json())
@@ -488,6 +505,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
                     }
                 })
                 .then(response => response.json())
@@ -515,6 +533,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
                 },
                 body: JSON.stringify(formData)
             })

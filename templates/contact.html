@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Solar Intelligence</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/contact.css') }}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logos/new_logo.svg') }}">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav-container">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <!-- Logo -->
+                <a href="{{ url_for('landing') }}" class="flex items-center space-x-3">
+                    <img src="{{ url_for('static', filename='logos/new_logo.svg') }}" alt="Solar Intelligence" class="nav-logo">
+                </a>
+
+                <!-- Back to Home Link -->
+                <a href="{{ url_for('landing') }}" class="nav-link">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="contact-section">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="grid lg:grid-cols-12 gap-16 items-start">
+
+                <!-- Left Column: Header & Info -->
+                <div class="lg:col-span-5 contact-info">
+                    <h1 class="contact-title">
+                        Get in <span class="accent-color">touch</span>
+                    </h1>
+                    <p class="contact-description">
+                        We're always here for you—just a message away. Whether you have a question, an idea to share, or simply want to say hello, we'd love to hear from you. Together, let's shape the future of solar market intelligence!
+                    </p>
+
+                    <!-- Contact Details -->
+                    <div class="contact-details">
+                        <div class="contact-detail-item">
+                            <div class="contact-detail-icon">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="contact-detail-title">Email</h3>
+                                <a href="mailto:info@becquerelinstitute.eu" class="contact-detail-link">info@becquerelinstitute.eu</a>
+                            </div>
+                        </div>
+
+                        <div class="contact-detail-item">
+                            <div class="contact-detail-icon">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="contact-detail-title">Website</h3>
+                                <a href="https://www.becquerelinstitute.eu/" target="_blank" class="contact-detail-link">becquerelinstitute.eu</a>
+                            </div>
+                        </div>
+
+                        <div class="contact-detail-item">
+                            <div class="contact-detail-icon">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="contact-detail-title">Data Hub</h3>
+                                <a href="https://datahub.becquerelinstitute.eu/Home" target="_blank" class="contact-detail-link">European PV Data Hub</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Contact Form -->
+                <div class="lg:col-span-7">
+                    <form class="contact-form" id="contactForm" action="/submit-contact" method="POST">
+
+                        <!-- Name Fields -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName" class="form-label">First name *</label>
+                                <input type="text" id="firstName" name="firstName" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName" class="form-label">Last name *</label>
+                                <input type="text" id="lastName" name="lastName" class="form-input" required>
+                            </div>
+                        </div>
+
+                        <!-- Email and Company -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" id="email" name="email" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="company" class="form-label">Company</label>
+                                <input type="text" id="company" name="company" class="form-input">
+                            </div>
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="form-group">
+                            <label for="phone" class="form-label">Phone</label>
+                            <input type="tel" id="phone" name="phone" class="form-input">
+                        </div>
+
+                        <!-- Message -->
+                        <div class="form-group">
+                            <label for="message" class="form-label">Message *</label>
+                            <textarea id="message" name="message" rows="6" class="form-input form-textarea" required></textarea>
+                        </div>
+
+                        <!-- Privacy Consent -->
+                        <div class="form-checkbox-group">
+                            <input type="checkbox" id="consent" name="consent" class="form-checkbox" required>
+                            <label for="consent" class="form-checkbox-label">
+                                I consent to be contacted and acknowledge the <a href="#" class="consent-link">privacy policy</a>
+                            </label>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="submit-button">
+                            <span>Send Message</span>
+                            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                            </svg>
+                        </button>
+
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="contact-footer">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-gray-400 text-sm">
+                    © 2025 Solarintelligence. All rights reserved.
+                </div>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="https://www.linkedin.com/company/becquerel-institute/" target="_blank" class="footer-social-link" aria-label="LinkedIn">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                        </svg>
+                    </a>
+                    <a href="https://twitter.com/becquerel_inst" target="_blank" class="footer-social-link" aria-label="Twitter/X">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                    </a>
+                    <a href="https://www.youtube.com/@becquerelinstitute" target="_blank" class="footer-social-link" aria-label="YouTube">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Form Submission Script -->
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Get form data
+            const formData = new FormData(this);
+
+            // Here you would normally send the data to your backend
+            // For now, we'll just show a success message
+            alert('Thank you for your message! We will get back to you soon.');
+
+            // Reset form
+            this.reset();
+        });
+    </script>
+
+</body>
+</html>

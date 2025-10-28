@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Solar Intelligence</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logos/new_logo.svg') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --becq-blue: #1e3a8a;
+            --becq-gold: #f59e0b;
+            --becq-light-blue: #3b82f6;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--becq-blue) 0%, var(--becq-light-blue) 100%);
+            color: white;
+            padding: 4rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 3rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand-text h1 {
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 0.25rem;
+            letter-spacing: 0.02em;
+        }
+
+        .brand-text p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            font-weight: 300;
+        }
+
+        .back-link {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 0.75rem 1.5rem;
+            border-radius: 2rem;
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .hero-title {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-title h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, var(--becq-gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-title p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            font-weight: 300;
+            line-height: 1.7;
+        }
+
+        .main-content {
+            padding: 4rem 0;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 1.5rem;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .privacy-section {
+            margin-bottom: 3rem;
+        }
+
+        .privacy-section h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--becq-blue);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid var(--becq-gold);
+            display: inline-block;
+        }
+
+        .privacy-section h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            margin-top: 2rem;
+        }
+
+        .privacy-section p {
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .privacy-section ul {
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem;
+        }
+
+        .privacy-section li {
+            margin-bottom: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .rights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .right-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 20%);
+            border: 1px solid var(--becq-gold);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .right-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(251, 191, 36, 0.15);
+        }
+
+        .right-card h4 {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .right-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #eff6ff 0%, #93c5fd 20%);
+            border: 1px solid var(--becq-light-blue);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .contact-card {
+            background: linear-gradient(135deg, var(--becq-blue) 0%, var(--becq-light-blue) 100%);
+            color: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .contact-card a {
+            color: var(--becq-gold);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .contact-card a:hover {
+            text-decoration: underline;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+
+        .btn {
+            padding: 0.875rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--becq-gold) 0%, #f97316 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(251, 191, 36, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.95);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 3rem 0;
+            margin-top: 4rem;
+            backdrop-filter: blur(20px);
+        }
+
+        .footer-content {
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--becq-blue);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .copyright {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .hero-title h1 {
+                font-size: 2.5rem;
+            }
+
+            .content-card {
+                padding: 2rem;
+            }
+
+            .nav-header {
+                flex-direction: column;
+                gap: 1.5rem;
+                text-align: center;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <div class="nav-header">
+                    <div class="logo-section">
+                        <div class="logo">
+                            <img src="{{ url_for('static', filename='logos/new_logo.svg') }}" alt="Solar Intelligence" style="height: 60px; width: auto;">
+                        </div>
+                    </div>
+                    <a href="{{ url_for('waitlist_page') }}" class="back-link">
+                        ← Back to Home
+                    </a>
+                </div>
+
+                <div class="hero-title">
+                    <h1>Privacy Policy</h1>
+                    <p>Your privacy matters to us. Learn how we protect and handle your data in compliance with GDPR and EU regulations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="content-card">
+                <p style="color: var(--text-muted); margin-bottom: 2rem;"><strong>Last Updated:</strong> January 2025</p>
+
+                <div class="privacy-section">
+                    <h2>1. Introduction</h2>
+                    <p>
+                        Solar Intelligence ("we," "our," or "us") is committed to protecting your privacy and ensuring the security of your personal data. This Privacy Policy explains how we collect, use, and protect your information when you use our AI-powered solar market analysis platform in compliance with GDPR and EU data protection laws.
+                    </p>
+                </div>
+
+                <div class="privacy-section">
+                    <h2>2. Data Controller</h2>
+                    <div class="contact-card">
+                        <h3 style="color: white; margin-top: 0;">Becquerel Institute</h3>
+                        <p style="margin-bottom: 0; color: rgba(255, 255, 255, 0.9);">
+                            <strong>Email:</strong> <a href="mailto:info@becquerelinstitute.eu">info@becquerelinstitute.eu</a><br>
+                            <strong>Response Time:</strong> Within 72 hours
+                        </p>
+                    </div>
+                </div>
+
+                <div class="privacy-section">
+                    <h2>3. Your GDPR Rights</h2>
+                    <div class="rights-grid">
+                        <div class="right-card">
+                            <h4>
+                                <svg style="width: 1.25rem; height: 1.25rem; color: var(--becq-gold);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                Right to Access
+                            </h4>
+                            <p>Request a copy of your personal data and see how it's being processed.</p>
+                        </div>
+                        <div class="right-card">
+                            <h4>
+                                <svg style="width: 1.25rem; height: 1.25rem; color: var(--becq-gold);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                Right to Rectification
+                            </h4>
+                            <p>Correct any inaccurate or incomplete personal data we hold about you.</p>
+                        </div>
+                        <div class="right-card">
+                            <h4>
+                                <svg style="width: 1.25rem; height: 1.25rem; color: var(--becq-gold);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                                Right to Erasure
+                            </h4>
+                            <p>Request permanent deletion of your personal data from our systems.</p>
+                        </div>
+                        <div class="right-card">
+                            <h4>
+                                <svg style="width: 1.25rem; height: 1.25rem; color: var(--becq-gold);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Right to Portability
+                            </h4>
+                            <p>Export your data in a machine-readable format for transfer to other services.</p>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <a href="{{ url_for('waitlist_page') }}" class="btn btn-primary">
+                            <svg style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Export My Data
+                        </a>
+                        <a href="{{ url_for('waitlist_page') }}" class="btn btn-secondary">
+                            <svg style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                            Delete Account
+                        </a>
+                    </div>
+                </div>
+
+                <div class="privacy-section">
+                    <h2>4. Data We Collect</h2>
+
+                    <h3>4.1 Personal Information</h3>
+                    <ul>
+                        <li><strong>Account Data:</strong> Username, email, full name</li>
+                        <li><strong>Authentication:</strong> Encrypted password hashes</li>
+                        <li><strong>Usage Data:</strong> Chat conversations and AI interactions</li>
+                    </ul>
+
+                    <h3>4.2 Technical Information</h3>
+                    <ul>
+                        <li><strong>Session Data:</strong> Login timestamps and activity</li>
+                        <li><strong>Performance:</strong> Error logs and metrics</li>
+                        <li><strong>Cookies:</strong> With your explicit consent</li>
+                    </ul>
+                </div>
+
+                <div class="privacy-section">
+                    <h2>5. Legal Basis for Processing</h2>
+                    <div class="info-box">
+                        <ul style="margin-bottom: 0;">
+                            <li><strong>Contract Performance:</strong> Processing necessary for service provision</li>
+                            <li><strong>Legitimate Interest:</strong> Improving our AI models and user experience</li>
+                            <li><strong>Consent:</strong> Marketing communications and non-essential cookies</li>
+                            <li><strong>Legal Obligation:</strong> Compliance with EU regulations</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="privacy-section">
+                    <h2>6. Data Sharing and Transfers</h2>
+                    <p>We do not sell your personal data. We may share data with:</p>
+                    <ul>
+                        <li>AI service providers (with appropriate data processing agreements)</li>
+                        <li>Cloud infrastructure providers within the EU</li>
+                        <li>Legal authorities when required by law</li>
+                    </ul>
+                    <p>All international transfers comply with GDPR adequacy decisions or standard contractual clauses.</p>
+                </div>
+
+                <div class="privacy-section">
+                    <h2>7. Data Retention</h2>
+                    <ul>
+                        <li><strong>Account Data:</strong> Retained until account deletion</li>
+                        <li><strong>Conversation Data:</strong> Retained for service improvement (up to 3 years)</li>
+                        <li><strong>Technical Logs:</strong> Automatically deleted after 12 months</li>
+                        <li><strong>Marketing Data:</strong> Until consent is withdrawn</li>
+                    </ul>
+                </div>
+
+                <div class="privacy-section">
+                    <h2>8. Security Measures</h2>
+                    <div class="info-box">
+                        <ul style="margin-bottom: 0;">
+                            <li>End-to-end encryption for data transmission</li>
+                            <li>AES-256 encryption for data at rest</li>
+                            <li>Regular security audits and penetration testing</li>
+                            <li>Multi-factor authentication for admin access</li>
+                            <li>GDPR-compliant data processing agreements</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="privacy-section">
+                    <h2>9. Changes to This Policy</h2>
+                    <p>
+                        We may update this Privacy Policy periodically. Material changes will be communicated via email and platform notification at least 30 days before taking effect. Continued use after changes constitutes acceptance of the updated policy.
+                    </p>
+                </div>
+
+                <div class="privacy-section">
+                    <h2>10. Contact Information</h2>
+                    <div class="contact-card">
+                        <p style="font-weight: 600; margin-bottom: 1rem; color: white;">For privacy-related questions:</p>
+                        <p style="margin-bottom: 0; color: rgba(255, 255, 255, 0.9);">
+                            <strong>Contact:</strong> <a href="mailto:info@becquerelinstitute.eu">info@becquerelinstitute.eu</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="{{ url_for('terms_of_service') }}">Terms of Service</a>
+                    <a href="{{ url_for('privacy_policy') }}">Privacy Policy</a>
+                    <a href="mailto:info@becquerelinstitute.eu">Contact</a>
+                </div>
+                <div class="copyright">
+                    &copy; 2025 Solar Intelligence - Becquerel Institute. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -27,7 +27,7 @@ window.QUERY_EXAMPLES = [
     "German distributed solar market analysis",
     "What are the PV market drivers in Germany?",
     "Germany solar market policy impact analysis",
-    "Show PV module prices in Germany",
+    "Show PV prices in Germany",
     "German solar market supply chain analysis",
     "Plot Germany's monthly PV installations",
     "Germany PV market forecast through 2030",

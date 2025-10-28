@@ -1,0 +1,30 @@
+services:
+  module-prices-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - FLASK_ENV=development  # Use 'production' for AWS deployment
+      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
+      - LOGFIRE_TOKEN=${LOGFIRE_TOKEN}
+      - DATABASE_URL=${DATABASE_URL}  # SECURITY: Never hardcode credentials
+      - WEAVIATE_URL=${WEAVIATE_URL}
+      - WEAVIATE_API_KEY=${WEAVIATE_API_KEY}
+    volumes:
+      - ./datasets:/app/datasets:ro
+      - ./static:/app/static
+      - ./exports:/app/exports
+      - ./memory_dumps:/app/memory_dumps
+      - ./app.py:/app/app.py:ro
+      - ./pydantic_weaviate_agent.py:/app/pydantic_weaviate_agent.py:ro
+      - ./market_intelligence_agent.py:/app/market_intelligence_agent.py:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s 

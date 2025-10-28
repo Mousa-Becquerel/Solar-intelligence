@@ -50,6 +50,9 @@ logs/
 agent_workflow.log
 pandasai.log
 
+# Memory dumps (debugging)
+memory_dumps/
+
 # Temporary files
 temp_styles.css
 temp/
@@ -86,4 +89,52 @@ datasets/**/*.csv
 node_modules/
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log* 
+yarn-error.log*
+
+# Temporary and debug files
+debug_*.py
+backup_*.py
+temp_*.py
+*.tmp
+*.bak
+
+# Documentation and migration scripts (prevent clutter)
+*_SUMMARY.md
+*_FIX*.md
+*_IMPLEMENTATION.md
+*_GUIDE.md
+*_PLAN.md
+*_COMPLETE.md
+*_SETUP.md
+*_INSTRUCTIONS.md
+*_INTEGRATION.md
+*_UPGRADE.md
+*_UPDATED.md
+migrate_*.py
+fix_*.py
+cleanup_*.py
+*.sql
+!scripts/deployment/*.sql
+
+# Jupyter notebooks (temporary)
+*.ipynb
+
+# Log files
+*.log
+pandasai.log
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db 

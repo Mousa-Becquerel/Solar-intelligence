@@ -1,0 +1,58 @@
+name: annual_full_dataset
+source:
+  type: parquet
+  path: data.parquet
+description: Annual PV market inputs by country, year, scenario, connection, segment,
+  and application with installed capacity values.
+columns:
+- name: country
+  type: string
+  description: 'Country or region name. Examples from this dataset: Albania, Algeria,
+    Argentina, Australia, Austria.'
+- name: year
+  type: integer
+  description: 'Calendar year of the record. Examples present: 1992, 2011, 2030.'
+- name: scenario
+  type: string
+  description: 'Data scenario (e.g., historical or forecast variants). Examples present:
+    Historical, Forecast - High, Forecast - Low, Forecast - Most probable.'
+- name: duration
+  type: string
+  description: 'the duration or the frequency of this data point capacity (e.g., full
+    year (FY) or a given quarter in the year). Examples present: FY, Q1, Q2, Q3, Q4'
+- name: connection
+  type: string
+  description: 'System connection category. Examples present: Total, Distributed,
+    Centralised, Off-grid.'
+- name: segment
+  type: string
+  description: 'Market segment within a connection type. Examples present: Total,
+    Residential, Commercial & Industrial, Ground-mounted, AgriPV, Floating PV.'
+- name: applications
+  type: string
+  description: 'Application subtype. Examples present: Total, Residential BAPV, Industrial
+    BAPV, Commercial BAPV, BIPV.'
+- name: type
+  type: string
+  description: 'type of the capcity value reported. Examples present: Annual, Cumulative.'
+- name: capacity
+  type: float
+  description: 'Annual PV capacity value in megawatts for the given slice. Example
+    magnitudes present: 0.0, 0.791, 1383.0.'
+- name: estimation_status
+  type: string
+  description: 'Whether the value is an estimate or confirmed. Examples present: Estimated,
+    Confirmed.'
+- name: install_action
+  type: string
+  description: 'Whether the record refers to installations or decommissioning. Examples
+    present: Installed.'
+- name: source
+  type: string
+  description: 'Data source reference. Examples present: Snapshot, IRENA, https://www.pv-magazine.com/2025/05/06/albanian-government-approves-54-mw-of-solar-projects/,
+    OLD DB.'
+- name: comments
+  type: string
+  description: "Free-text notes or annotations. Example snippets present: \u201CT1:\
+    \ \"resi-commercial split shifting as resi rooftop size grows\", \"leaving the\
+    \ s\u2026\u201D, \u201CCorrected in T1 document\u201D."
