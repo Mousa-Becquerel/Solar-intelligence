@@ -338,7 +338,7 @@
 </head>
 <body>
     <div class="admin-container">
-        <a href="{{ url_for('dashboard') }}" class="back-link">
+        <a href="{{ url_for('chat.agents') }}" class="back-link">
             <i class="fas fa-arrow-left"></i>
             Back to Dashboard
         </a>
@@ -349,14 +349,14 @@
                 User Management
             </h1>
             <div class="admin-actions">
-                <a href="{{ url_for('admin_pending_users') }}" class="btn btn-warning" style="background: #f59e0b; position: relative;">
+                <a href="{{ url_for('admin.pending_users') }}" class="btn btn-warning" style="background: #f59e0b; position: relative;">
                     <i class="fas fa-user-clock"></i>
                     Pending Approvals
                     {% if pending_users|length > 0 %}
                     <span style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold;">{{ pending_users|length }}</span>
                     {% endif %}
                 </a>
-                <a href="{{ url_for('admin_create_user') }}" class="btn btn-primary">
+                <a href="{{ url_for('admin.create_user') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i>
                     Add New User
                 </a>
@@ -378,7 +378,7 @@
         <div class="alert alert-warning" style="background: #fef3c7; border-color: #fbbf24; color: #92400e;">
             <i class="fas fa-exclamation-triangle"></i>
             <strong>{{ pending_users|length }} user{{ 's' if pending_users|length != 1 else '' }} pending approval!</strong>
-            <a href="{{ url_for('admin_pending_users') }}" style="color: #92400e; text-decoration: underline; margin-left: 10px;">Review now →</a>
+            <a href="{{ url_for('admin.pending_users') }}" style="color: #92400e; text-decoration: underline; margin-left: 10px;">Review now →</a>
         </div>
         {% endif %}
 

@@ -288,7 +288,7 @@
         <div class="login-card">
             <!-- Logo and Title -->
             <div class="logo-section">
-                <a href="{{ url_for('landing') }}">
+                <a href="{{ url_for('static.landing') }}">
                     <img src="{{ url_for('static', filename='logos/new_logo.svg') }}" alt="Solar Intelligence" class="logo">
                 </a>
                 <h1 class="login-title">
@@ -316,7 +316,7 @@
             {% endwith %}
 
             <!-- Login Form -->
-            <form id="loginForm" action="{{ url_for('login') }}" method="POST">
+            <form id="loginForm" action="{{ url_for('auth.login') }}" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <!-- Email -->
@@ -357,10 +357,10 @@
                 <div class="link-section">
                     <p class="link-text">
                         Don't have an account?
-                        <a href="{{ url_for('register') }}" class="link-primary">Create one here</a>
+                        <a href="{{ url_for('auth.register') }}" class="link-primary">Create one here</a>
                     </p>
                     <p class="link-text">
-                        <a href="{{ url_for('landing') }}" class="link-secondary">
+                        <a href="{{ url_for('static.landing') }}" class="link-secondary">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                             </svg>
@@ -392,7 +392,7 @@
 
             const formData = new FormData(this);
 
-            fetch('/login', {
+            fetch('/auth/login', {
                 method: 'POST',
                 body: formData
             })

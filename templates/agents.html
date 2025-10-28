@@ -652,15 +652,15 @@
         <div class="max-w-7xl mx-auto px-6 lg:px-8">
             <div class="flex items-center justify-between">
                 <!-- Logo -->
-                <a href="{{ url_for('landing') }}">
+                <a href="{{ url_for('static.landing') }}">
                     <img src="{{ url_for('static', filename='logos/new_logo.svg') }}" alt="Solar Intelligence" class="logo">
                 </a>
 
                 <!-- User Info and Actions -->
                 <div class="user-info">
                     <span class="user-name">{{ current_user.full_name or current_user.username }}</span>
-                    <a href="/profile" class="header-btn secondary">Profile</a>
-                    <a href="{{ url_for('logout') }}" class="header-btn">Logout</a>
+                    <a href="{{ url_for('auth.profile') }}" class="header-btn secondary">Profile</a>
+                    <a href="{{ url_for('auth.logout') }}" class="header-btn">Logout</a>
                 </div>
             </div>
         </div>
@@ -675,7 +675,7 @@
         <aside class="sidebar">
             <div class="sidebar-card">
                 <div class="sidebar-logo">
-                    <a href="{{ url_for('landing') }}">
+                    <a href="{{ url_for('static.landing') }}">
                         <img src="{{ url_for('static', filename='logos/new_logo.svg') }}" alt="Solar Intelligence">
                     </a>
                 </div>
@@ -700,12 +700,12 @@
 
         <!-- Top Right User Menu -->
         <div class="top-user-menu">
-            <a href="/profile" class="user-icon-btn" title="Profile">
+            <a href="{{ url_for('auth.profile') }}" class="user-icon-btn" title="Profile">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                 </svg>
             </a>
-            <a href="{{ url_for('logout') }}" class="user-icon-btn logout" title="Logout">
+            <a href="{{ url_for('auth.logout') }}" class="user-icon-btn logout" title="Logout">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                 </svg>

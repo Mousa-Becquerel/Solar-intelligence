@@ -281,7 +281,8 @@ Analyze the conversation history carefully to determine the intent.
                 session = self.conversation_sessions[conversation_id]
 
             # Step 1: Classify the intent (non-streaming)
-            classify_result = await Runner.run(self.intent_agent, query, session=session)
+            # IMPORTANT: Don't pass session to intent classifier to avoid duplicate messages in history
+            classify_result = await Runner.run(self.intent_agent, query, session=None)
             classification = classify_result.final_output.query_class if hasattr(classify_result.final_output, 'query_class') else "general"
 
             logger.info(f"Intent classified as: {classification}")
@@ -351,7 +352,8 @@ Analyze the conversation history carefully to determine the intent.
                     session = self.conversation_sessions[conversation_id]
 
                 # Step 1: Classify the intent
-                classify_result = await Runner.run(self.intent_agent, query, session=session)
+                # IMPORTANT: Don't pass session to intent classifier to avoid duplicate messages in history
+                classify_result = await Runner.run(self.intent_agent, query, session=None)
                 classification = classify_result.final_output.query_class if hasattr(classify_result.final_output, 'query_class') else "general"
 
                 logger.info(f"Intent classified as: {classification}")

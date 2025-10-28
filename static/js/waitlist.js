@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .map(checkbox => checkbox.value);
 
         try {
-            const response = await fetch('/api/waitlist/join', {
+            const response = await fetch('/waitlist', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -237,9 +237,9 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 // Track failed submission
                 trackEvent('waitlist_signup_failed', {
-                    error_message: data.message
+                    error_message: data.error || data.message
                 });
-                showError(data.message || 'Something went wrong. Please try again.');
+                showError(data.error || data.message || 'Something went wrong. Please try again.');
             }
         } catch (error) {
             console.error('Error joining waitlist:', error);

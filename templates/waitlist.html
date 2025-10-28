@@ -36,7 +36,7 @@
         <div class="header-actions">
             <a href="#waitlist-form" class="get-access-btn">Get Early Access</a>
             {% if show_admin_access %}
-            <a href="{{ url_for('landing') }}" class="admin-access-link">Admin Access</a>
+            <a href="{{ url_for('static.landing') }}" class="admin-access-link">Admin Access</a>
             {% endif %}
         </div>
     </header>
@@ -228,8 +228,8 @@
     <footer class="waitlist-footer">
         <p>&copy; 2025 Solar Intelligence. Powered by <a href="https://www.becquerelinstitute.eu/" target="_blank">Becquerel Institute</a>.</p>
         <div class="footer-links">
-            <a href="{{ url_for('privacy_policy') }}">Privacy</a>
-            <a href="{{ url_for('terms_of_service') }}">Terms</a>
+            <a href="{{ url_for('static.privacy_policy') }}">Privacy</a>
+            <a href="{{ url_for('static.terms_of_service') }}">Terms</a>
         </div>
     </footer>
 

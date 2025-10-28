@@ -297,7 +297,7 @@
                             <img src="{{ url_for('static', filename='logos/new_logo.svg') }}" alt="Solar Intelligence" style="height: 60px; width: auto;">
                         </div>
                     </div>
-                    <a href="{{ url_for('waitlist_page') }}" class="back-link">
+                    <a href="{{ url_for('static.waitlist') }}" class="back-link">
                         ← Back to Home
                     </a>
                 </div>
@@ -503,8 +503,8 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-links">
-                    <a href="{{ url_for('terms_of_service') }}">Terms of Service</a>
-                    <a href="{{ url_for('privacy_policy') }}">Privacy Policy</a>
+                    <a href="{{ url_for('static.terms_of_service') }}">Terms of Service</a>
+                    <a href="{{ url_for('static.privacy_policy') }}">Privacy Policy</a>
                     <a href="mailto:info@becquerelinstitute.eu">Contact</a>
                 </div>
                 <div class="copyright">

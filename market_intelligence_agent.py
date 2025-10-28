@@ -724,10 +724,11 @@ Once you understand the plot to be generated, extract the required data from the
             user_query = workflow["input_as_text"]
 
             # Step 1: Classification - Determine intent (data vs plot)
+            # IMPORTANT: Don't pass session to classification agent to avoid duplicate messages
             classification_result_temp = await Runner.run(
                 self.classification_agent,
                 input=user_query,
-                session=session,
+                session=None,
                 run_config=RunConfig(trace_metadata={
                     "__trace_source__": "agent-builder",
                     "workflow_id": "market_intelligence_workflow"
@@ -745,11 +746,12 @@ Once you understand the plot to be generated, extract the required data from the
             # Step 2: Route to appropriate agent based on intent
             if intent == "plot":
                 # Step 2a: Use plotting agent to generate D3-compatible JSON
+                # IMPORTANT: Don't pass session here either, as plotting agent doesn't need conversation context
                 logger.info("Routing to plotting agent")
                 plotting_result_temp = await Runner.run(
                     self.plotting_agent,
                     input=user_query,
-                    session=session,
+                    session=None,
                     run_config=RunConfig(trace_metadata={
                         "__trace_source__": "agent-builder",
                         "workflow_id": "market_intelligence_workflow"
@@ -809,10 +811,11 @@ Once you understand the plot to be generated, extract the required data from the
                 session = self.conversation_sessions[conversation_id]
 
             # Step 1: Classification - Determine intent (data vs plot)
+            # IMPORTANT: Don't pass session to classification agent to avoid duplicate messages
             classification_result = await Runner.run(
                 self.classification_agent,
                 input=query,
-                session=session,
+                session=None,
                 run_config=RunConfig(trace_metadata={
                     "__trace_source__": "agent-builder",
                     "workflow_id": "market_intelligence_workflow"
@@ -825,12 +828,13 @@ Once you understand the plot to be generated, extract the required data from the
             # Step 2: Route to appropriate agent with streaming
             if intent == "plot":
                 # Step 2a: Use plotting agent - plots return complete JSON (no streaming)
+                # IMPORTANT: Don't pass session here either, as plotting agent doesn't need conversation context
                 logger.info("Routing to plotting agent")
 
                 plotting_result = await Runner.run(
                     self.plotting_agent,
                     input=query,
-                    session=session,
+                    session=None,
                     run_config=RunConfig(trace_metadata={
                         "__trace_source__": "agent-builder",
                         "workflow_id": "market_intelligence_workflow"

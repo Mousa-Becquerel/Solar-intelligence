@@ -289,7 +289,7 @@ let currentConversationId = null;
 // Authentication handling
 async function loadCurrentUser() {
     try {
-        const response = await fetch('/current-user');
+        const response = await fetch('/auth/current-user');
         if (response.ok) {
             const userData = await response.json();
             const userNameEl = document.getElementById('user-name');
@@ -305,11 +305,11 @@ async function loadCurrentUser() {
             }
         } else {
             // Redirect to login if not authenticated
-            window.location.href = '/login';
+            window.location.href = '/auth/login';
         }
     } catch (error) {
         console.error('Error loading user info:', error);
-        window.location.href = '/login';
+        window.location.href = '/auth/login';
     }
 }
 
@@ -317,7 +317,7 @@ function setupLogoutButton() {
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function() {
-            window.location.href = '/logout';
+            window.location.href = '/auth/logout';
         });
     }
 }
@@ -325,7 +325,8 @@ function setupLogoutButton() {
 // Sidebar logic
 async function fetchConversations() {
     const res = await fetch('/conversations');
-    conversations = await res.json();
+    const data = await res.json();
+    conversations = data.conversations || [];
     renderConversationList();
 }
 function renderConversationList() {
@@ -345,10 +346,11 @@ function renderConversationList() {
         const li = document.createElement('li');
         li.className = 'conversation-item' + (conv.id === currentConversationId ? ' active' : '');
         
-        // Create title span
+        // Create title span - use preview if available, otherwise fallback to title
         const titleSpan = document.createElement('span');
         titleSpan.className = 'conversation-title';
-        titleSpan.textContent = conv.title || `Conversation ${conv.id}`;
+        titleSpan.textContent = conv.preview || conv.title || `Conversation ${conv.id}`;
+        titleSpan.title = conv.preview || conv.title || `Conversation ${conv.id}`; // Tooltip shows full text
         li.appendChild(titleSpan);
         
         // Add delete button
@@ -419,20 +421,28 @@ async function selectConversation(id) {
         console.error('No conversation ID provided');
         return;
     }
-    
+
+    console.log('Selecting conversation:', id);
     currentConversationId = id;
     renderConversationList();
-    
+
     try {
+        console.log(`Fetching conversation from: /conversations/${id}`);
         const res = await fetch(`/conversations/${id}`);
-        
+
+        console.log('Response status:', res.status, res.ok);
         if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Response error:', errorText);
             throw new Error(`Failed to fetch conversation: ${res.status}`);
         }
-        
-        const messages = await res.json();
+
+        const data = await res.json();
+        console.log('Conversation data received:', data);
+        const messages = data.messages || [];
+        console.log('Number of messages:', messages.length);
         const chatMessages = document.getElementById('chat-messages');
-        
+
         // Remove only message containers, not the welcome message
         const chatWrapper = document.querySelector('.chat-messages-wrapper');
         [...chatWrapper.querySelectorAll('.message-container, .loading-container')].forEach(el => el.remove());

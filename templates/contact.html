@@ -21,12 +21,12 @@
         <div class="max-w-7xl mx-auto px-6 lg:px-8">
             <div class="flex justify-between items-center py-6">
                 <!-- Logo -->
-                <a href="{{ url_for('landing') }}" class="flex items-center space-x-3">
+                <a href="{{ url_for('static.landing') }}" class="flex items-center space-x-3">
                     <img src="{{ url_for('static', filename='logos/new_logo.svg') }}" alt="Solar Intelligence" class="nav-logo">
                 </a>
 
                 <!-- Back to Home Link -->
-                <a href="{{ url_for('landing') }}" class="nav-link">
+                <a href="{{ url_for('static.landing') }}" class="nav-link">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>

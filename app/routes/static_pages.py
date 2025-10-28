@@ -1,0 +1,305 @@
+"""
+Static pages routes blueprint.
+
+This blueprint handles all static/informational pages including
+landing page, waitlist, privacy policy, terms of service, and contact.
+"""
+
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+from flask_login import current_user
+from app.extensions import limiter, db
+from models import Waitlist  # Import from root models.py
+from app.schemas.user import WaitlistSchema
+from pydantic import ValidationError
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Create blueprint
+static_bp = Blueprint('static', __name__)
+
+
+@static_bp.route('/')
+def landing():
+    """
+    Landing page route.
+
+    Shows the main landing page with product information.
+    If user is authenticated, redirects to chat interface.
+    """
+    try:
+        if current_user.is_authenticated:
+            return redirect(url_for('chat.agents'))
+
+        return render_template('landing.html')
+
+    except Exception as e:
+        logger.error(f"Error loading landing page: {e}")
+        return render_template('landing.html')
+
+
+@static_bp.route('/waitlist', methods=['GET', 'POST'])
+@limiter.limit("10 per hour")
+def waitlist():
+    """
+    Waitlist signup route.
+
+    GET: Display waitlist signup form
+    POST: Process waitlist signup
+    """
+    if request.method == 'GET':
+        return render_template('waitlist.html')
+
+    try:
+        # Handle both JSON and form data
+        if request.is_json:
+            data = request.get_json()
+            email = data.get('email', '').strip()
+            interested_agents = data.get('interested_agents', [])
+        else:
+            email = request.form.get('email', '').strip()
+            interested_agents = []
+
+        if not email:
+            if request.is_json:
+                return jsonify({'success': False, 'error': 'Email address is required'}), 400
+            flash('Email address is required', 'error')
+            return render_template('waitlist.html')
+
+        # Validate using Pydantic schema
+        try:
+            waitlist_data = WaitlistSchema(email=email)
+        except ValidationError as e:
+            error_messages = '; '.join([err['msg'] for err in e.errors()])
+            if request.is_json:
+                return jsonify({'success': False, 'error': error_messages}), 400
+            flash(f'Validation error: {error_messages}', 'error')
+            return render_template('waitlist.html')
+
+        # Check if email already exists
+        existing = Waitlist.query.filter_by(email=waitlist_data.email).first()
+        if existing:
+            if request.is_json:
+                return jsonify({'success': False, 'error': 'This email is already on the waitlist'}), 409
+            flash('This email is already on the waitlist', 'info')
+            return render_template('waitlist.html')
+
+        # Add to waitlist
+        import json
+        waitlist_entry = Waitlist(
+            email=waitlist_data.email,
+            interested_agents=json.dumps(interested_agents) if interested_agents else None
+        )
+        db.session.add(waitlist_entry)
+        db.session.commit()
+
+        logger.info(f"New waitlist signup: {waitlist_data.email}")
+
+        if request.is_json:
+            return jsonify({'success': True, 'message': 'Thank you! You have been added to the waitlist.'}), 200
+
+        flash('Thank you! You have been added to the waitlist.', 'success')
+        return redirect(url_for('static.landing'))
+
+    except Exception as e:
+        logger.error(f"Error processing waitlist signup: {e}")
+        db.session.rollback()
+        if request.is_json:
+            return jsonify({'success': False, 'error': 'An error occurred. Please try again.'}), 500
+        flash('An error occurred. Please try again.', 'error')
+        return render_template('waitlist.html')
+
+
+@static_bp.route('/privacy')
+def privacy_policy():
+    """
+    Privacy policy page.
+
+    Displays the application's privacy policy and GDPR information.
+    """
+    try:
+        return render_template('privacy_policy.html')
+    except Exception as e:
+        logger.error(f"Error loading privacy policy: {e}")
+        return "Privacy Policy page unavailable", 500
+
+
+@static_bp.route('/terms')
+def terms_of_service():
+    """
+    Terms of service page.
+
+    Displays the application's terms of service.
+    """
+    try:
+        return render_template('terms_of_service.html')
+    except Exception as e:
+        logger.error(f"Error loading terms of service: {e}")
+        return "Terms of Service page unavailable", 500
+
+
+@static_bp.route('/contact', methods=['GET', 'POST'])
+@limiter.limit("20 per hour")
+def contact():
+    """
+    Contact page route.
+
+    GET: Display contact form
+    POST: Process contact form submission
+    """
+    if request.method == 'GET':
+        return render_template('contact.html')
+
+    try:
+        # Get form data
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip()
+        subject = request.form.get('subject', '').strip()
+        message = request.form.get('message', '').strip()
+
+        # Validate required fields
+        if not all([name, email, subject, message]):
+            flash('All fields are required', 'error')
+            return render_template('contact.html')
+
+        # Validate email using Pydantic schema
+        try:
+            WaitlistSchema(email=email)
+        except ValidationError:
+            flash('Invalid email address', 'error')
+            return render_template('contact.html')
+
+        # Log contact submission (in production, send email or save to database)
+        logger.info(f"Contact form submission from {name} ({email}): {subject}")
+
+        # TODO: In production, implement email sending or database storage
+        # For now, just log and show success message
+
+        flash('Thank you for your message. We will get back to you soon!', 'success')
+        return redirect(url_for('static.contact'))
+
+    except Exception as e:
+        logger.error(f"Error processing contact form: {e}")
+        flash('An error occurred. Please try again.', 'error')
+        return render_template('contact.html')
+
+
+@static_bp.route('/about')
+def about():
+    """
+    About page route.
+
+    Displays information about the application and company.
+    """
+    try:
+        return render_template('about.html')
+    except Exception as e:
+        logger.error(f"Error loading about page: {e}")
+        # Fallback content
+        return """
+        <h1>About Solar Intelligence Platform</h1>
+        <p>Your comprehensive solution for solar market analysis and intelligence.</p>
+        """, 200
+
+
+@static_bp.route('/health')
+def health_check():
+    """
+    Health check endpoint for monitoring.
+
+    Returns JSON with application status.
+    """
+    try:
+        # Check database connection
+        db.session.execute(db.text('SELECT 1'))
+
+        return jsonify({
+            'status': 'healthy',
+            'database': 'connected'
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        return jsonify({
+            'status': 'unhealthy',
+            'database': 'disconnected',
+            'error': str(e)
+        }), 503
+
+
+@static_bp.route('/submit-contact', methods=['POST'])
+def submit_contact():
+    """Handle contact form submission (JSON API version)"""
+    try:
+        # Get form data
+        first_name = request.form.get('firstName')
+        last_name = request.form.get('lastName')
+        email = request.form.get('email')
+        company = request.form.get('company', '')
+        phone = request.form.get('phone', '')
+        message = request.form.get('message')
+
+        # Log contact submission (in production, send email or save to database)
+        logger.info(f"Contact form submission from {first_name} {last_name} ({email})")
+        logger.info(f"Company: {company}, Phone: {phone}")
+        logger.info(f"Message: {message}")
+
+        # TODO: Add email sending logic or save to database
+
+        return jsonify({'success': True, 'message': 'Thank you for your message! We will get back to you soon.'})
+    except Exception as e:
+        logger.error(f"Error processing contact form: {str(e)}")
+        return jsonify({'success': False, 'message': 'An error occurred. Please try again.'}), 500
+
+
+@static_bp.route('/guide')
+def get_guide():
+    """Get user guide markdown content"""
+    from flask_login import login_required
+    try:
+        import os
+        guide_path = os.path.join('docs', 'pv-market-analysis-user-guide.md')
+        if os.path.exists(guide_path):
+            with open(guide_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return content
+        else:
+            return "User guide not found.", 404
+    except Exception as e:
+        logger.error(f"Error loading guide: {str(e)}")
+        return f"Error loading guide: {str(e)}", 500
+
+
+@static_bp.route('/random-news')
+def random_news():
+    """Get a random news article"""
+    from flask_login import login_required
+    import random
+
+    # News list would normally be loaded from a database or external source
+    # For now, return empty if no news available
+    NEWS_LIST = []  # TODO: Implement news loading
+
+    if not NEWS_LIST:
+        return jsonify({}), 404
+
+    news = random.choice(NEWS_LIST)
+    return jsonify({
+        "title": news.get("title", ""),
+        "description": news.get("description", ""),
+        "url": news.get("url", "")
+    })
+
+
+# Error handlers for this blueprint
+@static_bp.errorhandler(404)
+def not_found(e):
+    """Handle 404 errors."""
+    return render_template('404.html'), 404
+
+
+@static_bp.errorhandler(500)
+def internal_error(e):
+    """Handle 500 errors."""
+    logger.error(f"Internal server error: {e}")
+    return render_template('500.html'), 500

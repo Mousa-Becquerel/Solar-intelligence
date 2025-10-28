@@ -299,8 +299,8 @@
                     <img src="{{ url_for('static', filename='logos/new_logo.svg') }}" alt="Solar Intelligence" class="logo">
                 </a>
                 <div style="display: flex; align-items: center; gap: 16px;">
-                    <a href="/agents" class="header-btn">Dashboard</a>
-                    <a href="/logout" class="header-btn">Logout</a>
+                    <a href="{{ url_for('chat.agents') }}" class="header-btn">Dashboard</a>
+                    <a href="{{ url_for('auth.logout') }}" class="header-btn">Logout</a>
                 </div>
             </div>
         </div>
@@ -385,10 +385,10 @@
                         Download a copy of your data or request account deletion.
                     </p>
                     <div style="display: flex; gap: 12px;">
-                        <button id="export-data-btn" class="btn-primary">
+                        <button id="export-data-btn" class="btn-primary" disabled title="Feature coming soon">
                             Export My Data
                         </button>
-                        <a href="/gdpr/request-deletion" class="btn-danger" style="text-decoration: none; display: inline-block;">
+                        <a href="{{ url_for('auth.request_deletion') }}" class="btn-danger" style="text-decoration: none; display: inline-block;">
                             Delete Account
                         </a>
                     </div>
@@ -423,7 +423,11 @@
                             <span style="font-size: 0.875rem; font-weight: 700; color: #E9A544;">{{ usage_stats.monthly_queries }} / {{ usage_stats.query_limit }}</span>
                         </div>
                         <div class="progress-bar">
+                            {% if usage_stats.query_limit == 'Unlimited' %}
+                            <div class="progress-fill" style="width: 100%"></div>
+                            {% else %}
                             <div class="progress-fill" style="width: {{ (usage_stats.monthly_queries / usage_stats.query_limit * 100) if usage_stats.query_limit > 0 else 0 }}%"></div>
+                            {% endif %}
                         </div>
                         <p style="margin-top: 8px; font-size: 0.75rem; color: rgba(255, 255, 255, 0.5);">
                             {{ usage_stats.queries_remaining }} queries remaining

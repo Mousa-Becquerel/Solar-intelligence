@@ -38,7 +38,7 @@ RUN mkdir -p /app/instance && chmod 777 /app/instance
 RUN chmod 777 /app/static/plots /app/exports/data /app/exports/charts
 
 # Set environment variables
-ENV FLASK_APP=app.py
+ENV FLASK_APP=run_refactored.py
 ENV PYTHONPATH=/app
 
 # Expose port
@@ -52,5 +52,5 @@ USER appuser
 HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:5000/health || exit 1
 
-# Run with gunicorn using configuration file
-CMD ["gunicorn", "--config", "scripts/deployment/gunicorn.conf.py", "app:app"]
+# Run the refactored app with gunicorn
+CMD ["gunicorn", "--config", "scripts/deployment/gunicorn_refactored.conf.py", "run_refactored:app"]

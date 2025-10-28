@@ -1,5 +1,5 @@
 services:
-  module-prices-agent:
+  pv-market-analysis:
     build:
       context: .
       dockerfile: Dockerfile
@@ -18,9 +18,16 @@ services:
       - ./static:/app/static
       - ./exports:/app/exports
       - ./memory_dumps:/app/memory_dumps
-      - ./app.py:/app/app.py:ro
-      - ./pydantic_weaviate_agent.py:/app/pydantic_weaviate_agent.py:ro
+      # Mount the refactored app structure
+      - ./app:/app/app:ro
+      - ./run_refactored.py:/app/run_refactored.py:ro
+      - ./models.py:/app/models.py:ro
+      - ./module_prices_agent.py:/app/module_prices_agent.py:ro
+      - ./news_agent.py:/app/news_agent.py:ro
+      - ./leo_om_agent.py:/app/leo_om_agent.py:ro
+      - ./digitalization_trend_agent.py:/app/digitalization_trend_agent.py:ro
       - ./market_intelligence_agent.py:/app/market_intelligence_agent.py:ro
+      - ./pydantic_weaviate_agent.py:/app/pydantic_weaviate_agent.py:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
