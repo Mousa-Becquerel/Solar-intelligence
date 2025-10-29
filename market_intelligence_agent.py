@@ -136,6 +136,16 @@ class PlottingAgentSchema(BaseModel):
     success: bool
 
 
+class EvaluationAgentSchema(BaseModel):
+    """Output schema for evaluation agent - assesses response quality"""
+    response_quality: Literal["good_answer", "bad_answer"]  # Fixed typo from original
+
+
+class ResponseAgentSchema(BaseModel):
+    """Output schema for response agent - formats final answer"""
+    informative_summary: str
+
+
 class WorkflowInput(BaseModel):
     """Input for the workflow"""
     input_as_text: str
@@ -160,33 +170,24 @@ class MarketIntelligenceAgent:
     """
 
     # Schema description for the market database
-    MARKET_DATABASE_SCHEMA = """You are an agent which has access to PV market data, you should answer any PV market data only from here.
+    MARKET_DATABASE_SCHEMA = """You are a Market Intelligence Agent with access to PV market data. Your role is to analyze data and extract insights.
 
-**Response Formatting Guidelines:**
-- Use proper markdown formatting with headers (##, ###), bullet points (-), and numbered lists
-- Break content into clear sections with descriptive headers
-- Use **bold** for key terms, important numbers, and metrics
-- Use tables for comparative data (e.g., country comparisons, year-over-year data)
-- Add blank lines between sections for readability
-- Structure long lists as proper bullet points, not run-on sentences
-- Use concise paragraphs (2-3 sentences max)
-- Highlight trends with visual separators or emojis when appropriate (📈 for growth, 📉 for decline)
-- Format large numbers with thousand separators (e.g., 1,234.5 MW instead of 1234.5)
+**Your Focus:**
+- Extract accurate data from the database
+- Perform calculations and comparisons
+- Identify trends and patterns
+- Provide clear, factual insights
+- Keep responses concise and focused on the data
 
-**Example Response Structure:**
-## Market Overview
-Brief summary of the query results...
+**Response Style:**
+- Focus on facts and numbers, not formatting
+- Use simple, clear language
+- State findings directly (e.g., "Italy installed 1,234.5 MW in 2024, up 20% from 2023")
+- List key data points without elaborate formatting
+- Avoid markdown headers, tables, or emojis - a Response Agent will handle formatting later
 
-### Key Findings
-- **Total Capacity**: 1,234.5 MW
-- **Growth Rate**: +15.2% YoY
-- **Market Leader**: Country X with 456 MW
-
-### Detailed Breakdown
-| Country | 2023 | 2024 | Growth |
-|---------|------|------|--------|
-| Italy   | 100  | 120  | +20%   |
-| Germany | 150  | 165  | +10%   |
+**Example Response:**
+"Based on the data, Italy's total solar capacity in 2024 was 1,234.5 MW. This represents a 20% increase from 2023 when capacity was 1,028 MW. Germany leads the region with 1,560 MW installed. The growth rate across these markets averaged 15.2% year-over-year."
 
 This is the schema of the data:
 
@@ -325,17 +326,24 @@ Never give any link to the user to download anything.
             # 1. Classification Agent - Routes between data vs plot intent
             self.classification_agent = Agent(
                 name="Classification Agent",
-                instructions="""You are a classification agent. Your job is to determine the user's intent.
+                instructions="""You are a classification agent. Your job is to determine the user's intent based on their current query and conversation history.
 
 Return EXACTLY one of these two values:
 - "data" - if the user wants to analyze data, get insights, or ask questions about the data
 - "plot" - if the user wants to generate a chart, graph, or visualization
+
+IMPORTANT: Consider conversation context for follow-up queries:
+- If the previous response was a plot and user says "now do it for Italy", classify as "plot"
+- If the previous query was about plotting and user says "what about Germany?", classify as "plot"
+- Look at the conversation history to understand what "it" or "that" refers to
 
 Examples:
 - "How much PV did Italy install?" -> "data"
 - "Generate a plot of Italy PV" -> "plot"
 - "Show me a chart of installations" -> "plot"
 - "What were the top countries?" -> "data"
+- After a plot: "now do it for Italy" -> "plot" (context: user wants same plot for different country)
+- After a plot: "what about Germany?" -> "plot" (context: continuing plot requests)
 """,
                 model="gpt-4.1",  # Fast, lightweight model for simple classification (no reasoning support)
                 output_type=ClassificationAgentSchema,
@@ -689,7 +697,161 @@ Once you understand the plot to be generated, extract the required data from the
                 )
             )
 
+            # 4. Evaluation Agent - Assesses response quality (good vs bad answer)
+            self.evaluation_agent = Agent(
+                name="Evaluation Agent",
+                instructions="""You evaluate Market Intelligence Agent responses about PV (solar photovoltaic) market data. Classify as "good_answer" or "bad_answer" based on whether the agent found relevant data.
+
+**Classification Criteria:**
+
+- **"good_answer"**: The agent provides relevant PV market data that answers the user's query, even if partial or limited.
+- **"bad_answer"**: The agent explicitly states that NO relevant data exists in the database for the query.
+
+**Important Distinctions:**
+
+✅ **"good_answer"** includes:
+- Complete data answering the full query
+- Partial data (e.g., data for 2023-2024 when user asked for 2020-2024)
+- Data for similar regions/technologies if exact match not available
+- Any insights derived from available PV market data
+
+❌ **"bad_answer"** ONLY when:
+- Agent says "no data available" or "data does not exist" for the query
+- Agent cannot find ANY relevant information in the database
+- Agent explicitly states the requested information is not in the dataset
+
+**Output Format:**
+
+Respond ONLY with this JSON (no explanations):
+
+{
+  "response_quality": "good_answer"
+}
+
+or
+
+{
+  "response_quality": "bad_answer"
+}
+
+**Examples:**
+
+**Example 1 - good_answer**
+- User Query: "What was Italy's solar capacity in 2024?"
+- Agent Response: "Italy's total solar capacity in 2024 was 28,450 MW, representing a 12% increase from 2023."
+- Output: {"response_quality": "good_answer"}
+
+**Example 2 - bad_answer**
+- User Query: "What is Tesla's solar panel manufacturing capacity?"
+- Agent Response: "I don't have data on Tesla's solar panel manufacturing capacity. Our database contains PV market installation data by country and region, not individual company manufacturing details."
+- Output: {"response_quality": "bad_answer"}
+
+**Example 3 - good_answer (partial data)**
+- User Query: "Show me Germany's solar installations from 2010 to 2024"
+- Agent Response: "I have data for Germany from 2015 to 2024. In 2015, Germany had 39,700 MW installed, growing to 82,150 MW by 2024."
+- Output: {"response_quality": "good_answer"}
+
+**Example 4 - bad_answer**
+- User Query: "What are the labor costs for solar installation in Spain?"
+- Agent Response: "Our database doesn't include labor cost data. We only have PV installation capacity data by territory, connection type, and technology."
+- Output: {"response_quality": "bad_answer"}
+
+**Example 5 - good_answer (alternative data)**
+- User Query: "What's the solar capacity in Scandinavia?"
+- Agent Response: "While we don't have a 'Scandinavia' category, I can provide data for the Nordic countries. Norway had 450 MW, Sweden had 2,100 MW, and Denmark had 1,800 MW in 2024."
+- Output: {"response_quality": "good_answer"}
+
+**Rules:**
+- Only output the JSON with "response_quality" field
+- Do NOT add reasoning, explanations, or extra fields
+- When in doubt, if ANY relevant PV market data was provided, classify as "good_answer"
+""",
+                model="gpt-4.1",  # Fast classification model
+                output_type=EvaluationAgentSchema,
+                model_settings=ModelSettings(
+                    store=True
+                )
+            )
+
+            # 5. Response Agent - Formats and presents good answers beautifully
+            self.response_agent = Agent(
+                name="Response Agent",
+                instructions="""You are a Response Agent that transforms raw market intelligence data into beautifully formatted, user-friendly responses.
+
+**Your Role:**
+- Take the factual response from the Market Intelligence Agent
+- Transform it into a professional, well-structured format
+- Apply consistent styling and formatting guidelines
+- Make the data easy to scan and understand
+- Highlight key insights and findings
+
+**Formatting Guidelines (CRITICAL - Apply these consistently):**
+- Use proper markdown formatting with headers (##, ###), bullet points (-), and numbered lists
+- Break content into clear sections with descriptive headers
+- Use **bold** for key terms, important numbers, and metrics
+- Use tables for comparative data (e.g., country comparisons, year-over-year data)
+- Add blank lines between sections for readability
+- Structure long lists as proper bullet points, not run-on sentences
+- Use concise paragraphs (2-3 sentences max)
+- Highlight trends with visual indicators when appropriate (📈 for growth, 📉 for decline)
+- Format large numbers with thousand separators (e.g., 1,234.5 MW instead of 1234.5)
+
+**Example Transformation:**
+
+Input from Market Intelligence Agent:
+"Italy's total solar capacity in 2024 was 1,234.5 MW. This represents a 20% increase from 2023 when capacity was 1,028 MW. Germany leads with 1,560 MW installed. Growth rate averaged 15.2% year-over-year."
+
+Your Output:
+## Market Overview
+Based on the latest data, here's the solar capacity analysis you requested:
+
+### Key Findings 📊
+- **Italy 2024**: 1,234.5 MW total installed capacity
+- **Growth Rate**: +20% year-over-year 📈
+- **Regional Leader**: Germany with 1,560 MW
+
+### Detailed Breakdown
+| Country | 2023 | 2024 | Growth |
+|---------|------|------|--------|
+| Germany | 1,300 MW | 1,560 MW | +20.0% |
+| Italy | 1,028 MW | 1,234.5 MW | +20.1% |
+
+### Market Insights
+The regional solar market showed strong growth with an average increase of **15.2% year-over-year**. Germany maintains its position as the market leader, while Italy demonstrated impressive expansion.
+
+**Important Rules:**
+- Do NOT add facts or numbers that weren't in the Market Intelligence Agent's response
+- Do NOT make assumptions or estimates
+- Do NOT change the meaning of the data
+- ONLY reformat, structure, and present the existing information beautifully
+- If the Market Intelligence Agent mentions data unavailability, present it clearly but don't apologize excessively""",
+                model="gpt-4.1",
+                output_type=ResponseAgentSchema,
+                model_settings=ModelSettings(
+                    store=True
+                )
+            )
+
+            # 6. Follow-up Agent - Handles bad answers by offering expert contact
+            self.follow_up_agent = Agent(
+                name="Follow-up Agent",
+                instructions="""You are an agent which requires to summarize the response coming from the Market Intelligence Agent, and to ask the user whether he would like to reach experts to answer his query since the information is not present.
+
+First summarize what comes from the Market Intelligence Agent regarding the info the user asks for, then offer the user to reach an expert to get a proper answer to his query.
+
+Example format:
+"Based on the available data, [summary of what was found/not found].
+
+Unfortunately, we don't have complete information on [specific missing data]. Would you like me to connect you with one of our market experts who can provide more detailed insights on this topic? They can offer personalized analysis based on the latest industry research."
+""",
+                model="gpt-4.1-mini",  # Lighter model for simple follow-up
+                model_settings=ModelSettings(
+                    store=True
+                )
+            )
+
             logger.info(f"✅ Created market intelligence agent with file: {self.config.file_id}")
+            logger.info(f"✅ Created evaluation, response, and follow-up agents")
 
         except Exception as e:
             logger.error(f"❌ Failed to initialize agents: {e}")
@@ -766,7 +928,7 @@ Once you understand the plot to be generated, extract the required data from the
                 }
 
             else:
-                # Use market intelligence agent for data analysis
+                # Step 2b: Use market intelligence agent for data analysis
                 logger.info("Routing to market intelligence agent")
                 market_result_temp = await Runner.run(
                     self.market_intelligence_agent,
@@ -778,11 +940,67 @@ Once you understand the plot to be generated, extract the required data from the
                     })
                 )
 
-                market_result = {
-                    "output_text": market_result_temp.final_output_as(str),
-                    "response_type": "text"  # Flag for app.py
-                }
-                return market_result
+                market_intelligence_response = market_result_temp.final_output_as(str)
+                logger.info("Market intelligence agent completed")
+
+                # Step 3: Evaluation - Assess response quality
+                # IMPORTANT: Don't pass session to evaluation agent
+                logger.info("Evaluating response quality")
+                evaluation_result_temp = await Runner.run(
+                    self.evaluation_agent,
+                    input=user_query,  # Evaluation agent will see conversation history including market agent's response
+                    session=None,
+                    run_config=RunConfig(trace_metadata={
+                        "__trace_source__": "agent-builder",
+                        "workflow_id": "market_intelligence_workflow"
+                    })
+                )
+
+                evaluation_result = evaluation_result_temp.final_output.model_dump()
+                response_quality = evaluation_result["response_quality"]
+                logger.info(f"Response quality: {response_quality}")
+
+                # Step 4: Route based on evaluation
+                if response_quality == "bad_answer":
+                    # Step 4a: Follow-up agent offers expert contact
+                    logger.info("Bad answer detected - routing to follow-up agent")
+                    follow_up_result_temp = await Runner.run(
+                        self.follow_up_agent,
+                        input=user_query,
+                        session=session,  # Follow-up agent should have context
+                        run_config=RunConfig(trace_metadata={
+                            "__trace_source__": "agent-builder",
+                            "workflow_id": "market_intelligence_workflow"
+                        })
+                    )
+
+                    follow_up_response = follow_up_result_temp.final_output_as(str)
+                    return {
+                        "output_text": follow_up_response,
+                        "response_type": "text",
+                        "quality": "bad_answer",
+                        "offers_expert_contact": True
+                    }
+
+                else:  # good_answer
+                    # Step 4b: Response agent formats and summarizes
+                    logger.info("Good answer - routing to response agent")
+                    response_result_temp = await Runner.run(
+                        self.response_agent,
+                        input=user_query,
+                        session=session,  # Response agent needs full context
+                        run_config=RunConfig(trace_metadata={
+                            "__trace_source__": "agent-builder",
+                            "workflow_id": "market_intelligence_workflow"
+                        })
+                    )
+
+                    final_response = response_result_temp.final_output.informative_summary
+                    return {
+                        "output_text": final_response,
+                        "response_type": "text",
+                        "quality": "good_answer"
+                    }
 
     async def analyze_stream(self, query: str, conversation_id: str = None):
         """
@@ -811,11 +1029,11 @@ Once you understand the plot to be generated, extract the required data from the
                 session = self.conversation_sessions[conversation_id]
 
             # Step 1: Classification - Determine intent (data vs plot)
-            # IMPORTANT: Don't pass session to classification agent to avoid duplicate messages
+            # IMPORTANT: Pass session so classification can understand context (e.g., "now do it for Italy")
             classification_result = await Runner.run(
                 self.classification_agent,
                 input=query,
-                session=None,
+                session=session,  # Changed from None to session for context-aware classification
                 run_config=RunConfig(trace_metadata={
                     "__trace_source__": "agent-builder",
                     "workflow_id": "market_intelligence_workflow"
@@ -828,13 +1046,13 @@ Once you understand the plot to be generated, extract the required data from the
             # Step 2: Route to appropriate agent with streaming
             if intent == "plot":
                 # Step 2a: Use plotting agent - plots return complete JSON (no streaming)
-                # IMPORTANT: Don't pass session here either, as plotting agent doesn't need conversation context
+                # IMPORTANT: Pass session so plot queries are added to conversation history
                 logger.info("Routing to plotting agent")
 
                 plotting_result = await Runner.run(
                     self.plotting_agent,
                     input=query,
-                    session=None,
+                    session=session,  # Changed from None to session to maintain conversation history
                     run_config=RunConfig(trace_metadata={
                         "__trace_source__": "agent-builder",
                         "workflow_id": "market_intelligence_workflow"
@@ -846,9 +1064,15 @@ Once you understand the plot to be generated, extract the required data from the
                 yield json.dumps({"type": "plot", "content": plot_json})
 
             else:
-                # Use market intelligence agent for data analysis with streaming
-                logger.info("Routing to market intelligence agent with streaming")
-                result = Runner.run_streamed(
+                # Step 2b: Use market intelligence agent for data analysis
+                # NOTE: For streaming, we collect the full response first, then evaluate
+                logger.info("Routing to market intelligence agent")
+
+                # Send status update - analyzing data
+                yield json.dumps({"type": "status", "message": "Analyzing data..."})
+
+                # Run market intelligence agent (non-streaming for evaluation)
+                market_result_temp = await Runner.run(
                     self.market_intelligence_agent,
                     input=query,
                     session=session,
@@ -858,16 +1082,82 @@ Once you understand the plot to be generated, extract the required data from the
                     })
                 )
 
-                # Stream text deltas as they arrive
-                async for event in result.stream_events():
-                    if event.type == "raw_response_event":
-                        # Check if it's a text delta event
-                        from openai.types.responses import ResponseTextDeltaEvent
-                        if isinstance(event.data, ResponseTextDeltaEvent):
-                            # Clean citation markers before yielding
-                            cleaned_delta = clean_citation_markers(event.data.delta)
-                            if cleaned_delta:  # Only yield if there's content after cleaning
-                                yield cleaned_delta
+                market_intelligence_response = market_result_temp.final_output_as(str)
+                logger.info("Market intelligence agent completed")
+
+                # Send status update - evaluating quality
+                yield json.dumps({"type": "status", "message": "Evaluating response quality..."})
+
+                # Step 3: Evaluation - Assess response quality
+                logger.info("Evaluating response quality")
+                evaluation_result_temp = await Runner.run(
+                    self.evaluation_agent,
+                    input=query,
+                    session=None,
+                    run_config=RunConfig(trace_metadata={
+                        "__trace_source__": "agent-builder",
+                        "workflow_id": "market_intelligence_workflow"
+                    })
+                )
+
+                evaluation_result = evaluation_result_temp.final_output.model_dump()
+                response_quality = evaluation_result["response_quality"]
+                logger.info(f"Response quality: {response_quality}")
+
+                # Step 4: Route based on evaluation
+                if response_quality == "bad_answer":
+                    # Follow-up agent offers expert contact
+                    logger.info("Bad answer detected - routing to follow-up agent")
+
+                    # Send status update
+                    yield json.dumps({"type": "status", "message": "Preparing alternative response..."})
+
+                    follow_up_result_temp = await Runner.run(
+                        self.follow_up_agent,
+                        input=query,
+                        session=session,
+                        run_config=RunConfig(trace_metadata={
+                            "__trace_source__": "agent-builder",
+                            "workflow_id": "market_intelligence_workflow"
+                        })
+                    )
+
+                    follow_up_response = follow_up_result_temp.final_output_as(str)
+                    # Yield approval request - frontend will show Yes/No buttons
+                    yield json.dumps({
+                        "type": "approval_request",
+                        "message": follow_up_response,
+                        "approval_question": "Would you like to proceed and reach the expert?",
+                        "conversation_id": conversation_id,
+                        "context": "expert_contact"
+                    })
+
+                else:  # good_answer
+                    # Response agent formats and summarizes
+                    logger.info("Good answer - routing to response agent")
+
+                    # Send status update
+                    yield json.dumps({"type": "status", "message": "Formatting response..."})
+
+                    response_result_temp = await Runner.run(
+                        self.response_agent,
+                        input=query,
+                        session=session,
+                        run_config=RunConfig(trace_metadata={
+                            "__trace_source__": "agent-builder",
+                            "workflow_id": "market_intelligence_workflow"
+                        })
+                    )
+
+                    final_response = response_result_temp.final_output.informative_summary
+                    # Clean citation markers
+                    cleaned_response = clean_citation_markers(final_response)
+                    # Yield formatted response
+                    yield json.dumps({
+                        "type": "text",
+                        "content": cleaned_response,
+                        "quality": "good_answer"
+                    })
 
         except Exception as e:
             error_msg = f"Failed to stream query: {str(e)}"

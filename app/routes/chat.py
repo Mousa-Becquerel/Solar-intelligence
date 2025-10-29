@@ -573,3 +573,89 @@ def generate_ppt():
     except Exception as e:
         logger.error(f"Error generating PowerPoint: {e}", exc_info=True)
         return jsonify({'error': f'Failed to generate PowerPoint: {str(e)}'}), 500
+
+
+@chat_bp.route('/api/approval_response', methods=['POST'])
+@login_required
+def approval_response():
+    """
+    Handle user approval response for expert contact.
+
+    This is called when user clicks Yes/No on the expert contact approval UI.
+
+    Request JSON:
+        {
+            "approved": bool,
+            "conversation_id": str,
+            "context": str  # e.g., "expert_contact"
+        }
+
+    Returns:
+        JSON: Response message and optional redirect flag
+    """
+    try:
+        # Log incoming request details for debugging
+        logger.info(f"Approval response endpoint called")
+        logger.info(f"Content-Type: {request.content_type}")
+        logger.info(f"Request data: {request.data}")
+
+        data = request.get_json(force=True)  # force=True to parse even without correct Content-Type
+
+        if not data:
+            logger.error("No JSON data in request body")
+            return jsonify({'error': 'No data provided'}), 400
+
+        approved = data.get('approved', False)
+        conversation_id = data.get('conversation_id')
+        context = data.get('context', '')
+
+        logger.info(f"Approval response received: approved={approved}, conversation_id={conversation_id}, context={context}")
+
+        # Based on the longer_market_agent_flow.py logic:
+        # If user approves → "Let's fill the contact form"
+        # If user rejects → "Can I help you with other queries then?"
+
+        if approved:
+            response_message = "Great! Let's fill the contact form so our experts can reach out to you."
+            redirect_to_contact = True
+        else:
+            response_message = "No problem! Can I help you with other queries then?"
+            redirect_to_contact = False
+
+        # Save the approval response to conversation history
+        if conversation_id:
+            try:
+                from app.services.conversation_service import ConversationService
+                conv_service = ConversationService()
+
+                # Save user's approval decision as a system message
+                approval_text = "Yes, I want to contact an expert" if approved else "No, thanks"
+                conv_service.add_message(
+                    conversation_id=conversation_id,
+                    content=approval_text,
+                    sender='user',
+                    agent_type='system'
+                )
+
+                # Save bot's response
+                conv_service.add_message(
+                    conversation_id=conversation_id,
+                    content=response_message,
+                    sender='bot',
+                    agent_type='market'
+                )
+
+                logger.info(f"Saved approval response to conversation {conversation_id}")
+            except Exception as e:
+                logger.error(f"Failed to save approval response to conversation: {e}")
+                # Continue anyway, don't fail the request
+
+        return jsonify({
+            'success': True,
+            'message': response_message,
+            'redirect_to_contact': redirect_to_contact
+        })
+
+    except Exception as e:
+        logger.error(f"Error handling approval response: {e}", exc_info=True)
+        return jsonify({'error': f'Failed to process approval: {str(e)}'}), 500

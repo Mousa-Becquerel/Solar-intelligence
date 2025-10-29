@@ -510,7 +510,26 @@ def process_market_intelligence_agent_stream(user_message: str, conv_id: int, ap
                             event_type = response_json.get('type')
 
                             # Handle new streaming format
-                            if event_type == 'plot':
+                            if event_type == 'status':
+                                # Status update - pass through to frontend
+                                logger.info(f"Status update: {response_json.get('message')}")
+                                yield f"data: {json.dumps({'type': 'status', 'message': response_json.get('message')})}\n\n"
+
+                            elif event_type == 'approval_request':
+                                # Approval request - pass through to frontend with all metadata
+                                logger.info(f"Approval request: {response_json.get('context')}")
+                                full_response = response_json.get('message', '')
+                                response_type = "approval_request"
+                                yield f"data: {json.dumps({'type': 'approval_request', 'message': response_json.get('message'), 'approval_question': response_json.get('approval_question'), 'conversation_id': response_json.get('conversation_id'), 'context': response_json.get('context')})}\n\n"
+
+                            elif event_type == 'text':
+                                # Text response from evaluation flow
+                                response_type = "text"
+                                text_content = response_json.get('content', '')
+                                full_response += text_content
+                                yield f"data: {json.dumps({'type': 'chunk', 'content': text_content})}\n\n"
+
+                            elif event_type == 'plot':
                                 response_type = "plot"
                                 plot_data = response_json['content']
                                 full_response = f"Generated plot: {plot_data.get('title', 'Untitled')}"
@@ -526,7 +545,7 @@ def process_market_intelligence_agent_stream(user_message: str, conv_id: int, ap
                                 yield f"data: {json.dumps({'type': 'plot', 'content': plot_data})}\n\n"
 
                             else:
-                                # JSON but not a plot
+                                # JSON but not a recognized type
                                 full_response += str(response_json)
                                 yield f"data: {json.dumps({'type': 'chunk', 'content': str(response_json)})}\n\n"
                         else:

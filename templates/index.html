@@ -163,8 +163,8 @@
         <!-- Chat Messages Container (Grid Area: messages) - ONLY THIS SCROLLS -->
         <main id="chat-messages" class="chat-messages">
                 <!-- Welcome Message (shown before first message) -->
-                <div id="welcome-message" class="welcome-message">
-                    <h1 class="welcome-title">Solar Intelligence</h1>
+                <div id="welcome-message" class="welcome-message" style="opacity: 0;">
+                    <h1 class="welcome-title"></h1>
                     <p class="welcome-subtitle">Your AI-powered assistant for photovoltaic market insights, price analysis, and industry intelligence</p>
                 </div>
 
@@ -200,7 +200,7 @@
                                        autocorrect="off"
                                        spellcheck="false">
                             </div>
-                            <button id="send-btn" class="send-btn" onclick="sendMessage()" aria-label="Send message">
+                            <button id="send-btn" class="send-btn" aria-label="Send message">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <line x1="22" y1="2" x2="11" y2="13"></line>
                                     <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
@@ -534,20 +534,26 @@
         </div>
     </div>
 
-    <!-- External Scripts -->
+    <!-- External Scripts - CDN Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <!-- D3 Chart Rendering Utilities -->
+    <script src="/static/js/chart-utils.js"></script>
+
+    <!-- Suggested Queries Data -->
     <script src="/static/js/suggested_queries.js"></script>
 
-    <!-- Initialize hired agents before main.js -->
+    <!-- Initialize global configuration -->
     <script>
         // Pass hired agents from backend to frontend
         window.hiredAgents = {{ hired_agents | tojson }};
 
         // Agent metadata for display names
-        const agentDisplayNames = {
+        window.agentDisplayNames = {
             market: 'Alex - PV Capacity',
+            market_intel: 'Titan - Market Intelligence',
             price: 'Maya - Price Analysis',
             news: 'Emma - News Analyst',
             digitalization: 'Nova - Digitalization Expert'
@@ -570,20 +576,19 @@
             window.hiredAgents.forEach(agentType => {
                 const option = document.createElement('option');
                 option.value = agentType;
-                option.textContent = agentDisplayNames[agentType] || agentType;
+                option.textContent = window.agentDisplayNames[agentType] || agentType;
                 agentSelect.appendChild(option);
             });
 
             // Set first hired agent as selected
             if (window.hiredAgents.length > 0) {
                 agentSelect.value = window.hiredAgents[0];
-                // Trigger change event to update suggested queries
-                agentSelect.dispatchEvent(new Event('change'));
             }
         });
     </script>
 
-    <script src="/static/js/main.js"></script>
+    <!-- Main Application - ES6 Module -->
+    <script type="module" src="/static/js/main.js"></script>
 
     <style>
         /* Additional CSS to ensure autocomplete is completely disabled */

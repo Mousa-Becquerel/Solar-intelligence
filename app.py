@@ -1201,61 +1201,68 @@ def get_fresh_conversation():
 @app.route('/conversations', methods=['GET'])
 @login_required
 def get_conversations():
-    """Get conversations for current user - FULLY OPTIMIZED with single SQL query"""
+    """Get conversations for current user - OPTIMIZED with single SQL query and preview"""
     from sqlalchemy import func
 
-    # Subquery to get first message ID for each conversation
-    first_msg_subquery = db.session.query(
+    # Subquery to get LAST user message ID for each conversation (for preview)
+    last_msg_subquery = db.session.query(
         Message.conversation_id,
-        func.min(Message.id).label('first_msg_id')
+        func.max(Message.id).label('last_msg_id')
     ).filter(
         Message.sender == 'user'
     ).group_by(Message.conversation_id).subquery()
 
-    # Single query: Get all conversations with their first message in ONE query
+    # Single query: Get all conversations with their last user message in ONE query
     conversations_with_msgs = db.session.query(
         Conversation.id,
         Conversation.title,
+        Conversation.agent_type,
         Conversation.created_at,
         Message.content
     ).outerjoin(
-        first_msg_subquery,
-        Conversation.id == first_msg_subquery.c.conversation_id
+        last_msg_subquery,
+        Conversation.id == last_msg_subquery.c.conversation_id
     ).outerjoin(
         Message,
-        Message.id == first_msg_subquery.c.first_msg_id
+        Message.id == last_msg_subquery.c.last_msg_id
     ).filter(
         Conversation.user_id == current_user.id
     ).order_by(Conversation.created_at.desc()).all()
 
     result = []
-    for conv_id, conv_title, created_at, first_msg_content in conversations_with_msgs:
-        # Use existing title if available (fast path)
-        if conv_title:
-            title = conv_title
-        elif first_msg_content:
-            # Generate title from first message
+    for conv_id, conv_title, agent_type, created_at, last_msg_content in conversations_with_msgs:
+        # Generate preview from last message
+        preview = None
+        if last_msg_content:
             try:
-                content = json.loads(first_msg_content)
-                if content.get('type') == 'string' and content.get('value'):
-                    value = str(content['value'])
-                    words = value.split()
-                    title = ' '.join(words[:4]) + '...' if len(words) > 4 else value
+                content = json.loads(last_msg_content)
+                if isinstance(content, dict) and 'value' in content:
+                    preview = content['value']
                 else:
-                    title = f"Conversation {conv_id}"
-            except (json.JSONDecodeError, KeyError, TypeError, AttributeError) as e:
-                memory_logger.debug(f"Error parsing message content for title: {e}")
-                title = first_msg_content[:40] if first_msg_content else f"Conversation {conv_id}"
+                    preview = str(content)
+            except:
+                preview = last_msg_content
+
+            # Truncate to 60 characters
+            if preview and len(preview) > 60:
+                preview = preview[:60] + '...'
+
+        # Use preview for title if no title exists
+        if not conv_title and preview:
+            words = preview.split()
+            title = ' '.join(words[:4]) + '...' if len(words) > 4 else preview
         else:
-            title = f"Conversation {conv_id}"
+            title = conv_title or f"Conversation {conv_id}"
 
         result.append({
             'id': conv_id,
             'title': title,
+            'preview': preview or title,
+            'agent_type': agent_type,
             'created_at': created_at.isoformat()
         })
 
-    return jsonify(result)
+    return jsonify({'conversations': result})
 
 @app.route('/conversations', methods=['POST'])
 @login_required
@@ -1291,18 +1298,37 @@ def get_conversation(conv_id):
         memory_logger.error(f"Database error accessing conversation {conv_id}: {e}")
         db.session.rollback()
         return jsonify({'error': 'Database connection error'}), 500
-    
+
+    # Get limit from query parameters (default: all messages, max: 500)
+    limit = request.args.get('limit', type=int)
+    if limit and limit > 500:
+        limit = 500
+
     # Get messages ordered by timestamp to ensure proper chronological order
-    messages = Message.query.filter_by(conversation_id=conv_id).order_by(Message.timestamp.asc()).all()
-    
-    return jsonify([
-        {
-            'id': m.id,
-            'sender': m.sender,
-            'content': m.content,
-            'timestamp': m.timestamp.isoformat()
-        } for m in messages
-    ])
+    query = Message.query.filter_by(conversation_id=conv_id).order_by(Message.timestamp.asc())
+
+    if limit:
+        # Get the most recent N messages
+        total_count = query.count()
+        if total_count > limit:
+            # Skip older messages, keep only recent ones
+            query = query.offset(total_count - limit)
+
+    messages = query.all()
+
+    return jsonify({
+        'messages': [
+            {
+                'id': m.id,
+                'sender': m.sender,
+                'content': m.content,
+                'timestamp': m.timestamp.isoformat(),
+                'agent_type': conversation.agent_type  # Include agent type from conversation
+            } for m in messages
+        ],
+        'total_count': Message.query.filter_by(conversation_id=conv_id).count(),
+        'returned_count': len(messages)
+    })
 
 @app.route('/conversations/<int:conv_id>', methods=['DELETE'])
 @login_required
@@ -3114,6 +3140,7 @@ try:
     csrf.exempt(app.view_functions['get_conversations'])
     csrf.exempt(app.view_functions['get_conversation'])
     csrf.exempt(app.view_functions['delete_conversation'])
+    csrf.exempt(app.view_functions['chat.approval_response'])
     print("✅ CSRF exemptions applied successfully")
 except KeyError as e:
     print(f"⚠️  Warning: Could not exempt route {e} from CSRF protection")

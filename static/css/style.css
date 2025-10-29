@@ -34,6 +34,11 @@ body {
     border-width: 0;
 }
 
+/* Hidden utility class */
+.hidden {
+    display: none !important;
+}
+
 /* ===== APP SHELL LAYOUT (ChatGPT Pattern) ===== */
 .app-container {
     display: flex;
@@ -454,6 +459,9 @@ body {
 
 /* Welcome Message Styling */
 .welcome-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
     opacity: 1;
     transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -470,6 +478,7 @@ body {
 }
 
 .welcome-title {
+    display: block;
     font-size: 3.5rem;
     font-weight: 200;
     margin-bottom: 1.5rem;
@@ -479,12 +488,70 @@ body {
 }
 
 .welcome-subtitle {
+    display: block;
     font-size: 1.125rem;
     color: #000755;
     line-height: 1.6;
     font-weight: 300;
     margin: 0;
     opacity: 0.7;
+}
+
+/* ===== LOADING SPINNER ===== */
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 1rem 0;
+    position: relative;
+    height: 50px;
+}
+
+.spinner-ring {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--becq-gold) 0%, var(--becq-gold-dark) 100%);
+    animation: bounce 1.4s ease-in-out infinite;
+}
+
+.spinner-ring:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.spinner-ring:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.spinner-ring:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+    0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.loading-text {
+    display: block;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+.loading-container .message {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    padding: 1rem 1.5rem;
 }
 
 .chat-messages::-webkit-scrollbar {
@@ -1006,6 +1073,58 @@ input[type="text"]#user-input:disabled::placeholder {
 
 .plot-card.loading .plot-img {
     filter: blur(2px);
+}
+
+/* Table styles */
+.table-container {
+    overflow-x: auto;
+    margin: 1rem 0;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: white;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.data-table thead {
+    background: linear-gradient(135deg, var(--becq-gold) 0%, var(--becq-gold-dark) 100%);
+    color: white;
+}
+
+.data-table th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.data-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.data-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Chart container styles */
+.chart-container {
+    margin: 1rem 0;
+}
+
+.chart-container img {
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
 }
 
 /* Responsive design for charts */
@@ -2548,19 +2667,24 @@ blockquote {
     width: 100%;
     max-width: 900px;
     margin: 0 auto 1.5rem auto;
+    opacity: 0; /* Start hidden to prevent flash */
+    transform: translateY(10px);
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0 1rem;
+    min-height: 200px; /* Reserve space to prevent layout shifts */
+}
+
+.suggested-queries-container.loaded {
     opacity: 1;
     transform: translateY(0);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 0 1rem;
 }
 
 .suggested-queries-container.hidden {
     opacity: 0;
     transform: translateY(10px);
     pointer-events: none;
-    height: 0;
-    margin: 0;
-    overflow: hidden;
+    visibility: hidden;
+    /* Keep the min-height and margin to prevent layout shift */
 }
 
 .suggested-queries-wrapper {
