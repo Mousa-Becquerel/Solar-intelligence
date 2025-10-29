@@ -1,0 +1,109 @@
+/**
+ * Sidebar Component
+ * Navigation sidebar with conversations list
+ */
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+    width: 60px;  /* Collapsed by default */
+    flex-shrink: 0;
+    background: #f6f8fa;
+    color: #4b5563;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    border-top-right-radius: 18px;
+    border-bottom-right-radius: 18px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transition: width 0.3s ease;
+    z-index: 1000;
+}
+
+/* Expanded sidebar */
+.sidebar[data-expanded="true"] {
+    width: 280px;
+}
+
+/* ===== WORKSPACE (Right side: Header + Messages + Input) ===== */
+.workspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+    background: var(--becq-white);
+}
+
+/* Sidebar Toggle Button */
+.sidebar-toggle-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    color: #2563eb;
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0.5rem auto;
+    transition: background 0.2s ease;
+}
+
+.sidebar-toggle-btn:hover {
+    background: rgba(37, 99, 235, 0.1);
+}
+
+.sidebar-toggle-btn:active {
+    transform: scale(0.95);
+}
+
+/* Collapsed icons - visible when sidebar collapsed */
+.sidebar-collapsed-icons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sidebar[data-expanded="true"] .sidebar-collapsed-icons {
+    display: none;
+}
+
+/* Conversations indicator when collapsed */
+.conversations-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 0;
+    margin: 0.5rem 0;
+    border-radius: 8px;
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sidebar[data-expanded="true"] .conversations-indicator {
+    display: none;
+}
+.conversations-indicator:hover {
+    background: rgba(37, 99, 235, 0.15);
+    transform: scale(1.05);
+}
+.conversations-count {
+    background: #2563eb;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-top: 2px;
+}
+

@@ -18,8 +18,9 @@ services:
       - ./static:/app/static
       - ./exports:/app/exports
       - ./memory_dumps:/app/memory_dumps
-      # Mount the refactored app structure
-      - ./app:/app/app:ro
+      # Mount the refactored app structure (writable for live development)
+      - ./app:/app/app
+      - ./templates:/app/templates
       - ./run_refactored.py:/app/run_refactored.py:ro
       - ./models.py:/app/models.py:ro
       - ./module_prices_agent.py:/app/module_prices_agent.py:ro

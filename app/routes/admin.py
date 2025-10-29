@@ -58,7 +58,8 @@ def pending_users():
     """View pending user approvals."""
     try:
         pending = AdminService.get_pending_users()
-        return render_template('admin_pending_users.html', users=pending)
+        # Template expects 'pending_users' variable, not 'users'
+        return render_template('admin_pending_users.html', pending_users=pending)
 
     except Exception as e:
         logger.error(f"Error loading pending users: {e}")

@@ -70,6 +70,9 @@ tmp/
 
 # Windows
 Thumbs.db
+
+# Windows reserved name artifact that breaks Git on Windows
+nul
 ehthumbs.db
 Desktop.ini
 

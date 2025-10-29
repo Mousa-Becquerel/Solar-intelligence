@@ -325,11 +325,14 @@ class SolarIntelligenceApp {
                     // Static chart image
                     this.createImageMessage(item.value, item.artifact, agentType);
                 } else if (item.type === 'table' && item.table_data) {
-                    // Table data
+                    // Table data - render as HTML table
                     this.createTableMessage(item.value, item.table_data, agentType);
-                } else if (item.type === 'string' || item.value) {
-                    // Text message
-                    this.createTextMessage(item.value, agentType);
+                } else if (item.type === 'string') {
+                    // Text message only (removed || item.value to avoid catching tables)
+                    this.createTextMessage(item.value || item.content || String(item), agentType);
+                } else if (item.value) {
+                    // Fallback for other types with value
+                    this.createTextMessage(String(item.value), agentType);
                 }
             }
 

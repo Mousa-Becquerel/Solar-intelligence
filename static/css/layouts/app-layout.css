@@ -1,0 +1,22 @@
+/**
+ * App Layout
+ * Main application container and workspace layout
+ */
+
+/* ===== APP SHELL LAYOUT (ChatGPT Pattern) ===== */
+.app-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+/* ===== WORKSPACE (Right side: Header + Messages + Input) ===== */
+.workspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+    background: var(--becq-white);
+}

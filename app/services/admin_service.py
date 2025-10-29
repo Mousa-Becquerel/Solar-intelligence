@@ -68,10 +68,28 @@ class AdminService:
         Get all users pending approval.
 
         Returns:
-            List of User objects with is_active=False
+            List of User objects with is_active=False and not deleted
         """
         try:
-            return User.query.filter_by(is_active=False).order_by(User.created_at.asc()).all()
+            from sqlalchemy import or_
+
+            # DEBUG: Get all users to see database state
+            all_users = User.query.all()
+            logger.info(f"🔍 DEBUG - Total users in database: {len(all_users)}")
+            for user in all_users:
+                logger.info(f"  - ID {user.id}: {user.full_name} | is_active={user.is_active} | deleted={user.deleted}")
+
+            # Get pending users (inactive AND not deleted)
+            pending = User.query.filter(
+                User.is_active == False,
+                or_(User.deleted == False, User.deleted == None)
+            ).order_by(User.created_at.asc()).all()
+
+            logger.info(f"🔍 PENDING USERS QUERY: Found {len(pending)} pending users")
+            for user in pending:
+                logger.info(f"  ✅ PENDING: ID {user.id}: {user.full_name} ({user.username}) - is_active={user.is_active}, deleted={user.deleted}")
+
+            return pending
 
         except Exception as e:
             logger.error(f"Error getting pending users: {e}")

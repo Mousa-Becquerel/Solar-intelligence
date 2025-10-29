@@ -2566,9 +2566,10 @@ def admin_users():
         flash('Access denied. Admin privileges required.', 'error')
         return redirect(url_for('index'))
 
-    users = User.query.all()
-    pending_users = User.query.filter_by(is_active=False).all()
-    active_users = User.query.filter_by(is_active=True).all()
+    # Exclude soft-deleted users from all queries
+    users = User.query.filter_by(deleted=False).all()
+    pending_users = User.query.filter_by(is_active=False, deleted=False).all()
+    active_users = User.query.filter_by(is_active=True, deleted=False).all()
 
     return render_template('admin_users.html',
                          users=users,
@@ -2583,8 +2584,27 @@ def admin_pending_users():
     if current_user.role != 'admin':
         flash('Access denied. Admin privileges required.', 'error')
         return redirect(url_for('index'))
-    
-    pending_users = User.query.filter_by(is_active=False).order_by(User.created_at.desc()).all()
+
+    # Get users that are inactive AND not deleted (pending approval)
+    # Handle NULL deleted column by using filter() instead of filter_by()
+    from sqlalchemy import or_
+
+    # DEBUG: First, let's see ALL users to understand the database state
+    all_users = User.query.all()
+    memory_logger.info(f"🔍 DEBUG - Total users in database: {len(all_users)}")
+    for user in all_users:
+        memory_logger.info(f"  - ID {user.id}: {user.full_name} | is_active={user.is_active} | deleted={user.deleted}")
+
+    # Now get pending users (inactive and not deleted)
+    pending_users = User.query.filter(
+        User.is_active == False,
+        or_(User.deleted == False, User.deleted == None)
+    ).order_by(User.created_at.desc()).all()
+
+    memory_logger.info(f"🔍 PENDING USERS QUERY: Found {len(pending_users)} pending users")
+    for user in pending_users:
+        memory_logger.info(f"  ✅ PENDING: ID {user.id}: {user.full_name} ({user.username}) - is_active={user.is_active}, deleted={user.deleted}")
+
     return render_template('admin_pending_users.html', pending_users=pending_users)
 
 @app.route('/admin/users/<int:user_id>/approve', methods=['POST'])

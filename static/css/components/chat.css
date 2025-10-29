@@ -1,0 +1,71 @@
+/**
+ * Chat Component
+ * Messages container and message bubbles
+ */
+
+/* ===== MESSAGES (MessageList - Grows and scrolls) ===== */
+.chat-messages {
+    flex: 1;  /* Grow to fill space */
+    overflow-y: auto;  /* ONLY messages scroll */
+    overflow-x: hidden;
+    padding: 2rem;
+    background: var(--becq-white);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;  /* Center vertically when empty */
+    scroll-behavior: smooth;
+}
+
+/* When messages exist, align to top instead of center */
+.chat-messages:has(.chat-messages-wrapper > *) {
+    justify-content: flex-start;
+}
+
+.chat-messages-wrapper {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Welcome Message Styling */
+.welcome-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    opacity: 1;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    width: 100%;
+    max-width: 900px;
+    padding: 0 1rem;
+    margin: auto 0;  /* Center vertically in flex container */
+}
+
+.welcome-message.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.welcome-title {
+    display: block;
+    font-size: 3.5rem;
+    font-weight: 200;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    color: #000755;
+}
+
+.welcome-subtitle {
+    display: block;
+    font-size: 1.125rem;
+    color: #000755;
+    line-height: 1.6;
+    font-weight: 300;
+    margin: 0;
+    opacity: 0.7;
+}
+

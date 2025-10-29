@@ -1,0 +1,57 @@
+/**
+ * CSS Reset & Base Styles
+ * Normalize browser defaults and set foundational styles
+ */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    background: var(--becq-white);
+    color: var(--becq-blue);
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+    min-height: 100vh;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+/* Remove default margins */
+h1, h2, h3, h4, h5, h6, p, ul, ol {
+    margin: 0;
+    padding: 0;
+}
+
+/* Remove list styles */
+ul, ol {
+    list-style: none;
+}
+
+/* Remove default button styles */
+button {
+    font-family: inherit;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+/* Remove default link styles */
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Image defaults */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}

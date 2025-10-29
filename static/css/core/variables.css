@@ -1,0 +1,44 @@
+/**
+ * CSS Variables
+ * Brand colors and design tokens
+ */
+
+:root {
+    /* Brand Colors */
+    --becq-blue: #0a1850;
+    --becq-gold: #fbbf24;
+    --becq-gold-dark: #f59e42;
+    --becq-white: #ffffff;
+    --becq-accent-blue: #2563eb;
+
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+
+    /* Border Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 18px;
+
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+    --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
+    --shadow-gold: 0 4px 16px rgba(251, 191, 36, 0.25), 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    /* Z-Index Layers */
+    --z-base: 1;
+    --z-dropdown: 100;
+    --z-sticky: 200;
+    --z-modal: 1000;
+    --z-tooltip: 2000;
+}

@@ -1,0 +1,123 @@
+/**
+ * Loading Component
+ * Loading spinners and skeleton states
+ */
+
+/* ===== LOADING SPINNER ===== */
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 1rem 0;
+    position: relative;
+    height: 50px;
+}
+
+.spinner-ring {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--becq-gold) 0%, var(--becq-gold-dark) 100%);
+    animation: bounce 1.4s ease-in-out infinite;
+}
+
+.spinner-ring:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.spinner-ring:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.spinner-ring:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+    0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.loading-text {
+    display: block;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+.loading-container .message {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    padding: 1rem 1.5rem;
+}
+
+.chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #d1d5db;
+}
+.message {
+    max-width: 85%;
+    min-width: 32px;
+    margin: 8px 0;
+    padding: 12px 16px;
+    border-radius: 18px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.06);
+    border: none;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 0.875rem;
+    font-weight: 400;
+    letter-spacing: 0.005em;
+    word-break: break-word;
+    line-height: 1.5;
+    width: fit-content;
+    opacity: 0;
+    transform: translateY(15px);
+    animation: messageAppear 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    backdrop-filter: blur(8px);
+    position: relative;
+}
+.user-message {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+    color: #1f2937;
+    border-bottom-right-radius: 6px;
+    font-weight: 500;
+    text-align: left;
+    animation-delay: 0.1s;
+    margin-left: auto;
+    margin-right: 0;
+    align-self: flex-end;
+    box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.06), 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+}
+.bot-message {
+    background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
+    color: #1f2937;
+    border-bottom-left-radius: 6px;
+    text-align: left;
+    animation-delay: 0.2s;
+    margin-left: 0;
+    margin-right: auto;
+    align-self: flex-start;
+    box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.06), 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+}
+

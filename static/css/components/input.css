@@ -1,0 +1,21 @@
+/**
+ * Input Component
+ * Chat input field, send button, and suggested queries
+ */
+
+/* ===== INPUT (Composer - Fixed at bottom) ===== */
+.chat-input {
+    position: relative;  /* Required for z-index to work */
+    flex-shrink: 0;  /* Don't shrink */
+    padding: 1.5rem 2rem;
+    background: var(--becq-white);
+    border-top: 1px solid #f3f4f6;
+    z-index: 100;  /* Stay above scrolling content */
+}
+
+.input-content-wrapper {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
