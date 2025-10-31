@@ -7,7 +7,7 @@ landing page, waitlist, privacy policy, terms of service, and contact.
 
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
 from flask_login import current_user
-from app.extensions import limiter, db
+from app.extensions import limiter, db, csrf
 from models import Waitlist  # Import from root models.py
 from app.schemas.user import WaitlistSchema
 from pydantic import ValidationError
@@ -228,27 +228,48 @@ def health_check():
 
 
 @static_bp.route('/submit-contact', methods=['POST'])
+@csrf.exempt  # Exempt from CSRF protection for public contact form
 def submit_contact():
     """Handle contact form submission (JSON API version)"""
     try:
         # Get form data
-        first_name = request.form.get('firstName')
-        last_name = request.form.get('lastName')
-        email = request.form.get('email')
-        company = request.form.get('company', '')
-        phone = request.form.get('phone', '')
-        message = request.form.get('message')
+        first_name = request.form.get('firstName', '').strip()
+        last_name = request.form.get('lastName', '').strip()
+        email = request.form.get('email', '').strip()
+        company = request.form.get('company', '').strip()
+        phone = request.form.get('phone', '').strip()
+        message = request.form.get('message', '').strip()
 
-        # Log contact submission (in production, send email or save to database)
-        logger.info(f"Contact form submission from {first_name} {last_name} ({email})")
-        logger.info(f"Company: {company}, Phone: {phone}")
-        logger.info(f"Message: {message}")
+        # Validate required fields
+        if not all([first_name, last_name, email, message]):
+            return jsonify({'success': False, 'message': 'Name, email, and message are required'}), 400
 
-        # TODO: Add email sending logic or save to database
+        # Save to database
+        from models import ContactRequest
+
+        full_name = f"{first_name} {last_name}"
+        contact_request = ContactRequest(
+            user_id=None,  # Public form, no user ID
+            name=full_name,
+            email=email,
+            company=company if company else None,
+            phone=phone if phone else None,
+            message=message,
+            source='landing_page'
+        )
+        db.session.add(contact_request)
+        db.session.commit()
+
+        logger.info(f"Landing page contact request saved: ID {contact_request.id} from {full_name} ({email})")
+
+        # TODO: In production, implement:
+        # 1. Send notification email to sales team
+        # 2. Send confirmation email to user
 
         return jsonify({'success': True, 'message': 'Thank you for your message! We will get back to you soon.'})
     except Exception as e:
         logger.error(f"Error processing contact form: {str(e)}")
+        db.session.rollback()
         return jsonify({'success': False, 'message': 'An error occurred. Please try again.'}), 500
 
 

@@ -6,6 +6,7 @@
 import { api } from '../core/api.js';
 import { createElement, scrollToBottom } from '../../utils/dom.js';
 import { safeRenderMarkdown } from '../../utils/markdown.js';
+import { contactFormHandler } from '../ui/contactFormHandler.js';
 
 export class ApprovalFlow {
     constructor() {
@@ -125,18 +126,19 @@ export class ApprovalFlow {
                 innerHTML: safeRenderMarkdown(result.message || '')
             });
 
+            // If user approved and wants to contact expert, open artifact panel with contact form
+            if (approved && result.redirect_to_contact) {
+                // Open artifact panel with contact form after a brief delay
+                setTimeout(() => {
+                    contactFormHandler.showContactForm();
+                }, 800);
+            }
+
             responseContainer.appendChild(responseDiv);
             this.chatWrapper.appendChild(responseContainer);
 
             // Auto-scroll
             scrollToBottom(this.chatMessages);
-
-            // If user approved and wants to contact expert, redirect to contact form
-            if (approved && result.redirect_to_contact) {
-                setTimeout(() => {
-                    window.location.href = '/contact';
-                }, 1500);
-            }
 
         } catch (error) {
             console.error('Error handling approval:', error);
@@ -166,6 +168,55 @@ export class ApprovalFlow {
                 btn.style.cursor = 'pointer';
             });
         }
+    }
+
+    /**
+     * Append approval buttons to an existing message div
+     * @param {HTMLElement} messageDiv - Existing message div element
+     * @param {object} data - Approval request data
+     */
+    appendApprovalButtons(messageDiv, data) {
+        const { approval_question, conversation_id, context } = data;
+
+        // Get the message container (parent of messageDiv)
+        const messageContainer = messageDiv.closest('.message-container');
+        if (messageContainer) {
+            // Update container attributes for approval context
+            messageContainer.setAttribute('data-msg-type', 'approval_request');
+            messageContainer.setAttribute('data-context', context || '');
+            messageContainer.setAttribute('data-conversation-id', conversation_id || '');
+        }
+
+        // Create approval buttons container
+        const approvalButtons = createElement('div', {
+            classes: 'approval-buttons'
+        });
+
+        // Create Yes button
+        const yesBtn = createElement('button', {
+            classes: 'approval-btn approval-yes',
+            textContent: 'Yes, contact expert'
+        });
+        yesBtn.addEventListener('click', () => {
+            this.handleApprovalResponse(true, conversation_id, context, messageContainer || messageDiv.parentElement);
+        });
+
+        // Create No button
+        const noBtn = createElement('button', {
+            classes: 'approval-btn approval-no',
+            textContent: 'No, thanks'
+        });
+        noBtn.addEventListener('click', () => {
+            this.handleApprovalResponse(false, conversation_id, context, messageContainer || messageDiv.parentElement);
+        });
+
+        // Assemble and append buttons to existing message
+        approvalButtons.appendChild(yesBtn);
+        approvalButtons.appendChild(noBtn);
+        messageDiv.appendChild(approvalButtons);
+
+        // Scroll to bottom
+        scrollToBottom(this.chatMessages);
     }
 
     /**

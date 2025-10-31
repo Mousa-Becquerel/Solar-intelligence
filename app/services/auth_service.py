@@ -72,13 +72,18 @@ class AuthService:
             if existing_user:
                 return None, "An account with this email already exists"
 
+            # Check if email is in waitlist (auto-approve if found)
+            from models import Waitlist
+            waitlist_entry = Waitlist.query.filter_by(email=email).first()
+            is_active_status = True if waitlist_entry else False
+
             # Create new user
             consent_timestamp = datetime.utcnow()
             new_user = User(
                 username=email,  # Use email as username
                 full_name=f"{first_name} {last_name}",
                 role='user',
-                is_active=False,  # Requires admin approval
+                is_active=is_active_status,  # Auto-approve if in waitlist
 
                 # GDPR Consent Tracking
                 gdpr_consent_given=True,  # Required for account creation

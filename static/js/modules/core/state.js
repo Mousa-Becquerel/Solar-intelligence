@@ -17,7 +17,7 @@ export class AppState {
             // UI state
             isSubmittingMessage: false,
             exportMode: false,
-            sidebarExpanded: false,
+            sidebarExpanded: true,
 
             // Agent state
             currentAgentType: 'market',
@@ -253,7 +253,7 @@ export class AppState {
             conversationHistory: {},
             isSubmittingMessage: false,
             exportMode: false,
-            sidebarExpanded: false,
+            sidebarExpanded: true,
             currentAgentType: 'market',
             hiredAgents: window.hiredAgents || [],
             surveysCompleted: {

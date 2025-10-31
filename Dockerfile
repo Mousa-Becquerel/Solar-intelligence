@@ -28,14 +28,14 @@ RUN poetry install --only main --no-interaction --no-ansi
 # Copy application code
 COPY . .
 
-# Create directories for static files and exports
-RUN mkdir -p static/plots exports/data exports/charts datasets
+# Create directories for exports and data
+RUN mkdir -p exports/data datasets
 
 # Create database directory and set permissions
 RUN mkdir -p /app/instance && chmod 777 /app/instance
 
-# Set permissions for static directories
-RUN chmod 777 /app/static/plots /app/exports/data /app/exports/charts
+# Set permissions for export directory
+RUN chmod 777 /app/exports/data
 
 # Set environment variables
 ENV FLASK_APP=run_refactored.py

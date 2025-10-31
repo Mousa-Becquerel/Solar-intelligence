@@ -66,37 +66,27 @@ export class PlotHandler {
         `;
 
         plotContent.appendChild(chartContainer);
+
+        // Add commentary text if available in description
+        if (plotData.description) {
+            const commentaryDiv = createElement('div', {
+                classes: 'plot-commentary'
+            });
+            commentaryDiv.style.cssText = `
+                margin-top: 1rem;
+                padding: 1rem;
+                background: #f9fafb;
+                border-left: 3px solid #EB8F47;
+                border-radius: 4px;
+                font-size: 0.9rem;
+                line-height: 1.6;
+                color: #374151;
+            `;
+            commentaryDiv.textContent = plotData.description;
+            plotContent.appendChild(commentaryDiv);
+        }
+
         plotCard.appendChild(plotContent);
-
-        // Add action buttons for interactivity
-        const actions = createElement('div', {
-            classes: 'plot-actions'
-        });
-
-        const resetLegendBtn = createElement('button', {
-            classes: 'download-btn',
-            textContent: 'Reset legend'
-        });
-        resetLegendBtn.onclick = () => {
-            if (window.resetD3Legend) {
-                window.resetD3Legend(plotContainerId);
-            }
-        };
-
-        const downloadBtn = createElement('button', {
-            classes: 'download-btn',
-            textContent: 'Download PNG'
-        });
-        downloadBtn.onclick = () => {
-            if (window.downloadD3Chart) {
-                const title = (plotData.title || 'chart').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                window.downloadD3Chart(plotContainerId, `${title}.png`);
-            }
-        };
-
-        actions.appendChild(resetLegendBtn);
-        actions.appendChild(downloadBtn);
-        plotCard.appendChild(actions);
 
         // Add the plot card to message
         messageDiv.appendChild(plotCard);

@@ -10,6 +10,8 @@ import { appState } from './modules/core/state.js';
 // === MODULE IMPORTS ===
 import { conversationManager } from './modules/conversation/conversationManager.js';
 import { suggestedQueries } from './modules/ui/suggestedQueries.js';
+import { artifactPanel } from './modules/ui/artifactPanel.js'; // Imported for initialization
+import { contactFormHandler } from './modules/ui/contactFormHandler.js'; // Imported for initialization
 import { approvalFlow } from './modules/chat/approvalFlow.js';
 import { plotHandler } from './modules/chat/plotHandler.js';
 
@@ -31,9 +33,13 @@ class SolarIntelligenceApp {
         this.userInput = qs('#user-input');
         this.sendBtn = qs('#send-btn');
         this.agentSelect = qs('#agent-select');
-        this.sidebar = qs('#sidebar');
+        this.sidebar = qs('#sidebar-panel');
         this.sidebarToggle = qs('#sidebar-toggle');
+        this.sidebarExpand = qs('#sidebar-expand');
         this.logoutBtn = qs('#logout-btn');
+        this.userDropdownMenu = qs('#user-dropdown-menu');
+        this.sidebarUserProfile = qs('#sidebar-user-profile');
+        this.dropdownLogoutBtn = qs('#dropdown-logout-btn');
     }
 
     /**
@@ -78,17 +84,35 @@ class SolarIntelligenceApp {
             const user = await api.getCurrentUser();
             appState.setCurrentUser(user);
 
-            // Update UI with user info
+            // Update UI with user info (header)
             const userNameEl = qs('#user-name');
             const userRoleEl = qs('#user-role');
 
             if (userNameEl) userNameEl.textContent = user.full_name || user.email || user.username || 'User';
             if (userRoleEl) userRoleEl.textContent = user.role || '';
 
-            // Show admin button if user is admin
+            // Update sidebar user info
+            const sidebarUserName = qs('#sidebar-user-name');
+            const sidebarUserAvatar = qs('#sidebar-user-avatar');
+            const sidebarUserPlan = qs('#sidebar-user-plan');
+
+            const displayName = user.full_name || user.email || user.username || 'User';
+            if (sidebarUserName) sidebarUserName.textContent = displayName;
+            if (sidebarUserAvatar) {
+                // Get first letter of name for avatar
+                sidebarUserAvatar.textContent = displayName.charAt(0).toUpperCase();
+            }
+            if (sidebarUserPlan) {
+                // Show user role/plan
+                sidebarUserPlan.textContent = user.role === 'admin' ? 'Admin' : 'Max plan';
+            }
+
+            // Show admin button if user is admin (both in header and dropdown)
             if (user.role === 'admin') {
                 const adminBtn = qs('#admin-btn');
+                const adminDropdownLink = qs('#admin-dropdown-link');
                 if (adminBtn) adminBtn.style.display = 'flex';
+                if (adminDropdownLink) adminDropdownLink.style.display = 'flex';
             }
 
         } catch (error) {
@@ -125,9 +149,34 @@ class SolarIntelligenceApp {
             });
         }
 
-        // Logout button
+        // Logout button (header - keep for backward compatibility)
         if (this.logoutBtn) {
             this.logoutBtn.addEventListener('click', () => {
+                window.location.href = '/auth/logout';
+            });
+        }
+
+        // User profile dropdown toggle
+        if (this.sidebarUserProfile && this.userDropdownMenu) {
+            this.sidebarUserProfile.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.userDropdownMenu.classList.toggle('open');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (this.userDropdownMenu &&
+                    !this.userDropdownMenu.contains(e.target) &&
+                    !this.sidebarUserProfile.contains(e.target)) {
+                    this.userDropdownMenu.classList.remove('open');
+                }
+            });
+        }
+
+        // Dropdown logout button
+        if (this.dropdownLogoutBtn) {
+            this.dropdownLogoutBtn.addEventListener('click', () => {
                 window.location.href = '/auth/logout';
             });
         }
@@ -158,13 +207,33 @@ class SolarIntelligenceApp {
      * Setup sidebar toggle
      */
     setupSidebar() {
-        if (!this.sidebar || !this.sidebarToggle) return;
+        if (!this.sidebar) return;
 
-        this.sidebarToggle.addEventListener('click', () => {
+        const toggleSidebar = () => {
+            const mainLayout = document.getElementById('main-layout');
             const isExpanded = this.sidebar.getAttribute('data-expanded') === 'true';
-            this.sidebar.setAttribute('data-expanded', !isExpanded);
-            appState.setSidebarExpanded(!isExpanded);
-        });
+            const newState = !isExpanded;
+
+            console.log(`🔄 Sidebar: ${isExpanded ? 'expanded' : 'collapsed'} → ${newState ? 'expanded' : 'collapsed'}`);
+
+            // Update data attributes - CSS handles button visibility automatically
+            this.sidebar.setAttribute('data-expanded', newState);
+
+            if (mainLayout) {
+                mainLayout.setAttribute('data-sidebar-expanded', newState);
+            }
+
+            appState.setSidebarExpanded(newState);
+        };
+
+        // Attach click listeners
+        if (this.sidebarToggle) {
+            this.sidebarToggle.addEventListener('click', toggleSidebar);
+        }
+
+        if (this.sidebarExpand) {
+            this.sidebarExpand.addEventListener('click', toggleSidebar);
+        }
     }
 
     /**
@@ -272,12 +341,10 @@ class SolarIntelligenceApp {
 
         loadingDiv.innerHTML = `
             <div class="message bot-message">
-                <div class="loading-spinner">
-                    <div class="spinner-ring"></div>
-                    <div class="spinner-ring"></div>
-                    <div class="spinner-ring"></div>
+                <div class="loading-spinner-container">
+                    <div class="loading-spinner"></div>
+                    <span class="loading-text">Analyzing data...</span>
                 </div>
-                <span class="loading-text">Analyzing data...</span>
             </div>
         `;
 
@@ -507,7 +574,13 @@ class SolarIntelligenceApp {
 
                                 case 'approval_request':
                                     this.removeLoadingIndicator();
-                                    approvalFlow.displayApprovalRequest(eventData);
+                                    // If we have an existing message container from streaming, append buttons to it
+                                    if (messageContainer && messageDiv) {
+                                        approvalFlow.appendApprovalButtons(messageDiv, eventData);
+                                    } else {
+                                        // Fallback: create new container if no existing message
+                                        approvalFlow.displayApprovalRequest(eventData);
+                                    }
                                     break;
 
                                 case 'done':

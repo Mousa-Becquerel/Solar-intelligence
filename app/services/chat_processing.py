@@ -522,8 +522,8 @@ def process_market_intelligence_agent_stream(user_message: str, conv_id: int, ap
                                 response_type = "approval_request"
                                 yield f"data: {json.dumps({'type': 'approval_request', 'message': response_json.get('message'), 'approval_question': response_json.get('approval_question'), 'conversation_id': response_json.get('conversation_id'), 'context': response_json.get('context')})}\n\n"
 
-                            elif event_type == 'text':
-                                # Text response from evaluation flow
+                            elif event_type == 'text' or event_type == 'text_chunk':
+                                # Text response from evaluation flow (streaming or full)
                                 response_type = "text"
                                 text_content = response_json.get('content', '')
                                 full_response += text_content

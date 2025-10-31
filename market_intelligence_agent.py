@@ -138,7 +138,7 @@ class PlottingAgentSchema(BaseModel):
 
 class EvaluationAgentSchema(BaseModel):
     """Output schema for evaluation agent - assesses response quality"""
-    response_quality: Literal["good_answer", "bad_answer"]  # Fixed typo from original
+    response_quality: Literal["good_answer", "bad_answer", "neutral"]
 
 
 class ResponseAgentSchema(BaseModel):
@@ -155,11 +155,13 @@ class WorkflowInput(BaseModel):
 @dataclass
 class MarketIntelligenceConfig:
     """Configuration for Market Intelligence Agent"""
-    model: str = "gpt-5"
+    model: str = "gpt-5-mini"
+    plotting_model: str = "gpt-5-mini"  # Separate model for plotting agent
     agent_name: str = "Market Intelligence Agent"
     file_id: str = "file-2C3SRLgo4PVK8PRQhgrjRN"  # Main market data CSV
     plotting_file_id: str = "file-2C3SRLgo4PVK8PRQhgrjRN"  # Plotting data CSV (same file)
     reasoning_effort: str = "low"
+    plotting_reasoning_effort: str = "low"  # Separate reasoning effort for plotting
     reasoning_summary: str = "auto"
 
 
@@ -371,8 +373,7 @@ Examples:
             # 3. Plotting Agent - Generates D3-compatible JSON
             self.plotting_agent = Agent(
                 name="Plotting Agent",
-                instructions="""
-You are a plotting agent. Your role is to extract the parameters for generating a plot from the user query, and then provide the response in the specified JSON format so it can be rendered in the frontend.
+                instructions="""You are a plotting agent. Your role is to extract the parameters for generating a plot from the user query, and then provide the response in the specified JSON format so it can be rendered in the frontend.
 
 **IMPORTANT: Brand Color Palette**
 
@@ -684,87 +685,119 @@ df_combined = pd.concat([historical_recent, forecast])
 ```
 Once you understand the plot to be generated, extract the required data from the dataset you have access to, applying the data cleaning and sampling rules above.
 
+**CRITICAL: Generate Informative Descriptions**
+
+The "description" field must provide valuable context and insights about the data being plotted, not just describe the chart type.
+
+**Description Requirements:**
+1. **Address the user's query directly** - reference what they asked for
+2. **Highlight key findings** - mention notable trends, peaks, or patterns visible in the data
+3. **Provide data context** - specify time ranges, countries, scenarios being shown
+4. **Add analytical insight** - comment on growth rates, comparisons, or significant observations
+5. **Keep it concise** - 2-4 sentences maximum
+
+**Examples of GOOD descriptions:**
+
+BAD (too basic): "Line chart showing the evolution of photovoltaic capacity over time for Italy."
+
+GOOD: "Italy's solar installations show strong growth from 2015 to 2024, rising from 18.9 GW to 28.5 GW cumulative capacity. The historical data reveals a peak annual installation year in 2011 with 9.5 GW added. Forecast scenarios through 2030 project continued expansion, with the high scenario reaching 13.0 GW annually by 2030."
+
+BAD: "Bar chart comparing total installed PV capacity across different countries in 2024."
+
+GOOD: "Comparison of 2024 cumulative solar capacity across major European markets reveals Germany's leadership with 82.2 GW, followed by Spain (31.6 GW) and Italy (28.5 GW). Germany maintains a significant 2.6x advantage over Italy, reflecting its earlier market maturity and sustained policy support."
+
+BAD: "Stacked bar chart showing the distribution of capacity across connection types."
+
+GOOD: "Italy's solar installations from 2015-2024 show evolving balance between centralised utility-scale (44%), distributed commercial/industrial (38%), and off-grid systems (18%). The distributed segment has grown steadily, reflecting increasing adoption of rooftop and behind-the-meter installations driven by falling costs and self-consumption economics."
+
+**Format:**
+Always write the description as flowing narrative text (2-4 sentences), NOT as bullet points or lists. Make it informative, analytical, and directly relevant to what the user asked for.
+
 """,
-                model=self.config.model,  # gpt-5 with reasoning for high-quality plots
+                model=self.config.plotting_model,  # Separate model for plotting agent
                 tools=[self.code_interpreter_plotting],
                 output_type=PlottingAgentSchema,
                 model_settings=ModelSettings(
                     store=True,
                     reasoning=Reasoning(
-                        effort=self.config.reasoning_effort,
+                        effort=self.config.plotting_reasoning_effort,
                         summary=self.config.reasoning_summary
                     )
                 )
             )
 
-            # 4. Evaluation Agent - Assesses response quality (good vs bad answer)
+            # 4. Evaluation Agent - Assesses response quality (good vs bad vs neutral answer)
             self.evaluation_agent = Agent(
                 name="Evaluation Agent",
-                instructions="""You evaluate Market Intelligence Agent responses about PV (solar photovoltaic) market data. Classify as "good_answer" or "bad_answer" based on whether the agent found relevant data.
+                instructions="""Classify the Market Intelligence Agent's response to a user's query as "good_answer", "bad_answer", or "neutral" using these criteria:
 
-**Classification Criteria:**
+- "good_answer": The response includes any specific data or information the user requested.
+- "bad_answer": The response completely lacks the requested data, including when the agent says the data is unknown or unavailable.
+- "neutral": The response is just general greetings, conversational speech, or off-topic without addressing the user's data request.
 
-- **"good_answer"**: The agent provides relevant PV market data that answers the user's query, even if partial or limited.
-- **"bad_answer"**: The agent explicitly states that NO relevant data exists in the database for the query.
+Return only the "response_quality" field in the JSON below, with no other output.
 
-**Important Distinctions:**
+# Steps
 
-✅ **"good_answer"** includes:
-- Complete data answering the full query
-- Partial data (e.g., data for 2023-2024 when user asked for 2020-2024)
-- Data for similar regions/technologies if exact match not available
-- Any insights derived from available PV market data
+1. Read the user query and the agent's response.
+2. Identify if the query asks for specific data.
+3. Check if the agent's response:
+   - Provides any requested data → "good_answer"
+   - Does not provide requested data at all (including saying it is unavailable) → "bad_answer"
+   - Is only a greeting, general speech, or does not address the query → "neutral"
+4. Output using the exact JSON schema.
 
-❌ **"bad_answer"** ONLY when:
-- Agent says "no data available" or "data does not exist" for the query
-- Agent cannot find ANY relevant information in the database
-- Agent explicitly states the requested information is not in the dataset
+# Output Format
 
-**Output Format:**
-
-Respond ONLY with this JSON (no explanations):
+Return only:
 
 {
-  "response_quality": "good_answer"
+  "response_quality": "good_answer" // or "bad_answer" or "neutral"
 }
 
-or
+# Examples
 
+**Example 1**
+- User Query: "What was Italy's solar capacity in 2024?"
+- Agent Response: "I'm sorry, there is no available data on Italy's solar capacity in 2024."
+- Output:
 {
   "response_quality": "bad_answer"
 }
 
-**Examples:**
+**Example 2**
+- User Query: "Which countries had the highest PV installations in 2022?"
+- Agent Response: "In 2022, China had the highest with 87,400 MW, followed by the United States with 20,200 MW, and India with 13,900 MW."
+- Output:
+{
+  "response_quality": "good_answer"
+}
 
-**Example 1 - good_answer**
-- User Query: "What was Italy's solar capacity in 2024?"
-- Agent Response: "Italy's total solar capacity in 2024 was 28,450 MW, representing a 12% increase from 2023."
-- Output: {"response_quality": "good_answer"}
+**Example 3**
+- User Query: "Hi there!"
+- Agent Response: "Hello! How can I assist you today?"
+- Output:
+{
+  "response_quality": "neutral"
+}
 
-**Example 2 - bad_answer**
-- User Query: "What is Tesla's solar panel manufacturing capacity?"
-- Agent Response: "I don't have data on Tesla's solar panel manufacturing capacity. Our database contains PV market installation data by country and region, not individual company manufacturing details."
-- Output: {"response_quality": "bad_answer"}
-
-**Example 3 - good_answer (partial data)**
+**Example 4**
 - User Query: "Show me Germany's solar installations from 2010 to 2024"
 - Agent Response: "I have data for Germany from 2015 to 2024. In 2015, Germany had 39,700 MW installed, growing to 82,150 MW by 2024."
-- Output: {"response_quality": "good_answer"}
+- Output:
+{
+  "response_quality": "good_answer"
+}
 
-**Example 4 - bad_answer**
-- User Query: "What are the labor costs for solar installation in Spain?"
-- Agent Response: "Our database doesn't include labor cost data. We only have PV installation capacity data by territory, connection type, and technology."
-- Output: {"response_quality": "bad_answer"}
+# Notes
 
-**Example 5 - good_answer (alternative data)**
-- User Query: "What's the solar capacity in Scandinavia?"
-- Agent Response: "While we don't have a 'Scandinavia' category, I can provide data for the Nordic countries. Norway had 450 MW, Sweden had 2,100 MW, and Denmark had 1,800 MW in 2024."
-- Output: {"response_quality": "good_answer"}
+- Only output the "response_quality" field as shown above.
+- Classify as "neutral" only when the response is non-informative, off-topic, or just social/greeting.
+- Classify as "good_answer" if any of the requested data is present.
+- Classify as "bad_answer" solely when the requested data is completely absent, including if the agent says it does not exist.
+- Always follow the JSON output schema exactly.
 
-**Rules:**
-- Only output the JSON with "response_quality" field
-- Do NOT add reasoning, explanations, or extra fields
-- When in doubt, if ANY relevant PV market data was provided, classify as "good_answer"
+(Reminder: Choose "neutral" if the response is purely conversational or does not address the data request.)
 """,
                 model="gpt-4.1",  # Fast classification model
                 output_type=EvaluationAgentSchema,
@@ -824,9 +857,11 @@ The regional solar market showed strong growth with an average increase of **15.
 - Do NOT make assumptions or estimates
 - Do NOT change the meaning of the data
 - ONLY reformat, structure, and present the existing information beautifully
-- If the Market Intelligence Agent mentions data unavailability, present it clearly but don't apologize excessively""",
+- If the Market Intelligence Agent mentions data unavailability, present it clearly but don't apologize excessively
+
+**Output Format:**
+Respond directly with the formatted markdown text. Do NOT wrap it in JSON or use field names like "informative_summary". Just output the markdown content directly.""",
                 model="gpt-4.1",
-                output_type=ResponseAgentSchema,
                 model_settings=ModelSettings(
                     store=True
                 )
@@ -835,14 +870,73 @@ The regional solar market showed strong growth with an average increase of **15.
             # 6. Follow-up Agent - Handles bad answers by offering expert contact
             self.follow_up_agent = Agent(
                 name="Follow-up Agent",
-                instructions="""You are an agent which requires to summarize the response coming from the Market Intelligence Agent, and to ask the user whether he would like to reach experts to answer his query since the information is not present.
+                instructions="""You are a Follow-up Agent that handles cases where the Market Intelligence Agent couldn't find the requested data. Your role is to summarize what's missing and offer expert assistance in a professional, well-formatted manner.
 
-First summarize what comes from the Market Intelligence Agent regarding the info the user asks for, then offer the user to reach an expert to get a proper answer to his query.
+**Your Task:**
+1. Acknowledge what the user was looking for
+2. Explain clearly what information is not available in our database
+3. Offer to connect them with a market expert for personalized insights
 
-Example format:
-"Based on the available data, [summary of what was found/not found].
+**Formatting Guidelines (CRITICAL - Apply these consistently):**
+- Use proper markdown formatting with headers (##, ###), bullet points (-), and **bold** text
+- Break content into clear sections
+- Use **bold** for key information and emphasis
+- Keep paragraphs concise (2-3 sentences max)
+- Professional but friendly tone
 
-Unfortunately, we don't have complete information on [specific missing data]. Would you like me to connect you with one of our market experts who can provide more detailed insights on this topic? They can offer personalized analysis based on the latest industry research."
+**Response Structure:**
+
+## Your Query
+
+[Briefly acknowledge what they asked for - 1 sentence]
+
+## Current Data Availability
+
+[Explain what's missing or unavailable - use bullet points if multiple items]
+- **[Data type]**: Not available in our current database
+- **[Reason]**: [Brief explanation if relevant]
+
+## How We Can Help
+
+Our solar market experts can provide:
+- Personalized analysis based on the latest industry research
+- Detailed insights from proprietary data sources
+- Custom reports tailored to your specific needs
+
+**Would you like to connect with one of our experts?** They typically respond within 24-48 hours with comprehensive insights.
+
+---
+
+**Example Output:**
+
+## Your Query
+
+You asked about battery energy storage systems (BESS) capacity for Italy.
+
+## Current Data Availability
+
+Unfortunately, our database doesn't include BESS installation data at this time. We currently focus on:
+- **PV Installation Capacity**: By country, connection type, and technology
+- **Annual and Cumulative Data**: Historical and forecast scenarios
+
+BESS capacity data is tracked separately and not part of our current photovoltaic market database.
+
+## How We Can Help
+
+Our solar market experts can provide:
+- Detailed BESS capacity data for Italy and other markets
+- Integration trends between PV and storage systems
+- Market forecasts for combined PV+storage installations
+
+**Would you like to connect with one of our experts?** They typically respond within 24-48 hours with comprehensive insights.
+
+---
+
+**Important:**
+- Do NOT apologize excessively
+- Be clear and direct about what's not available
+- Make the expert offer sound valuable, not desperate
+- Keep formatting clean and consistent
 """,
                 model="gpt-4.1-mini",  # Lighter model for simple follow-up
                 model_settings=ModelSettings(
@@ -1071,7 +1165,7 @@ Unfortunately, we don't have complete information on [specific missing data]. Wo
                 # Send status update - analyzing data
                 yield json.dumps({"type": "status", "message": "Analyzing data..."})
 
-                # Run market intelligence agent (non-streaming for evaluation)
+                # Run market intelligence agent
                 market_result_temp = await Runner.run(
                     self.market_intelligence_agent,
                     input=query,
@@ -1090,9 +1184,14 @@ Unfortunately, we don't have complete information on [specific missing data]. Wo
 
                 # Step 3: Evaluation - Assess response quality
                 logger.info("Evaluating response quality")
+                # IMPORTANT: Pass both query AND market intelligence response for evaluation
+                evaluation_input = f"""User Query: {query}
+
+Agent Response: {market_intelligence_response}"""
+
                 evaluation_result_temp = await Runner.run(
                     self.evaluation_agent,
-                    input=query,
+                    input=evaluation_input,
                     session=None,
                     run_config=RunConfig(trace_metadata={
                         "__trace_source__": "agent-builder",
@@ -1112,7 +1211,8 @@ Unfortunately, we don't have complete information on [specific missing data]. Wo
                     # Send status update
                     yield json.dumps({"type": "status", "message": "Preparing alternative response..."})
 
-                    follow_up_result_temp = await Runner.run(
+                    # Stream follow-up agent response
+                    result = Runner.run_streamed(
                         self.follow_up_agent,
                         input=query,
                         session=session,
@@ -1122,24 +1222,39 @@ Unfortunately, we don't have complete information on [specific missing data]. Wo
                         })
                     )
 
-                    follow_up_response = follow_up_result_temp.final_output_as(str)
-                    # Yield approval request - frontend will show Yes/No buttons
+                    # Collect the full response while streaming
+                    follow_up_response = ""
+                    async for event in result.stream_events():
+                        if event.type == "raw_response_event":
+                            from openai.types.responses import ResponseTextDeltaEvent
+                            if isinstance(event.data, ResponseTextDeltaEvent):
+                                cleaned_delta = clean_citation_markers(event.data.delta)
+                                if cleaned_delta:
+                                    follow_up_response += cleaned_delta
+                                    yield json.dumps({
+                                        "type": "text_chunk",
+                                        "content": cleaned_delta
+                                    })
+
+                    # After streaming complete, yield approval request without message to avoid duplication
+                    # The message was already streamed as text_chunks above
                     yield json.dumps({
                         "type": "approval_request",
-                        "message": follow_up_response,
+                        "message": "",  # Empty to avoid showing the text twice
                         "approval_question": "Would you like to proceed and reach the expert?",
                         "conversation_id": conversation_id,
                         "context": "expert_contact"
                     })
 
-                else:  # good_answer
-                    # Response agent formats and summarizes
-                    logger.info("Good answer - routing to response agent")
+                elif response_quality == "good_answer" or response_quality == "neutral":
+                    # Response agent formats and summarizes with streaming
+                    logger.info(f"{response_quality} - routing to response agent with streaming")
 
                     # Send status update
                     yield json.dumps({"type": "status", "message": "Formatting response..."})
 
-                    response_result_temp = await Runner.run(
+                    # Stream response agent output
+                    result = Runner.run_streamed(
                         self.response_agent,
                         input=query,
                         session=session,
@@ -1149,15 +1264,19 @@ Unfortunately, we don't have complete information on [specific missing data]. Wo
                         })
                     )
 
-                    final_response = response_result_temp.final_output.informative_summary
-                    # Clean citation markers
-                    cleaned_response = clean_citation_markers(final_response)
-                    # Yield formatted response
-                    yield json.dumps({
-                        "type": "text",
-                        "content": cleaned_response,
-                        "quality": "good_answer"
-                    })
+                    # Stream text deltas as they arrive
+                    async for event in result.stream_events():
+                        if event.type == "raw_response_event":
+                            # Check if it's a text delta event
+                            from openai.types.responses import ResponseTextDeltaEvent
+                            if isinstance(event.data, ResponseTextDeltaEvent):
+                                # Clean citation markers before yielding
+                                cleaned_delta = clean_citation_markers(event.data.delta)
+                                if cleaned_delta:  # Only yield if there's content after cleaning
+                                    yield json.dumps({
+                                        "type": "text_chunk",
+                                        "content": cleaned_delta
+                                    })
 
         except Exception as e:
             error_msg = f"Failed to stream query: {str(e)}"

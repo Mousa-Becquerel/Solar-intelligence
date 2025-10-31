@@ -1445,16 +1445,15 @@ nav {
 }
 
 .contact-widget-container {
-    background: linear-gradient(135deg, rgba(30, 27, 75, 0.98) 0%, rgba(49, 46, 129, 0.98) 100%);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
-    max-width: 700px;
+    background: #ffffff; /* ✅ Clean white background */
+    border: 1px solid #e5e7eb; /* ✅ Subtle border */
+    border-radius: 16px; /* ✅ Softer corners */
+    max-width: 600px; /* ✅ Slightly narrower for better focus */
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15); /* ✅ Softer shadow */
     transform: scale(0.9);
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -1467,12 +1466,12 @@ nav {
     position: absolute;
     top: 20px;
     right: 20px;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: #ffffff;
+    background: transparent; /* ✅ Transparent background */
+    border: 1px solid #e5e7eb; /* ✅ Subtle border */
+    color: #6b7280; /* ✅ Gray color */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1482,48 +1481,49 @@ nav {
 }
 
 .contact-widget-close:hover {
-    background: rgba(239, 68, 68, 0.2);
-    border-color: rgba(239, 68, 68, 0.4);
-    color: #EF4444;
-    transform: rotate(90deg);
+    background: #f3f4f6; /* ✅ Light gray on hover */
+    border-color: #d1d5db;
+    color: #374151; /* ✅ Darker gray */
+    transform: scale(1.05); /* ✅ Subtle scale instead of rotate */
 }
 
 .contact-widget-content {
-    padding: 48px 40px;
+    padding: 40px; /* ✅ Reduced padding */
 }
 
 .contact-widget-header {
-    margin-bottom: 32px;
-    text-align: center;
+    margin-bottom: 28px;
+    text-align: left; /* ✅ Left-aligned for cleaner look */
 }
 
 .contact-widget-title {
-    font-size: 2rem;
-    font-weight: 300;
-    color: #ffffff;
-    margin-bottom: 12px;
-    letter-spacing: -0.02em;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', sans-serif;
+    font-size: 1.5rem; /* ✅ Smaller, more subtle */
+    font-weight: 600; /* ✅ Medium weight */
+    color: #1f2937; /* ✅ Dark gray instead of white */
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .contact-widget-subtitle {
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.7);
-    line-height: 1.6;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Text', sans-serif;
+    font-size: 0.875rem; /* ✅ Smaller */
+    font-weight: 400; /* ✅ Lighter */
+    color: #6b7280; /* ✅ Medium gray */
+    line-height: 1.5;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* Widget Form Styles */
 .contact-widget-form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 18px; /* ✅ Slightly tighter spacing */
 }
 
 .widget-form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 14px; /* ✅ Slightly tighter */
 }
 
 .widget-form-group {
@@ -1532,34 +1532,35 @@ nav {
 }
 
 .widget-form-label {
-    font-size: 0.875rem;
+    font-size: 0.8125rem; /* ✅ Smaller (13px) */
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 8px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', sans-serif;
+    color: #374151; /* ✅ Dark gray */
+    margin-bottom: 6px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .widget-form-input {
     width: 100%;
-    padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
-    color: #ffffff;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Text', sans-serif;
+    padding: 10px 14px; /* ✅ Slightly reduced padding */
+    background: #ffffff; /* ✅ White background */
+    border: 1px solid #d1d5db; /* ✅ Light gray border */
+    border-radius: 8px; /* ✅ Softer corners */
+    color: #1f2937; /* ✅ Dark text */
+    font-size: 0.875rem; /* ✅ Smaller (14px) */
+    font-weight: 400; /* ✅ Normal weight */
+    transition: all 0.2s ease;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .widget-form-input::placeholder {
-    color: rgba(255, 255, 255, 0.4);
+    color: #9ca3af; /* ✅ Medium gray placeholder */
 }
 
 .widget-form-input:focus {
     outline: none;
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(233, 165, 68, 0.5);
-    box-shadow: 0 0 0 3px rgba(233, 165, 68, 0.1);
+    background: #ffffff;
+    border-color: #2563eb; /* ✅ Blue focus border */
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); /* ✅ Blue focus ring */
 }
 
 .widget-form-textarea {
@@ -1587,7 +1588,7 @@ nav {
 
 .widget-form-checkbox-label {
     font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.8);
+    color: #6b7280;
     line-height: 1.5;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Text', sans-serif;
 }
@@ -1596,21 +1597,24 @@ nav {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 14px 32px;
-    background: linear-gradient(135deg, #E9A544 0%, #E8BF4F 100%);
+    gap: 8px;
+    padding: 12px 24px; /* ✅ Slightly reduced */
+    background: #2563eb; /* ✅ Clean blue instead of yellow gradient */
     color: #ffffff;
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 0.9375rem; /* ✅ Slightly smaller (15px) */
+    font-weight: 500; /* ✅ Medium weight */
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', sans-serif;
+    transition: all 0.2s ease;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     width: 100%;
 }
 
 .widget-submit-button:hover:not(:disabled) {
-    transform: translateY(-2px);
+    background: #1d4ed8; /* ✅ Darker blue on hover */
+    transform: translateY(-1px); /* ✅ Subtle lift */
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
 .widget-submit-button:disabled {

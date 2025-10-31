@@ -1,0 +1,395 @@
+/**
+ * Sidebar Component
+ * Navigation sidebar with conversations list
+ * Note: Layout (width, positioning) handled by app-layout.css CSS Grid
+ */
+
+/* ===== SIDEBAR PANEL (CSS Grid Architecture) ===== */
+.sidebar-panel {
+    /* Width is managed by CSS Grid in app-layout.css */
+    /* DON'T set width here - grid uses --sidebar-width variable */
+
+    background: #f6f8fa;
+    color: #4b5563;
+
+    /* Internal CSS Grid Layout for sidebar sections */
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+        "header"
+        "content"
+        "footer";
+
+    padding: 0;
+    border-top-right-radius: 18px;
+    border-bottom-right-radius: 18px;
+    overflow: hidden;
+    height: 100%;
+}
+
+/* ===== SIDEBAR HEADER SECTION ===== */
+.sidebar-top {
+    grid-area: header;
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f6f8fa;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* When collapsed, center the expand button and adjust padding */
+.sidebar-panel[data-expanded="false"] .sidebar-top,
+.sidebar-panel:not([data-expanded="true"]) .sidebar-top {
+    justify-content: center;
+    padding: 0.75rem 0.5rem;
+}
+
+/* Solar Intelligence Title - matches header .app-title styling */
+.sidebar-title {
+    display: flex;
+    align-items: center;
+    font-family: 'Inter', 'Open Sans', 'Segoe UI', Arial, sans-serif;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--becq-blue);
+    letter-spacing: 0.08em;
+    line-height: 1.1;
+    flex: 1;
+    min-width: 0;
+}
+
+/* Beta indicator is styled globally in charts.css */
+.sidebar-title .beta-indicator {
+    flex-shrink: 0;
+}
+
+/* Title text - hidden when collapsed */
+.sidebar-title-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.sidebar-panel[data-expanded="true"] .sidebar-title-text {
+    opacity: 1;
+}
+
+/* ===== EXPAND BUTTON (Visible when collapsed) ===== */
+.sidebar-expand-btn {
+    width: 44px;
+    height: 44px;
+    border: 2px solid #2563eb !important;
+    background: #ffffff !important;
+    color: #2563eb !important;
+    cursor: pointer;
+    border-radius: 12px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1000 !important;
+}
+
+.sidebar-expand-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.sidebar-expand-btn:hover {
+    background: #2563eb;
+    color: white;
+    transform: translateX(2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.sidebar-expand-btn:active {
+    transform: scale(0.95) translateX(2px);
+}
+
+/* Show expand button ONLY when collapsed */
+.sidebar-panel[data-expanded="false"] .sidebar-expand-btn,
+.sidebar-panel:not([data-expanded="true"]) .sidebar-expand-btn {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Hide expand button when expanded */
+.sidebar-panel[data-expanded="true"] .sidebar-expand-btn {
+    display: none !important;
+}
+
+/* Hide title when collapsed */
+.sidebar-panel[data-expanded="false"] .sidebar-title,
+.sidebar-panel:not([data-expanded="true"]) .sidebar-title {
+    display: none;
+}
+
+/* ===== COLLAPSE BUTTON (Visible when expanded) ===== */
+.sidebar-toggle-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    color: #2563eb;
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.sidebar-toggle-btn:hover {
+    background: rgba(37, 99, 235, 0.1);
+}
+
+.sidebar-toggle-btn:active {
+    transform: scale(0.95);
+}
+
+/* Hide collapse button when collapsed */
+.sidebar-panel[data-expanded="false"] .sidebar-toggle-btn,
+.sidebar-panel:not([data-expanded="true"]) .sidebar-toggle-btn {
+    display: none;
+}
+
+/* Collapsed icons - visible when sidebar collapsed */
+.sidebar-collapsed-icons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sidebar-panel[data-expanded="true"] .sidebar-collapsed-icons {
+    display: none;
+}
+
+/* Icon buttons in collapsed state */
+.sidebar-icon-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: #ffffff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin: 0 auto;
+    box-shadow: 0 1px 4px rgba(34, 60, 80, 0.04);
+}
+
+.sidebar-icon-btn:hover {
+    background: #e7f0fd;
+    border-color: #2563eb;
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
+
+/* Conversations indicator when collapsed */
+.conversations-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 0;
+    margin: 0.5rem 0;
+    border-radius: 8px;
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sidebar-panel[data-expanded="true"] .conversations-indicator {
+    display: none;
+}
+
+.conversations-indicator:hover {
+    background: rgba(37, 99, 235, 0.15);
+    transform: scale(1.05);
+}
+
+.conversations-count {
+    background: #2563eb;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+/* ===== SIDEBAR CONTENT AREA ===== */
+.sidebar-content {
+    grid-area: content;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    gap: 0.5rem;
+}
+
+/* When collapsed, reduce padding and center content */
+.sidebar-panel[data-expanded="false"] .sidebar-content,
+.sidebar-panel:not([data-expanded="true"]) .sidebar-content {
+    padding: 0.5rem;
+    align-items: center;
+}
+
+.sidebar-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: rgba(37, 99, 235, 0.2);
+    border-radius: 2px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(37, 99, 235, 0.3);
+}
+
+/* ===== SIDEBAR FOOTER (User Profile) ===== */
+.sidebar-footer {
+    grid-area: footer;
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+    background: #f6f8fa;
+    flex-shrink: 0;
+}
+
+/* When collapsed, reduce footer padding */
+.sidebar-panel[data-expanded="false"] .sidebar-footer,
+.sidebar-panel:not([data-expanded="true"]) .sidebar-footer {
+    padding: 0.5rem;
+}
+
+/* User Profile Section */
+.sidebar-user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.sidebar-user-profile:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+/* User Avatar */
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.user-avatar-text {
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+/* User Info Text */
+.user-info-text {
+    flex: 1;
+    min-width: 0;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.sidebar-panel[data-expanded="true"] .user-info-text {
+    opacity: 1;
+}
+
+.user-name-text {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-plan-text {
+    font-size: 0.75rem;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Chevron Icon */
+.user-profile-chevron {
+    flex-shrink: 0;
+    color: #9ca3af;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.sidebar-panel[data-expanded="true"] .user-profile-chevron {
+    opacity: 1;
+}
+
+/* When collapsed, center the avatar */
+.sidebar-panel[data-expanded="false"] .sidebar-user-profile,
+.sidebar-panel:not([data-expanded="true"]) .sidebar-user-profile {
+    justify-content: center;
+    padding: 0.5rem;
+}
+
+/* Scrollbar styling */
+.sidebar-panel::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-panel::-webkit-scrollbar-thumb {
+    background: rgba(37, 99, 235, 0.2);
+    border-radius: 2px;
+}
+
+.sidebar-panel::-webkit-scrollbar-track {
+    background: transparent;
+}

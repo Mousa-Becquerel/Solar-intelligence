@@ -17,6 +17,24 @@
     scroll-behavior: smooth;
 }
 
+/* ✅ Nearly invisible scrollbar styling for chat messages */
+.chat-messages::-webkit-scrollbar {
+    width: 4px; /* Extra thin */
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: transparent; /* Invisible track */
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.05); /* Barely visible */
+    border-radius: 2px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.15); /* Slightly visible on hover */
+}
+
 /* When messages exist, align to top instead of center */
 .chat-messages:has(.chat-messages-wrapper > *) {
     justify-content: flex-start;

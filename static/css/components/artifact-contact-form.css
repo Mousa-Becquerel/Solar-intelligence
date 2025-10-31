@@ -1,0 +1,329 @@
+/**
+ * Contact Form Styles for Artifact Panel
+ * Clean, modern form design consistent with the rest of the interface
+ */
+
+/* Form Container */
+.artifact-contact-form {
+    max-width: 100%;
+}
+
+/* Form Introduction */
+.artifact-form-intro {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.artifact-form-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--becq-blue);
+    margin: 0 0 0.5rem 0;
+    letter-spacing: -0.01em;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+}
+
+.artifact-form-description {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--becq-blue);
+    margin-bottom: 0.375rem;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+}
+
+.required {
+    color: #ef4444;
+    font-weight: 700;
+}
+
+/* Form Inputs */
+.form-input,
+.form-textarea {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+    color: #1f2937;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    box-sizing: border-box;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+    border-color: var(--becq-gold);
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+    background: #fffbf0;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+    color: #9ca3af;
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.5;
+}
+
+/* Form Validation States */
+.form-input.error,
+.form-textarea.error {
+    border-color: #ef4444;
+    background: #fef2f2;
+}
+
+.form-input.error:focus,
+.form-textarea.error:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-error {
+    display: block;
+    font-size: 0.875rem;
+    color: #ef4444;
+    margin-top: 0.375rem;
+    min-height: 1.25rem;
+    font-weight: 500;
+}
+
+/* Form Actions */
+.form-actions {
+    margin-top: 1.25rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+    color: var(--becq-blue);
+    background: linear-gradient(135deg, var(--becq-gold) 0%, var(--becq-gold-dark) 100%);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.25);
+}
+
+.btn-submit:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--becq-gold-dark) 0%, var(--becq-gold) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+}
+
+.btn-submit:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.25);
+}
+
+.btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-submit svg {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.2s ease;
+}
+
+.btn-submit:hover:not(:disabled) svg {
+    transform: translateX(2px);
+}
+
+/* Loading state */
+.btn-submit.loading {
+    pointer-events: none;
+    position: relative;
+}
+
+.btn-submit.loading span {
+    opacity: 0;
+}
+
+.btn-submit.loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin-left: -10px;
+    margin-top: -10px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: var(--becq-blue);
+    border-radius: 50%;
+    animation: button-spin 0.8s linear infinite;
+}
+
+@keyframes button-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Form Messages */
+.form-message {
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.form-message.success {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1.5px solid #86efac;
+}
+
+.form-message.error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1.5px solid #fca5a5;
+}
+
+/* Success Screen */
+.artifact-success {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 3rem 2rem;
+}
+
+.success-icon {
+    margin-bottom: 1.5rem;
+    animation: success-pop 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes success-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.success-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--becq-blue);
+    margin: 0 0 1rem 0;
+    letter-spacing: -0.01em;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+}
+
+.success-message {
+    font-size: 1.125rem;
+    line-height: 1.7;
+    color: #374151;
+    margin: 0 0 1rem 0;
+    max-width: 500px;
+}
+
+.success-note {
+    font-size: 0.9375rem;
+    color: #6b7280;
+    margin: 0 0 2rem 0;
+    font-style: italic;
+}
+
+.btn-close-success {
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+    color: var(--becq-blue);
+    background: linear-gradient(135deg, var(--becq-gold) 0%, var(--becq-gold-dark) 100%);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+}
+
+.btn-close-success:hover {
+    background: linear-gradient(135deg, var(--becq-gold-dark) 0%, var(--becq-gold) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .artifact-form-title {
+        font-size: 1.25rem;
+    }
+
+    .artifact-form-description {
+        font-size: 0.9375rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .btn-submit {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .success-title {
+        font-size: 1.5rem;
+    }
+
+    .success-message {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .artifact-form-intro {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+    }
+
+    .artifact-form-title {
+        font-size: 1.125rem;
+    }
+
+    .form-input,
+    .form-textarea {
+        padding: 0.75rem 0.875rem;
+    }
+
+    .artifact-success {
+        padding: 2rem 1rem;
+    }
+}

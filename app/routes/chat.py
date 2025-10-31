@@ -8,7 +8,7 @@ from flask import Blueprint, render_template, request, jsonify, Response
 from flask_login import login_required, current_user
 from app.services.agent_service import AgentService
 from app.services.conversation_service import ConversationService
-from app.extensions import limiter
+from app.extensions import limiter, csrf
 import json
 import logging
 
@@ -575,6 +575,75 @@ def generate_ppt():
         return jsonify({'error': f'Failed to generate PowerPoint: {str(e)}'}), 500
 
 
+@chat_bp.route('/contact/submit', methods=['POST'])
+@login_required
+@csrf.exempt  # Exempt from CSRF for JSON API
+def submit_expert_contact():
+    """
+    Handle expert contact form submission from artifact panel.
+
+    Request JSON:
+        {
+            "name": str,
+            "email": str,
+            "company": str (optional),
+            "message": str
+        }
+
+    Returns:
+        JSON: Success status and message
+    """
+    try:
+        data = request.get_json()
+
+        if not data:
+            logger.error("No JSON data in contact form submission")
+            return jsonify({'success': False, 'message': 'No data provided'}), 400
+
+        name = data.get('name', '').strip()
+        email = data.get('email', '').strip()
+        company = data.get('company', '').strip()
+        message = data.get('message', '').strip()
+
+        # Validate required fields
+        if not all([name, email, message]):
+            return jsonify({'success': False, 'message': 'Name, email, and message are required'}), 400
+
+        # Save to database
+        from models import ContactRequest
+        from app.extensions import db
+
+        contact_request = ContactRequest(
+            user_id=current_user.id,
+            name=name,
+            email=email,
+            company=company if company else None,
+            message=message,
+            source='artifact_panel'
+        )
+        db.session.add(contact_request)
+        db.session.commit()
+
+        logger.info(f"Expert contact request saved: ID {contact_request.id} from {name} ({email})")
+
+        # TODO: In production, implement:
+        # 1. Send notification email to sales team
+        # 2. Send confirmation email to user
+
+        return jsonify({
+            'success': True,
+            'message': 'Thank you for your request! Our experts will reach out within 24-48 hours.'
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error processing expert contact form: {e}")
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': 'An error occurred. Please try again.'
+        }), 500
+
+
 @chat_bp.route('/api/approval_response', methods=['POST'])
 @login_required
 def approval_response():
@@ -616,7 +685,7 @@ def approval_response():
         # If user rejects → "Can I help you with other queries then?"
 
         if approved:
-            response_message = "Great! Let's fill the contact form so our experts can reach out to you."
+            response_message = "Excellent! Let me open the contact form for you. Please fill in your details and our experts will reach out to you within 24-48 hours with personalized insights.\n\n**Opening contact form...**"
             redirect_to_contact = True
         else:
             response_message = "No problem! Can I help you with other queries then?"

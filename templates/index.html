@@ -21,70 +21,118 @@
     {% endif %}
 </head>
 <body>
-    <!-- Main application container - CSS Grid Layout -->
-    <div class="app-container">
-        <!-- Sidebar Container -->
-        <aside class="sidebar" id="sidebar" data-expanded="false">
-            <!-- Sidebar Toggle Button -->
-            <button class="sidebar-toggle-btn" id="sidebar-toggle" aria-label="Toggle sidebar" title="Toggle sidebar">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="9" y1="3" x2="9" y2="21"></line>
-                </svg>
-            </button>
+    <!-- App Shell - Root Container -->
+    <div class="app-shell">
+        <!-- Main Layout - CSS Grid (3 Zones: Sidebar | Chat | Artifact) -->
+        <main class="main-layout" id="main-layout" data-sidebar-expanded="false" data-artifact-open="false">
+            <!-- Zone 1: Sidebar Panel (CSS Grid: header | content | footer) -->
+            <aside class="sidebar-panel" id="sidebar-panel" data-expanded="false">
 
-            <div class="sidebar-collapsed-icons">
-                <button class="sidebar-icon-btn" id="new-chat-collapsed" title="New Chat" aria-label="New Chat">
-                    <!-- Plus icon SVG -->
-                    <svg width="22" height="22" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <circle cx="11" cy="11" r="10" stroke="#2563eb" fill="#fff"/>
-                        <path d="M11 7v8M7 11h8"/>
-                    </svg>
-                </button>
-                <a href="https://datahub.becquerelinstitute.eu/Home" target="_blank" rel="noopener" class="sidebar-icon-btn" title="PV Data Hub">
-                    <!-- Solar panel icon SVG -->
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="11" width="18" height="7" rx="2" fill="#fbbf24" stroke="#2563eb"/>
-                        <rect x="7" y="4" width="10" height="7" rx="2" fill="#fff" stroke="#2563eb"/>
-                        <path d="M12 11V4" stroke="#2563eb"/>
-                    </svg>
-                </a>
-            </div>
-            
-            <!-- Conversations indicator when collapsed -->
-            <div class="conversations-indicator" id="conversations-indicator" title="View conversations">
-                <div class="conversations-count" id="conversations-count">0</div>
-            </div>
-            
-            <div class="sidebar-header">
-                <button id="new-chat-btn" class="new-chat-btn">+ New Chat</button>
-            </div>
-            <div class="sidebar-section-title">Recent</div>
-            <ul id="conversation-list" class="conversation-list"></ul>
-            <div class="sidebar-footer footer">
-                <div class="sidebar-copyright">&copy; 2025 Solar Intelligence</div>
-                <a href="https://datahub.becquerelinstitute.eu/Home" target="_blank" rel="noopener" class="sidebar-link-btn" aria-label="Visit PV Data Hub">
-                    <span class="icon-solar">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <rect x="3" y="11" width="18" height="7" rx="2" fill="#fbbf24" stroke="#2563eb"/>
-                            <rect x="7" y="4" width="10" height="7" rx="2" fill="#fff" stroke="#2563eb"/>
-                            <path d="M12 11V4" stroke="#2563eb"/>
+                <!-- Header: Title + Toggle Button -->
+                <div class="sidebar-top">
+                    <!-- Expand button (visible when collapsed) -->
+                    <button class="sidebar-expand-btn" id="sidebar-expand" aria-label="Expand sidebar" title="Expand sidebar">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 18l6-6-6-6"></path>
                         </svg>
-                    </span>
-                    <span class="sidebar-link-btn-text">PV Data Hub</span>
-                </a>
-            </div>
-        </aside>
+                    </button>
 
-        <!-- Workspace: Contains Header + Messages + Input -->
-        <div class="workspace">
+                    <!-- Title (visible when expanded) -->
+                    <div class="sidebar-title">
+                        <span class="sidebar-title-text">Solar Intelligence</span>
+                    </div>
+
+                    <!-- Collapse button (visible when expanded) -->
+                    <button class="sidebar-toggle-btn" id="sidebar-toggle" aria-label="Collapse sidebar" title="Collapse sidebar">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 18l-6-6 6-6"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Content: Scrollable area with chats/actions -->
+                <div class="sidebar-content">
+                    <!-- Collapsed state icons -->
+                    <div class="sidebar-collapsed-icons">
+                        <button class="sidebar-icon-btn" id="new-chat-collapsed" title="New Chat" aria-label="New Chat">
+                            <svg width="22" height="22" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="11" cy="11" r="10" stroke="#2563eb" fill="#fff"/>
+                                <path d="M11 7v8M7 11h8"/>
+                            </svg>
+                        </button>
+                        <a href="https://datahub.becquerelinstitute.eu/Home" target="_blank" rel="noopener" class="sidebar-icon-btn" title="PV Data Hub">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="7" rx="2" fill="#fbbf24" stroke="#2563eb"/>
+                                <rect x="7" y="4" width="10" height="7" rx="2" fill="#fff" stroke="#2563eb"/>
+                                <path d="M12 11V4" stroke="#2563eb"/>
+                            </svg>
+                        </a>
+                    </div>
+
+                    <!-- Conversations indicator when collapsed -->
+                    <div class="conversations-indicator" id="conversations-indicator" title="View conversations">
+                        <div class="conversations-count" id="conversations-count">0</div>
+                    </div>
+
+                    <!-- Expanded state content -->
+                    <div class="sidebar-header">
+                        <button id="new-chat-btn" class="new-chat-btn">+ New Chat</button>
+                    </div>
+                    <div class="sidebar-section-title">Recent</div>
+                    <ul id="conversation-list" class="conversation-list"></ul>
+                </div>
+
+                <!-- Footer: User Profile -->
+                <div class="sidebar-footer footer">
+                    <button class="sidebar-user-profile" id="sidebar-user-profile" type="button">
+                        <div class="user-avatar">
+                            <span class="user-avatar-text" id="sidebar-user-avatar">M</span>
+                        </div>
+                        <div class="user-info-text">
+                            <div class="user-name-text" id="sidebar-user-name">Loading...</div>
+                            <div class="user-plan-text" id="sidebar-user-plan">Max plan</div>
+                        </div>
+                        <svg class="user-profile-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+
+                    <!-- User Profile Dropdown Menu -->
+                    <div class="user-dropdown-menu" id="user-dropdown-menu">
+                        <a href="{{ url_for('auth.profile') }}" class="dropdown-menu-item">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span>Profile</span>
+                        </a>
+                        <a href="{{ url_for('admin.users') }}" class="dropdown-menu-item" id="admin-dropdown-link" style="display: none;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            <span>Admin</span>
+                        </a>
+                        <button class="dropdown-menu-item" id="dropdown-logout-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16,17 21,12 16,7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                            <span>Logout</span>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+        <!-- Zone 2: Chat Panel (Contains Header + Messages + Input) -->
+        <div class="chat-panel" id="chat-panel">
             <!-- App Header -->
             <header class="app-header">
                 <div class="title-section">
-                    <div class="app-title">
-                        <span class="beta-indicator" title="Beta Version - Features under active development"></span>
-                        Solar Intelligence
-                    </div>
+                    <!-- Solar Intelligence title removed -->
         <div class="agent-selector">
             <label for="agent-select" class="sr-only">Select AI Agent</label>
             <select id="agent-select" class="agent-select" aria-label="Select AI Agent">
@@ -104,59 +152,15 @@
         </a>
     </div>
     <div class="user-section">
-        <!-- Export Controls - Temporarily Disabled -->
-        <div class="export-controls" style="display: none;">
-            <button class="export-toggle-btn" id="export-toggle-btn" title="Toggle Export Mode">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 3h6l6 18h6"></path>
-                    <path d="M14 3h7"></path>
-                </svg>
-                <span>Export</span>
-            </button>
-            <button class="export-download-btn" id="export-download-btn" title="Download Selected Messages" style="display: none;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7,10 12,15 17,10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                <span>Download</span>
-            </button>
-            <button class="export-ppt-btn" id="export-ppt-btn" title="Generate PowerPoint Presentation" style="display: none;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="4" width="18" height="16" rx="2" ry="2"></rect>
-                    <polyline points="7,8 17,8"></polyline>
-                    <polyline points="7,12 17,12"></polyline>
-                    <polyline points="7,16 13,16"></polyline>
-                </svg>
-                <span>Generate PPT</span>
-            </button>
-        </div>
-        
-        <a href="{{ url_for('auth.profile') }}" class="user-info" id="user-info" title="View Profile" style="text-decoration: none; cursor: pointer;">
-            <span class="user-name" id="user-name">Loading...</span>
-            <span class="user-role" id="user-role"></span>
-        </a>
-        <a href="{{ url_for('admin.users') }}" class="admin-btn" id="admin-btn" title="User Management" aria-label="User Management" style="display: none;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        <!-- User info, profile, admin, and logout buttons removed - now in sidebar dropdown -->
+
+        <!-- Artifact Panel Toggle Button -->
+        <button id="artifact-toggle-btn" class="artifact-toggle-btn" title="Toggle artifact panel" aria-label="Toggle artifact panel" style="display: none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
             </svg>
-        </a>
-        <a href="{{ url_for('auth.profile') }}" class="profile-btn" id="profile-btn" title="Profile" aria-label="Profile">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-        </a>
-        <button class="logout-btn" id="logout-btn" title="Logout" aria-label="Logout">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16,17 21,12 16,7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-    </button>
+        </button>
     </div>
         </header>
 
@@ -210,18 +214,34 @@
                 </div>
             </div>
         </footer>
-        </div><!-- Close workspace -->
-    </div><!-- Close app-container -->
+        </div><!-- Close chat-panel -->
+
+        <!-- Zone 3: Artifact Panel (Side Panel for Dynamic Content) -->
+        <div id="artifact-panel" class="artifact-panel">
+            <div class="artifact-container">
+                <div class="artifact-header">
+                    <h2 class="artifact-title" id="artifact-title">Artifact</h2>
+                    <button class="artifact-close-btn" id="artifact-close-btn" aria-label="Close panel">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="artifact-content" id="artifact-content">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        </main><!-- Close main-layout -->
+    </div><!-- Close app-shell -->
 
     <!-- Fixed Position Elements (outside layout) -->
     <!-- CSRF Token for JavaScript -->
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    
-    <!-- Help Button -->
-    <button id="help-btn" class="help-icon-btn" title="User Guide" tabindex="0">
-        ?
-        <span class="help-tooltip">Find a detailed guide to using the agent</span>
-    </button>
+
+    <!-- Help Button - REMOVED -->
 
     <!-- News Card -->
     <div id="news-card" class="news-card">
@@ -589,6 +609,7 @@
 
     <!-- Main Application - ES6 Module -->
     <script type="module" src="/static/js/main.js"></script>
+
 
     <style>
         /* Additional CSS to ensure autocomplete is completely disabled */

@@ -117,7 +117,10 @@ def register():
         )
 
         if user:
-            flash('Registration successful! Your account is pending approval. An administrator will review and activate your account shortly.', 'info')
+            if user.is_active:
+                flash('Registration successful! You can now log in.', 'success')
+            else:
+                flash('Registration successful! Your account is pending approval. An administrator will review and activate your account shortly.', 'info')
             return redirect(url_for('auth.login'))
         else:
             flash(error, 'error')

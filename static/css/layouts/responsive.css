@@ -108,7 +108,7 @@
     font-weight: 500;
     color: #4b5563;
     letter-spacing: -0.01em;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    box-shadow: none;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
@@ -117,13 +117,13 @@
     background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(37, 99, 235, 0.08) 100%);
     border-color: rgba(251, 191, 36, 0.4);
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(251, 191, 36, 0.2), 0 2px 8px rgba(0, 0, 0, 0.06);
+    box-shadow: none;
     color: #1f2937;
 }
 
 .suggested-query-item:active {
     transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    box-shadow: none;
 }
 
 .suggested-query-icon {

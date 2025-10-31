@@ -1,22 +1,291 @@
 /**
- * App Layout
- * Main application container and workspace layout
+ * App Layout - CSS Grid Architecture
+ * Clean 3-zone layout: Sidebar | Chat | Artifact
+ * No fixed positioning, no margin hacks, pure CSS Grid
  */
 
-/* ===== APP SHELL LAYOUT (ChatGPT Pattern) ===== */
-.app-container {
+/* ============================================
+   ROOT: CSS Variables for Dynamic Widths
+   ============================================ */
+:root {
+    /* Default state: sidebar EXPANDED, no artifact */
+    --sidebar-width: 280px;
+    --artifact-width: 0px;
+
+    /* Transition timing */
+    --layout-transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   APP SHELL - Root Container
+   ============================================ */
+.app-shell {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
     display: flex;
+    flex-direction: column;
+}
+
+/* ============================================
+   MAIN LAYOUT - CSS Grid Container
+   3 Columns: [Sidebar] [Chat] [Artifact]
+   ============================================ */
+.main-layout {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) 1fr var(--artifact-width);
+    grid-template-rows: 1fr;
     height: 100vh;
     width: 100vw;
     overflow: hidden;
+    transition: grid-template-columns var(--layout-transition);
 }
 
-/* ===== WORKSPACE (Right side: Header + Messages + Input) ===== */
-.workspace {
-    flex: 1;
+/* State: Sidebar collapsed */
+.main-layout[data-sidebar-expanded="false"] {
+    --sidebar-width: 72px;
+}
+
+/* State: Sidebar expanded */
+.main-layout[data-sidebar-expanded="true"] {
+    --sidebar-width: 280px;
+}
+
+/* State: Artifact open */
+.main-layout[data-artifact-open="true"] {
+    --artifact-width: 40%;
+}
+
+/* ============================================
+   ZONE 1: SIDEBAR PANEL
+   ============================================ */
+.sidebar-panel {
+    grid-column: 1;
+    /* Grid handles width automatically - no explicit width needed */
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden; /* ✅ No horizontal scroll - button must fit inside */
+    /* Styling handled by sidebar.css - only layout here */
     display: flex;
     flex-direction: column;
+    position: relative;
+    min-width: 0; /* Allow grid to control sizing */
+}
+
+/* ============================================
+   ZONE 2: CHAT PANEL
+   ============================================ */
+.chat-panel {
+    grid-column: 2;
+    height: 100vh;
     overflow: hidden;
-    min-width: 0;
+    display: flex;
+    flex-direction: column;
     background: var(--becq-white);
+    min-width: 0; /* Important: allows flex children to shrink */
+}
+
+/* Chat panel structure (maintains existing workspace layout) */
+.chat-panel > header {
+    flex-shrink: 0;
+}
+
+.chat-panel > main {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0; /* Important for Firefox */
+}
+
+.chat-panel > footer {
+    flex-shrink: 0;
+}
+
+/* ============================================
+   ZONE 3: ARTIFACT PANEL
+   ============================================ */
+.artifact-panel {
+    grid-column: 3;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #ffffff; /* ✅ White background to match chat area */
+    display: flex;
+    flex-direction: column;
+
+    /* Hidden by default (width is 0) */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+
+    /* Add padding to create container effect */
+    padding: 1.5rem;
+    padding-right: 1rem; /* Less padding on right for scrollbar */
+}
+
+/* Artifact visible when open */
+.main-layout[data-artifact-open="true"] .artifact-panel {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ✅ Nearly invisible scrollbar styling */
+.artifact-panel::-webkit-scrollbar {
+    width: 4px; /* Extra thin */
+}
+
+.artifact-panel::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.05); /* Barely visible */
+    border-radius: 2px;
+}
+
+.artifact-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.15); /* Slightly visible on hover */
+}
+
+.artifact-panel::-webkit-scrollbar-track {
+    background: transparent; /* Invisible track */
+}
+
+/* ============================================
+   RESPONSIVE BEHAVIOR
+   ============================================ */
+
+/* Tablet: Artifact becomes overlay (1200px breakpoint) */
+@media (max-width: 1200px) {
+    /* Force artifact to 0 width in grid */
+    .main-layout[data-artifact-open="true"] {
+        --artifact-width: 0px;
+    }
+
+    /* Make artifact a fixed overlay */
+    .artifact-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 50%;
+        min-width: 400px;
+        max-width: 600px;
+        z-index: 1000;
+        grid-column: auto; /* Remove from grid */
+        transform: translateX(100%);
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 1; /* Always opaque when it slides in */
+    }
+
+    .main-layout[data-artifact-open="true"] .artifact-panel {
+        transform: translateX(0);
+        pointer-events: auto;
+    }
+
+    /* Add overlay backdrop */
+    .main-layout::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .main-layout[data-artifact-open="true"]::after {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+/* Mobile: Full-width artifact overlay */
+@media (max-width: 768px) {
+    .artifact-panel {
+        width: 100%;
+        min-width: unset;
+        max-width: unset;
+    }
+
+    /* Force sidebar collapsed on mobile */
+    .main-layout {
+        --sidebar-width: 60px;
+    }
+
+    /* If sidebar is expanded, make it overlay too */
+    .sidebar-panel[data-expanded="true"] {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 1001;
+        width: 280px;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+    }
+}
+
+/* Very small mobile (narrow phones) */
+@media (max-width: 480px) {
+    .main-layout {
+        --sidebar-width: 50px;
+    }
+}
+
+/* ============================================
+   LAYOUT PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+
+/* GPU acceleration for smooth transitions */
+.sidebar-panel,
+.chat-panel,
+.artifact-panel {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Prevent layout shift during transitions */
+.main-layout,
+.sidebar-panel,
+.artifact-panel {
+    contain: layout style;
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Focus visible for keyboard navigation */
+.main-layout:focus-within {
+    outline: none;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .main-layout,
+    .sidebar-panel,
+    .artifact-panel {
+        transition: none;
+    }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+@media print {
+    .sidebar-panel,
+    .artifact-panel {
+        display: none;
+    }
+
+    .main-layout {
+        display: block;
+    }
+
+    .chat-panel {
+        width: 100%;
+        height: auto;
+        overflow: visible;
+    }
 }

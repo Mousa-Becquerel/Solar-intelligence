@@ -252,3 +252,30 @@ class HiredAgent(db.Model):
 
     # Relationship to user
     user = db.relationship('User', backref=db.backref('hired_agents', lazy='dynamic'))
+
+
+class ContactRequest(db.Model):
+    """Model for storing contact form submissions from users"""
+    __tablename__ = 'contact_request'
+    __table_args__ = (
+        db.Index('idx_contact_request_created_at', 'created_at'),
+        db.Index('idx_contact_request_status', 'status'),
+        db.Index('idx_contact_request_source', 'source'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Null for landing page submissions
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    company = db.Column(db.String(150), nullable=True)
+    phone = db.Column(db.String(20), nullable=True)
+    message = db.Column(db.Text, nullable=False)
+    source = db.Column(db.String(50), nullable=False)  # 'landing_page', 'artifact_panel', 'contact_page'
+    status = db.Column(db.String(20), default='pending')  # 'pending', 'contacted', 'resolved'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    contacted_at = db.Column(db.DateTime, nullable=True)
+    resolved_at = db.Column(db.DateTime, nullable=True)
+    notes = db.Column(db.Text, nullable=True)  # Internal notes from sales team
+
+    # Relationship to user (optional)
+    user = db.relationship('User', backref=db.backref('contact_requests', lazy='dynamic'))
