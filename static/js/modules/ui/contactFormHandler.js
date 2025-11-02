@@ -5,12 +5,14 @@
 
 import { artifactPanel } from './artifactPanel.js';
 import { generateContactFormHTML, generateSuccessHTML } from './contactFormContent.js';
+import { setupExpertCards, getExpertTitles } from './expertCards.js';
 import { api } from '../core/api.js';
 
 export class ContactFormHandler {
     constructor() {
         this.form = null;
         this.submitBtn = null;
+        this.getSelectedExperts = null;
     }
 
     /**
@@ -25,7 +27,7 @@ export class ContactFormHandler {
 
         // Open artifact panel with contact form
         artifactPanel.open({
-            title: 'Contact Our Experts',
+            title: '',
             content: formHTML,
             type: 'form'
         });
@@ -47,6 +49,9 @@ export class ContactFormHandler {
             console.error('Contact form not found');
             return;
         }
+
+        // Setup expert card selection
+        this.getSelectedExperts = setupExpertCards();
 
         // Form submission
         this.form.addEventListener('submit', (e) => {
@@ -144,12 +149,27 @@ export class ContactFormHandler {
 
         // Get form data
         const formData = new FormData(this.form);
+
+        // Get user info from page (set by backend for logged-in users)
+        const userName = document.querySelector('meta[name="user-name"]')?.content || 'User';
+        const userEmail = document.querySelector('meta[name="user-email"]')?.content || '';
+
+        // Get selected experts
+        const selectedExpertIds = this.getSelectedExperts ? this.getSelectedExperts() : [];
+        const selectedExpertTitles = getExpertTitles(selectedExpertIds);
+
+        // Build message with expert preferences (for display in message)
+        let messageText = formData.get('message');
+        if (selectedExpertTitles.length > 0) {
+            messageText = `[Requested Experts: ${selectedExpertTitles.join(', ')}]\n\n${messageText}`;
+        }
+
         const data = {
-            name: formData.get('name'),
-            email: formData.get('email'),
-            company: formData.get('company') || '',
-            phone: formData.get('phone') || '',
-            message: formData.get('message'),
+            name: userName,
+            email: userEmail,
+            company: '',
+            message: messageText,
+            selected_experts: selectedExpertIds,  // Send expert IDs as separate field
             csrf_token: formData.get('csrf_token')
         };
 
@@ -171,7 +191,7 @@ export class ContactFormHandler {
 
             if (response.ok && result.success) {
                 // Show success screen
-                this.showSuccess(data.name);
+                this.showSuccess(userName);
             } else {
                 // Show error message
                 const errorMsg = result.message || 'Failed to send request. Please try again.';

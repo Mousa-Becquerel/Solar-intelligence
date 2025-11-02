@@ -272,6 +272,7 @@ class ContactRequest(db.Model):
     message = db.Column(db.Text, nullable=False)
     source = db.Column(db.String(50), nullable=False)  # 'landing_page', 'artifact_panel', 'contact_page'
     status = db.Column(db.String(20), default='pending')  # 'pending', 'contacted', 'resolved'
+    selected_experts = db.Column(db.JSON, nullable=True)  # JSON array of selected expert IDs from artifact panel
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     contacted_at = db.Column(db.DateTime, nullable=True)
     resolved_at = db.Column(db.DateTime, nullable=True)

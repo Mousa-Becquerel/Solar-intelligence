@@ -72,9 +72,17 @@ class WorkflowInput(BaseModel):
 class DigitalizationAgentConfig:
     """Configuration for the digitalization agent"""
     model: str = "gpt-4.1"
-    vector_store_id: str = "vs_68e5846b1a708191a5b17970b3ac9994"
+    vector_store_ids: list = None  # Changed from single ID to list
     agent_name: str = "Digitalization Expert"
     verbose: bool = True
+
+    def __post_init__(self):
+        """Set default vector store IDs if not provided"""
+        if self.vector_store_ids is None:
+            self.vector_store_ids = [
+                "vs_68e5846b1a708191a5b17970b3ac9994",  # Original AI report
+                "vs_6904c71afe4c8191a966640cf67c59fc"   # Updated AI report with latest data
+            ]
 
 class DigitalizationAgent:
     """
@@ -123,9 +131,9 @@ class DigitalizationAgent:
     def _initialize_agent(self):
         """Create the digitalization expert agent"""
         try:
-            # Create file search tool
+            # Create file search tool with multiple vector stores
             file_search = FileSearchTool(
-                vector_store_ids=[self.config.vector_store_id]
+                vector_store_ids=self.config.vector_store_ids
             )
 
             # Create digitalization expert agent with file search
@@ -141,7 +149,7 @@ class DigitalizationAgent:
                     store=True
                 )
             )
-            logger.info(f"✅ Created digitalization expert with vector store: {self.config.vector_store_id}")
+            logger.info(f"✅ Created digitalization expert with {len(self.config.vector_store_ids)} vector stores: {', '.join(self.config.vector_store_ids)}")
 
         except Exception as e:
             logger.error(f"❌ Failed to initialize agent: {e}")

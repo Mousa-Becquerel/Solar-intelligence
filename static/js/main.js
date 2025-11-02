@@ -342,8 +342,12 @@ class SolarIntelligenceApp {
         loadingDiv.innerHTML = `
             <div class="message bot-message">
                 <div class="loading-spinner-container">
-                    <div class="loading-spinner"></div>
-                    <span class="loading-text">Analyzing data...</span>
+                    <div class="loading-spinner">
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                    </div>
                 </div>
             </div>
         `;
@@ -750,6 +754,40 @@ class SolarIntelligenceApp {
                 this.chatWrapper,
                 this.chatMessages
             );
+        } else if (!isUser && parsed.type === 'approval_request') {
+            // Render approval request message from history (without buttons since it's historical)
+            const messageContainer = createElement('div', {
+                classes: 'message-container',
+                attributes: {
+                    'data-msg-id': msg.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                    'data-msg-sender': msg.sender,
+                    'data-msg-type': 'approval_request'
+                }
+            });
+
+            // Extract content with fallbacks for malformed messages
+            let content = parsed.value || parsed.content;
+
+            if (!content || (typeof content === 'object' && content !== null)) {
+                if (typeof parsed === 'object' && parsed !== null) {
+                    content = parsed.text || parsed.message || parsed.response ||
+                             JSON.stringify(parsed, null, 2);
+                } else {
+                    content = String(parsed);
+                }
+            }
+
+            if (content === '[object Object]') {
+                content = '_Message content unavailable_';
+            }
+
+            const messageDiv = createElement('div', {
+                classes: ['message', 'bot-message', `${agentType}-agent`],
+                innerHTML: safeRenderMarkdown(content)
+            });
+
+            messageContainer.appendChild(messageDiv);
+            this.chatWrapper.appendChild(messageContainer);
         } else {
             // Render text message
             const messageContainer = createElement('div', {
@@ -761,7 +799,25 @@ class SolarIntelligenceApp {
                 }
             });
 
-            const content = parsed.value || parsed.content || String(parsed);
+            // Extract content with fallbacks for malformed old messages
+            let content = parsed.value || parsed.content;
+
+            // If content is still an object or undefined, try to extract meaningful text
+            if (!content || (typeof content === 'object' && content !== null)) {
+                // Check if parsed itself has text fields
+                if (typeof parsed === 'object' && parsed !== null) {
+                    // Try various possible fields
+                    content = parsed.text || parsed.message || parsed.response ||
+                             JSON.stringify(parsed, null, 2);
+                } else {
+                    content = String(parsed);
+                }
+            }
+
+            // Final fallback - if content is still an object string representation
+            if (content === '[object Object]') {
+                content = '_Message content unavailable_';
+            }
 
             const messageDiv = createElement('div', {
                 classes: ['message', isUser ? 'user-message' : 'bot-message', !isUser ? `${agentType}-agent` : ''],

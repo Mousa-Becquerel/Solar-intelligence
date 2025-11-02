@@ -156,7 +156,7 @@ class WorkflowInput(BaseModel):
 class MarketIntelligenceConfig:
     """Configuration for Market Intelligence Agent"""
     model: str = "gpt-5-mini"
-    plotting_model: str = "gpt-5-mini"  # Separate model for plotting agent
+    plotting_model: str = "gpt-5"  # Separate model for plotting agent
     agent_name: str = "Market Intelligence Agent"
     file_id: str = "file-2C3SRLgo4PVK8PRQhgrjRN"  # Main market data CSV
     plotting_file_id: str = "file-2C3SRLgo4PVK8PRQhgrjRN"  # Plotting data CSV (same file)

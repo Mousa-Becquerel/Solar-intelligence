@@ -518,7 +518,11 @@ def process_market_intelligence_agent_stream(user_message: str, conv_id: int, ap
                             elif event_type == 'approval_request':
                                 # Approval request - pass through to frontend with all metadata
                                 logger.info(f"Approval request: {response_json.get('context')}")
-                                full_response = response_json.get('message', '')
+                                # Don't overwrite full_response - it contains the accumulated text chunks
+                                # Only update if the message has content
+                                approval_message = response_json.get('message', '')
+                                if approval_message and not full_response:
+                                    full_response = approval_message
                                 response_type = "approval_request"
                                 yield f"data: {json.dumps({'type': 'approval_request', 'message': response_json.get('message'), 'approval_question': response_json.get('approval_question'), 'conversation_id': response_json.get('conversation_id'), 'context': response_json.get('context')})}\n\n"
 
@@ -563,10 +567,22 @@ def process_market_intelligence_agent_stream(user_message: str, conv_id: int, ap
                 try:
                     with app.app_context():
                         try:
-                            content_to_save = {
-                                'type': 'plot' if response_type == "plot" else 'string',
-                                'value': plot_data if response_type == "plot" else full_response
-                            }
+                            # Determine content type and value based on response type
+                            if response_type == "plot":
+                                content_to_save = {
+                                    'type': 'plot',
+                                    'value': plot_data
+                                }
+                            elif response_type == "approval_request":
+                                content_to_save = {
+                                    'type': 'approval_request',
+                                    'value': full_response
+                                }
+                            else:
+                                content_to_save = {
+                                    'type': 'string',
+                                    'value': full_response
+                                }
 
                             bot_msg = Message(
                                 conversation_id=conv_id,

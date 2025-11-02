@@ -166,14 +166,169 @@ export class ConversationManager {
     async confirmDelete(convId) {
         console.log('Delete button clicked for conversation:', convId);
 
-        // Use custom modal if available, otherwise browser confirm
-        const shouldDelete = this.confirmModal
-            ? await this.showConfirmModal()
-            : confirm('Are you sure you want to delete this conversation? This action cannot be undone.');
+        // Show custom confirmation modal
+        const shouldDelete = await this.showConfirmModal(
+            'Delete Conversation?',
+            'Are you sure you want to delete this conversation? This action cannot be undone and all messages will be permanently removed.',
+            'Delete',
+            'Cancel'
+        );
 
         if (shouldDelete) {
             await this.deleteConversation(convId);
         }
+    }
+
+    /**
+     * Show custom confirmation modal
+     * @param {string} title - Modal title
+     * @param {string} message - Modal message
+     * @param {string} confirmText - Confirm button text
+     * @param {string} cancelText - Cancel button text
+     * @returns {Promise<boolean>} - User's choice
+     */
+    async showConfirmModal(title, message, confirmText = 'Confirm', cancelText = 'Cancel') {
+        return new Promise((resolve) => {
+            // Create modal HTML
+            const modalHTML = `
+                <div class="confirm-modal" id="delete-confirm-modal">
+                    <div class="confirm-modal-content">
+                        <div class="confirm-modal-header">
+                            <div class="confirm-modal-icon">⚠️</div>
+                            <h3 class="confirm-modal-title">${title}</h3>
+                        </div>
+                        <div class="confirm-modal-body">
+                            ${message}
+                        </div>
+                        <div class="confirm-modal-actions">
+                            <button class="confirm-modal-btn confirm-modal-btn-cancel" data-action="cancel">
+                                ${cancelText}
+                            </button>
+                            <button class="confirm-modal-btn confirm-modal-btn-confirm" data-action="confirm">
+                                ${confirmText}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Add to DOM
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+            const modal = document.getElementById('delete-confirm-modal');
+
+            // Show modal with animation
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+            });
+
+            // Handle button clicks
+            const handleClick = (e) => {
+                const action = e.target.dataset.action;
+                if (action) {
+                    // Hide modal
+                    modal.classList.remove('show');
+
+                    // Remove from DOM after animation
+                    setTimeout(() => {
+                        modal.remove();
+                    }, 300);
+
+                    // Resolve promise
+                    resolve(action === 'confirm');
+                }
+            };
+
+            modal.addEventListener('click', (e) => {
+                // Close on backdrop click
+                if (e.target === modal) {
+                    handleClick({ target: { dataset: { action: 'cancel' } } });
+                }
+            });
+
+            modal.querySelectorAll('[data-action]').forEach(btn => {
+                btn.addEventListener('click', handleClick);
+            });
+
+            // Handle ESC key
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    handleClick({ target: { dataset: { action: 'cancel' } } });
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
+        });
+    }
+
+    /**
+     * Show error modal
+     * @param {string} title - Modal title
+     * @param {string} message - Error message
+     */
+    async showErrorModal(title, message) {
+        return new Promise((resolve) => {
+            // Create modal HTML
+            const modalHTML = `
+                <div class="confirm-modal" id="error-modal">
+                    <div class="confirm-modal-content">
+                        <div class="confirm-modal-header">
+                            <div class="confirm-modal-icon" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">❌</div>
+                            <h3 class="confirm-modal-title">${title}</h3>
+                        </div>
+                        <div class="confirm-modal-body">
+                            ${message}
+                        </div>
+                        <div class="confirm-modal-actions">
+                            <button class="confirm-modal-btn confirm-modal-btn-cancel" data-action="ok">
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Add to DOM
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+            const modal = document.getElementById('error-modal');
+
+            // Show modal with animation
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+            });
+
+            // Handle button clicks
+            const handleClick = () => {
+                // Hide modal
+                modal.classList.remove('show');
+
+                // Remove from DOM after animation
+                setTimeout(() => {
+                    modal.remove();
+                }, 300);
+
+                resolve();
+            };
+
+            modal.addEventListener('click', (e) => {
+                // Close on backdrop click
+                if (e.target === modal) {
+                    handleClick();
+                }
+            });
+
+            modal.querySelector('[data-action="ok"]').addEventListener('click', handleClick);
+
+            // Handle ESC key
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    handleClick();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
+        });
     }
 
     /**
@@ -206,7 +361,33 @@ export class ConversationManager {
 
         } catch (error) {
             console.error('Error deleting conversation:', error);
-            alert('Failed to delete conversation. Please try again.');
+
+            // Check if it's a "not found" error - conversation already deleted
+            if (error.message && error.message.includes('not found')) {
+                console.log('Conversation already deleted, refreshing list');
+
+                // Remove from state
+                appState.removeConversation(convId);
+
+                // Refresh list silently
+                await this.fetchConversations();
+
+                // If deleted conversation was active, select next or start new
+                if (convId === appState.getState('currentConversationId')) {
+                    const conversations = appState.getState('conversations');
+                    if (conversations.length > 0) {
+                        await this.selectConversation(conversations[0].id);
+                    } else {
+                        await this.startNewChat();
+                    }
+                }
+            } else {
+                // Show error only for real errors, not "not found"
+                await this.showErrorModal(
+                    'Delete Failed',
+                    'Failed to delete conversation. Please try again.'
+                );
+            }
         }
     }
 
@@ -328,26 +509,6 @@ export class ConversationManager {
         }
     }
 
-    /**
-     * Show confirmation modal (if available)
-     * @returns {Promise<boolean>}
-     */
-    showConfirmModal() {
-        return new Promise((resolve) => {
-            // This will be implemented by modal module
-            // For now, fallback to browser confirm
-            const result = confirm('Are you sure you want to delete this conversation?');
-            resolve(result);
-        });
-    }
-
-    /**
-     * Set confirm modal (for integration with modal module)
-     * @param {object} modal - Modal instance
-     */
-    setConfirmModal(modal) {
-        this.confirmModal = modal;
-    }
 }
 
 // Create singleton instance

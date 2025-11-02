@@ -587,7 +587,8 @@ def submit_expert_contact():
             "name": str,
             "email": str,
             "company": str (optional),
-            "message": str
+            "message": str,
+            "selected_experts": list (optional)
         }
 
     Returns:
@@ -604,6 +605,7 @@ def submit_expert_contact():
         email = data.get('email', '').strip()
         company = data.get('company', '').strip()
         message = data.get('message', '').strip()
+        selected_experts = data.get('selected_experts', [])  # Get selected expert IDs
 
         # Validate required fields
         if not all([name, email, message]):
@@ -619,7 +621,8 @@ def submit_expert_contact():
             email=email,
             company=company if company else None,
             message=message,
-            source='artifact_panel'
+            source='artifact_panel',
+            selected_experts=selected_experts if selected_experts else None  # Store expert selections
         )
         db.session.add(contact_request)
         db.session.commit()
