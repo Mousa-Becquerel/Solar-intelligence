@@ -44,6 +44,19 @@ def create_app(config_name=None):
     # Load configuration
     app.config.from_object(config)
 
+    # Fix for running behind reverse proxy (AWS ALB/CloudFront)
+    # This ensures Flask respects X-Forwarded-Proto header for HTTPS
+    if config.IS_PRODUCTION:
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app,
+            x_for=1,  # Trust X-Forwarded-For
+            x_proto=1,  # Trust X-Forwarded-Proto (CRITICAL for HTTPS)
+            x_host=1,  # Trust X-Forwarded-Host
+            x_prefix=1  # Trust X-Forwarded-Prefix
+        )
+        print("✅ ProxyFix middleware enabled for production")
+
     # Initialize extensions
     init_extensions(app)
 

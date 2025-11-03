@@ -138,7 +138,7 @@ class PlottingAgentSchema(BaseModel):
 
 class EvaluationAgentSchema(BaseModel):
     """Output schema for evaluation agent - assesses response quality"""
-    response_quality: Literal["good_answer", "bad_answer", "neutral"]
+    response_quality: Literal["good_answer", "bad_answer", "neutral", "contact_request"]
 
 
 class ResponseAgentSchema(BaseModel):
@@ -734,13 +734,15 @@ Always write the description as flowing narrative text (2-4 sentences), NOT as b
 - "good_answer": The response includes any specific data or information the user requested.
 - "bad_answer": The response completely lacks the requested data, including when the agent says the data is unknown or unavailable.
 - "neutral": The response is just general greetings, conversational speech, or off-topic without addressing the user's data request.
+- "contact_request": The user asks to talk to or be directed to a human expert in their query.
 
 Return only the "response_quality" field in the JSON below, with no other output.
 
 # Steps
 
 1. Read the user query and the agent's response.
-2. Identify if the query asks for specific data.
+2.If the user query includes a request to speak to or be directed to a human expert, classify as "contact_request".
+3. If not, identify if the query asks for specific data.
 3. Check if the agent's response:
    - Provides any requested data → "good_answer"
    - Does not provide requested data at all (including saying it is unavailable) → "bad_answer"
@@ -787,6 +789,14 @@ Return only:
 - Output:
 {
   "response_quality": "good_answer"
+}
+
+**Example 5**
+- User Query: "Can I speak with a human expert about Company A's 2023 revenue?"
+- Agent Response: "Certainly, I will connect you to a human expert."
+- Output:
+{
+  "reponse_quality": "contact_request"
 }
 
 # Notes
@@ -867,75 +877,91 @@ Respond directly with the formatted markdown text. Do NOT wrap it in JSON or use
                 )
             )
 
-            # 6. Follow-up Agent - Handles bad answers by offering expert contact
+            # 6. Follow-up Agent - Handles bad answers and contact requests
             self.follow_up_agent = Agent(
                 name="Follow-up Agent",
-                instructions="""You are a Follow-up Agent that handles cases where the Market Intelligence Agent couldn't find the requested data. Your role is to summarize what's missing and offer expert assistance in a professional, well-formatted manner.
+                instructions="""You are a Follow-up Agent that handles two scenarios:
+1. When the Market Intelligence Agent couldn't find the requested data
+2. When users request to speak with a human expert
 
-**Your Task:**
-1. Acknowledge what the user was looking for
-2. Explain clearly what information is not available in our database
-3. Offer to connect them with a market expert for personalized insights
+Your role is to offer personalized expert assistance in a professional, welcoming manner.
 
 **Formatting Guidelines (CRITICAL - Apply these consistently):**
 - Use proper markdown formatting with headers (##, ###), bullet points (-), and **bold** text
 - Break content into clear sections
 - Use **bold** for key information and emphasis
 - Keep paragraphs concise (2-3 sentences max)
-- Professional but friendly tone
+- Professional but warm and helpful tone
 
 **Response Structure:**
 
 ## Your Query
 
-[Briefly acknowledge what they asked for - 1 sentence]
+[Acknowledge what they asked for in a friendly way - 1 sentence]
 
-## Current Data Availability
+## How Our Experts Can Help
 
-[Explain what's missing or unavailable - use bullet points if multiple items]
-- **[Data type]**: Not available in our current database
-- **[Reason]**: [Brief explanation if relevant]
+Our team of solar market specialists is here to provide you with:
 
-## How We Can Help
+- **Detailed, tailored analysis** based on the latest industry data and trends
+- **Custom reports** addressing your specific questions or market needs
+- **Direct expert consultation** via email with comprehensive guidance
+- **Personalized insights** from professionals with deep industry knowledge
 
-Our solar market experts can provide:
-- Personalized analysis based on the latest industry research
-- Detailed insights from proprietary data sources
-- Custom reports tailored to your specific needs
+Our experts typically respond within **24-48 hours** with thorough, actionable insights tailored to your needs.
 
-**Would you like to connect with one of our experts?** They typically respond within 24-48 hours with comprehensive insights.
+**Would you like us to connect you with one of our solar market specialists?**
 
 ---
 
-**Example Output:**
+**Example Output for Missing Data:**
 
 ## Your Query
 
-You asked about battery energy storage systems (BESS) capacity for Italy.
+You asked about battery energy storage systems (BESS) capacity trends in Italy.
 
-## Current Data Availability
+## How Our Experts Can Help
 
-Unfortunately, our database doesn't include BESS installation data at this time. We currently focus on:
-- **PV Installation Capacity**: By country, connection type, and technology
-- **Annual and Cumulative Data**: Historical and forecast scenarios
+Our team of solar market specialists is here to provide you with:
 
-BESS capacity data is tracked separately and not part of our current photovoltaic market database.
+- **Detailed, tailored analysis** based on the latest industry data and trends
+- **Custom reports** addressing your specific questions or market needs
+- **Direct expert consultation** via email with comprehensive guidance
+- **Personalized insights** from professionals with deep industry knowledge
 
-## How We Can Help
+Our experts typically respond within **24-48 hours** with thorough, actionable insights tailored to your needs.
 
-Our solar market experts can provide:
-- Detailed BESS capacity data for Italy and other markets
-- Integration trends between PV and storage systems
-- Market forecasts for combined PV+storage installations
+**Would you like us to connect you with one of our solar market specialists?**
 
-**Would you like to connect with one of our experts?** They typically respond within 24-48 hours with comprehensive insights.
+---
+
+**Example Output for Contact Request:**
+
+## Your Query
+
+You'd like to speak directly with one of our solar market experts.
+
+## How Our Experts Can Help
+
+Our team of solar market specialists is here to provide you with:
+
+- **Detailed, tailored analysis** based on the latest industry data and trends
+- **Custom reports** addressing your specific questions or market needs
+- **Direct expert consultation** via email with comprehensive guidance
+- **Personalized insights** from professionals with deep industry knowledge
+
+Our experts typically respond within **24-48 hours** with thorough, actionable insights tailored to your needs.
+
+**Would you like us to connect you with one of our solar market specialists?**
 
 ---
 
 **Important:**
-- Do NOT apologize excessively
-- Be clear and direct about what's not available
-- Make the expert offer sound valuable, not desperate
+- Keep the tone warm, welcoming, and professional
+- Focus on the VALUE the experts provide (personalized, detailed, actionable)
+- Use "our experts" and "our team" language to build trust
+- Don't mention what's NOT available - focus on what experts CAN provide
+- Make the expert contact sound valuable and helpful, not like a fallback option
 - Keep formatting clean and consistent
 """,
                 model="gpt-4.1-mini",  # Lighter model for simple follow-up
@@ -1242,6 +1268,44 @@ Agent Response: {market_intelligence_response}"""
                         "type": "approval_request",
                         "message": "",  # Empty to avoid showing the text twice
                         "approval_question": "Would you like to proceed and reach the expert?",
+                        "conversation_id": conversation_id,
+                        "context": "expert_contact"
+                    })
+
+                elif response_quality == "contact_request":
+                    # User wants to contact an expert - route to follow-up agent for expert contact form
+                    logger.info("Contact request detected - routing to follow-up agent for expert contact")
+
+                    # Send status update
+                    yield json.dumps({"type": "status", "message": "Connecting you with expert options..."})
+
+                    # Stream follow-up agent response
+                    result = Runner.run_streamed(
+                        self.follow_up_agent,
+                        input=query,
+                        session=session,
+                        run_config=RunConfig(trace_metadata={
+                            "__trace_source__": "agent-builder",
+                            "workflow_id": "market_intelligence_workflow"
+                        })
+                    )
+
+                    # Stream text deltas as they arrive
+                    async for event in result.stream_events():
+                        if event.type == "raw_response_event":
+                            from openai.types.responses import ResponseTextDeltaEvent
+                            if isinstance(event.data, ResponseTextDeltaEvent):
+                                cleaned_delta = clean_citation_markers(event.data.delta)
+                                if cleaned_delta:
+                                    yield json.dumps({
+                                        "type": "text_chunk",
+                                        "content": cleaned_delta
+                                    })
+
+                    # Send approval request for expert contact
+                    yield json.dumps({
+                        "type": "approval_request",
+                        "message": "Would you like to connect with one of our experts?",
                         "conversation_id": conversation_id,
                         "context": "expert_contact"
                     })

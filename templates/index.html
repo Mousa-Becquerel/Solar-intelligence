@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <title>Solar Intelligence - AI Market Analysis</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="user-name" content="{{ current_user.full_name if current_user.is_authenticated else '' }}">
     <meta name="user-email" content="{{ current_user.username if current_user.is_authenticated else '' }}">
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logos/new_logo.svg') }}">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
     <!-- Google Analytics -->
     {% if config.get('GOOGLE_ANALYTICS_ID') %}

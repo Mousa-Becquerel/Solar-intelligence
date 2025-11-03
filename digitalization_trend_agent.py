@@ -107,6 +107,13 @@ class DigitalizationAgent:
 - If information is not in the knowledge base, clearly state that
 - Keep responses clear, well-structured, and actionable
 
+**Citation Guidelines - CRITICAL:**
+- ALWAYS cite information as coming from: "Transforming the PV Sector: The AI & Robotics Revolution" report
+- NEVER mention the actual filename or file extension (e.g., never say "according to digitalization_report.pdf" or "as stated in the PDF")
+- Use phrases like: "According to the Transforming the PV Sector: The AI & Robotics Revolution report..."
+- Example: "The report 'Transforming the PV Sector: The AI & Robotics Revolution' indicates that..."
+- When referencing specific data, say: "Based on the Transforming the PV Sector report..." or "The AI & Robotics Revolution report shows..."
+
 **Important Guidelines:**
 - Never search the knowledge base for greetings and general conversation."""
 

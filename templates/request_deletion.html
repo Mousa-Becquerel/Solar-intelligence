@@ -316,6 +316,166 @@
             font-size: 0.9rem;
         }
 
+        /* Confirmation Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 1.5rem;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--becq-blue) 0%, var(--becq-light-blue) 100%);
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .modal-icon {
+            width: 4rem;
+            height: 4rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+
+        .modal-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-subtitle {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .modal-warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 20%);
+            border: 1px solid var(--becq-gold);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-warning-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .modal-list li {
+            display: flex;
+            align-items: flex-start;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .modal-list li:before {
+            content: '•';
+            position: absolute;
+            left: 0.5rem;
+            color: var(--becq-gold);
+            font-weight: bold;
+        }
+
+        .modal-footer {
+            padding: 0 2rem 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 0.875rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+
+        .modal-btn-cancel {
+            background: #f3f4f6;
+            color: var(--text-primary);
+        }
+
+        .modal-btn-cancel:hover {
+            background: #e5e7eb;
+        }
+
+        .modal-btn-confirm {
+            background: linear-gradient(135deg, var(--becq-gold) 0%, #f97316 100%);
+            color: white;
+        }
+
+        .modal-btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(251, 191, 36, 0.3);
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 0 1rem;
@@ -338,10 +498,61 @@
             .button-group {
                 flex-direction: column;
             }
+
+            .modal-content {
+                margin: 0 1rem;
+            }
+
+            .modal-footer {
+                flex-direction: column;
+            }
+
+            .modal-btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <svg style="width: 2rem; height: 2rem; color: white;" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <h2 class="modal-title">Delete Account?</h2>
+                <p class="modal-subtitle">This action cannot be undone</p>
+            </div>
+            <div class="modal-body">
+                <div class="modal-warning">
+                    <p class="modal-warning-title">⚠️ Permanent Deletion After 30 Days</p>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0;">
+                        Your account will be deactivated immediately, and all data will be permanently deleted after the 30-day grace period.
+                    </p>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
+                    The following will be permanently removed:
+                </p>
+                <ul class="modal-list">
+                    <li>Your account and all personal information</li>
+                    <li>All conversation history</li>
+                    <li>Generated charts and reports</li>
+                    <li>All associated data</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeConfirmModal()">
+                    Cancel - Keep My Account
+                </button>
+                <button type="button" class="modal-btn modal-btn-confirm" onclick="confirmDeletion()">
+                    Yes, Delete My Account
+                </button>
+            </div>
+        </div>
+    </div>
     <!-- Hero Section -->
     <section class="hero-section">
         <div class="container">
@@ -474,17 +685,18 @@
                 <div class="export-box">
                     <h3>Before you delete your account:</h3>
                     <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Consider downloading your data first. Under GDPR, you have the right to export all your data.</p>
-                    <a href="{{ url_for('static.export_data') }}" class="export-btn">
+                    <button disabled class="export-btn" style="opacity: 0.6; cursor: not-allowed;" title="Export feature coming soon">
                         <svg style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        Export My Data First
-                    </a>
+                        Export My Data First (Coming Soon)
+                    </button>
                 </div>
 
                 {% if not already_deleted %}
                 <!-- Deletion Form -->
-                <form method="POST" action="{{ url_for('static.request_deletion') }}" onsubmit="return confirmDeletion()">
+                <form id="deletionForm" method="POST" action="{{ url_for('auth.request_deletion') }}" onsubmit="return showConfirmModal(event)">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="form-section">
                         <div style="margin-bottom: 1.5rem;">
                             <label style="display: block; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">
@@ -495,7 +707,7 @@
 
                         <div class="checkbox-group">
                             <label class="checkbox-label">
-                                <input type="checkbox" id="confirm-deletion" required class="checkbox-input">
+                                <input type="checkbox" id="confirm-deletion" name="confirm" value="yes" required class="checkbox-input">
                                 <span style="color: var(--text-secondary); font-size: 0.9rem;">
                                     I understand that my account will be deactivated immediately, with permanent deletion after 30 days.
                                 </span>
@@ -552,17 +764,36 @@
     </footer>
 
     <script>
-        function confirmDeletion() {
-            return confirm(
-                'Are you absolutely sure you want to delete your account?\n\n' +
-                'This action cannot be undone and will permanently remove:\n' +
-                '• Your account and all personal information\n' +
-                '• All conversation history\n' +
-                '• Generated charts and reports\n' +
-                '• All associated data\n\n' +
-                'Click OK to proceed with permanent deletion, or Cancel to keep your account.'
-            );
+        // Show the confirmation modal
+        function showConfirmModal(event) {
+            event.preventDefault();
+            document.getElementById('confirmModal').classList.add('active');
+            return false;
         }
+
+        // Close the confirmation modal
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+        }
+
+        // Confirm deletion and submit the form
+        function confirmDeletion() {
+            document.getElementById('deletionForm').submit();
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('confirmModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeConfirmModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeConfirmModal();
+            }
+        });
     </script>
 </body>
 </html>

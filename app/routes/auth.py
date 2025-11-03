@@ -133,12 +133,16 @@ def register():
 
 
 @auth_bp.route('/logout')
-@login_required
 def logout():
-    """Logout route."""
+    """
+    Logout route.
+
+    Note: No @login_required decorator - users should be able to access
+    logout even if they're already logged out (to avoid redirect loops).
+    """
     logout_user()
     flash('You have been logged out successfully', 'success')
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('static.landing'))
 
 
 @auth_bp.route('/profile')
@@ -295,7 +299,14 @@ def request_deletion():
     POST: Process deletion request
     """
     if request.method == 'GET':
-        return render_template('request_deletion.html')
+        try:
+            return render_template('request_deletion.html')
+        except Exception as e:
+            logger.error(f"Error rendering request_deletion.html: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            flash('An error occurred loading the deletion page.', 'error')
+            return redirect(url_for('auth.profile'))
 
     try:
         reason = request.form.get('deletion_reason', '')
@@ -320,3 +331,102 @@ def request_deletion():
         logger.error(f"Error requesting deletion: {e}")
         flash('Failed to request account deletion', 'error')
         return render_template('request_deletion.html')
+
+
+@auth_bp.route('/forgot-password', methods=['GET', 'POST'])
+@limiter.limit("3 per hour")
+def forgot_password():
+    """
+    Forgot password route - Request password reset.
+
+    GET: Display forgot password form
+    POST: Process reset request and send email
+    """
+    if request.method == 'GET':
+        return render_template('forgot_password.html')
+
+    try:
+        email = request.form.get('email', '').strip()
+
+        if not email:
+            flash('Please enter your email address.', 'error')
+            return render_template('forgot_password.html')
+
+        # Find user by email
+        from models import User
+        user = User.query.filter_by(username=email).first()
+
+        # Always show success message (security best practice - don't reveal if email exists)
+        if user and user.is_active:
+            # Send reset email
+            from app.services.email_service import EmailService
+            reset_url = url_for('auth.reset_password', _external=True)
+            success, error = EmailService.send_password_reset_email(user, reset_url)
+
+            if not success:
+                logger.error(f"Failed to send reset email to {email}: {error}")
+
+        # Always show success message regardless of whether email exists
+        flash('If an account exists with that email, you will receive a password reset link shortly.', 'success')
+        return redirect(url_for('auth.login'))
+
+    except Exception as e:
+        logger.error(f"Error processing forgot password: {e}")
+        flash('An error occurred. Please try again.', 'error')
+        return render_template('forgot_password.html')
+
+
+@auth_bp.route('/reset-password', methods=['GET', 'POST'])
+@limiter.limit("5 per hour")
+def reset_password():
+    """
+    Reset password route - Reset password with token.
+
+    GET: Display reset password form
+    POST: Process password reset
+    """
+    token = request.args.get('token') or request.form.get('token')
+
+    if not token:
+        flash('Invalid or missing reset token.', 'error')
+        return redirect(url_for('auth.login'))
+
+    # Verify token
+    from app.services.email_service import EmailService
+    user = EmailService.verify_reset_token(token)
+
+    if not user:
+        flash('Invalid or expired reset token. Please request a new password reset.', 'error')
+        return redirect(url_for('auth.forgot_password'))
+
+    if request.method == 'GET':
+        return render_template('reset_password.html', token=token)
+
+    # Process password reset
+    try:
+        new_password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+
+        if not new_password or not confirm_password:
+            flash('Please fill in all fields.', 'error')
+            return render_template('reset_password.html', token=token)
+
+        if new_password != confirm_password:
+            flash('Passwords do not match.', 'error')
+            return render_template('reset_password.html', token=token)
+
+        if len(new_password) < 8:
+            flash('Password must be at least 8 characters long.', 'error')
+            return render_template('reset_password.html', token=token)
+
+        # Update password
+        user.set_password(new_password)
+        EmailService.clear_reset_token(user)
+
+        flash('Your password has been reset successfully. You can now log in with your new password.', 'success')
+        return redirect(url_for('auth.login'))
+
+    except Exception as e:
+        logger.error(f"Error resetting password: {e}")
+        flash('An error occurred while resetting your password. Please try again.', 'error')
+        return render_template('reset_password.html', token=token)

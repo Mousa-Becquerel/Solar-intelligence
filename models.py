@@ -51,6 +51,10 @@ class User(UserMixin, db.Model):
     deletion_requested_at = db.Column(db.DateTime)  # When deletion was requested
     deletion_reason = db.Column(db.Text)  # Optional: why user wants to delete
 
+    # Password Reset
+    reset_token = db.Column(db.String(100), nullable=True)  # Token for password reset
+    reset_token_expiry = db.Column(db.DateTime, nullable=True)  # When reset token expires
+
     def check_password(self, password):
         """Verify password against hash"""
         return check_password_hash(self.password_hash, password)

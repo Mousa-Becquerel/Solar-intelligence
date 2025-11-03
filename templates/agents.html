@@ -6,706 +6,58 @@
     <title>Hire AI Agents - Solar Intelligence</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logos/new_logo.svg') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        html, body {
-            width: 100%;
-            max-width: 100%;
-            overflow-x: hidden;
-        }
+    <!-- External CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/agents.css') }}">
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Text', sans-serif;
-            background:
-                radial-gradient(circle at 20% 30%, rgba(251, 191, 36, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, rgba(4, 11, 89, 0.4) 0%, transparent 70%),
-                linear-gradient(135deg, #0a1850 0%, #1e1b4b 30%, #312e81 60%, #3730a3 100%);
-            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
-            background-attachment: fixed;
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* Header */
-        .header {
-            padding: 24px 0;
-            position: relative;
-            z-index: 10;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-left: 320px;
-            display: none;
-        }
-
-        .logo {
-            height: 60px;
-            width: auto;
-            filter: brightness(0) invert(1);
-            opacity: 0.95;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .user-name {
-            font-size: 0.875rem;
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 500;
-        }
-
-        .header-btn {
-            padding: 10px 24px;
-            background: linear-gradient(135deg, #E9A544 0%, #E8BF4F 100%);
-            color: #ffffff;
-            font-size: 0.875rem;
-            font-weight: 600;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .header-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(233, 165, 68, 0.4);
-        }
-
-        .header-btn.secondary {
-            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-        }
-
-        /* Main Container */
-        .container {
-            display: flex;
-            min-height: 100vh;
-            width: 100%;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 320px;
-            min-height: 100vh;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            overflow-y: auto;
-        }
-
-        .sidebar-card {
-            padding: 48px 24px;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        /* Main Content Wrapper */
-        .page-container {
-            flex: 1;
-            padding: 48px 0px 48px 24px;
-        }
-
-        .sidebar-logo {
-            margin-bottom: 48px;
-            text-align: center;
-        }
-
-        .sidebar-logo img {
-            height: 55px;
-            width: auto;
-            filter: brightness(0) invert(1);
-            opacity: 0.95;
-        }
-
-        .sidebar-header {
-            margin-bottom: 20px;
-        }
-
-        .sidebar-title {
-            font-size: 1.25rem;
-            font-weight: 400;
-            color: #ffffff;
-            margin-bottom: 8px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', sans-serif;
-        }
-
-        .sidebar-subtitle {
-            font-size: 0.875rem;
-            color: rgba(255, 255, 255, 0.6);
-            line-height: 1.5;
-            font-weight: 300;
-        }
-
-        .hired-agents-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .hired-agent-item {
-            background: rgba(233, 165, 68, 0.1);
-            border: 1px solid rgba(233, 165, 68, 0.3);
-            border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: all 0.3s ease;
-        }
-
-        .hired-agent-item:hover {
-            background: rgba(233, 165, 68, 0.15);
-            border-color: rgba(233, 165, 68, 0.5);
-        }
-
-        .hired-agent-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .hired-agent-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #E9A544 0%, #E8BF4F 100%);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .hired-agent-icon svg {
-            width: 20px;
-            height: 20px;
-            color: #ffffff;
-        }
-
-        .hired-agent-details h4 {
-            font-size: 0.9375rem;
-            font-weight: 400;
-            color: #ffffff;
-            margin-bottom: 2px;
-        }
-
-        .hired-agent-details p {
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.6);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 300;
-        }
-
-        .unhire-btn {
-            padding: 6px 12px;
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            color: #fca5a5;
-            font-size: 0.75rem;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .unhire-btn:hover {
-            background: rgba(239, 68, 68, 0.3);
-            border-color: rgba(239, 68, 68, 0.6);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 32px 16px;
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .empty-state svg {
-            width: 48px;
-            height: 48px;
-            margin: 0 auto 12px;
-            opacity: 0.3;
-        }
-
-        .empty-state p {
-            font-size: 0.875rem;
-            line-height: 1.6;
-        }
-
-        .go-to-chat-btn {
-            width: 100%;
-            margin-top: auto;
-            padding: 14px 24px;
-            background: linear-gradient(135deg, #E9A544 0%, #E8BF4F 100%);
-            color: #ffffff;
-            font-size: 0.9375rem;
-            font-weight: 500;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .go-to-chat-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(233, 165, 68, 0.4);
-        }
-
-        .go-to-chat-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Top Right User Menu */
-        .top-user-menu {
-            position: fixed;
-            top: 24px;
-            right: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 1000;
-        }
-
-        .user-icon-btn {
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: rgba(255, 255, 255, 0.9);
-            text-decoration: none;
-        }
-
-        .user-icon-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .user-icon-btn.logout {
-            color: #fca5a5;
-        }
-
-        .user-icon-btn.logout:hover {
-            background: rgba(239, 68, 68, 0.15);
-            border-color: rgba(239, 68, 68, 0.3);
-        }
-
-        .user-icon-btn svg {
-            width: 20px;
-            height: 20px;
-        }
-
-        /* Page Header */
-        .page-header {
-            margin-bottom: 40px;
-        }
-
-        .page-title {
-            font-size: 2.5rem;
-            font-weight: 300;
-            color: #ffffff;
-            margin-bottom: 12px;
-            letter-spacing: -0.02em;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', sans-serif;
-        }
-
-        .page-subtitle {
-            font-size: 1.125rem;
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.6;
-            font-weight: 300;
-        }
-
-        .accent-color {
-            color: #E9A544;
-        }
-
-        /* Agent Cards Grid */
-        .agents-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            width: 100%;
-        }
-
-        /* Agent Card */
-        .agent-card {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 20px;
-            padding: 28px 24px;
-            position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            min-height: 420px;
-        }
-
-        .agent-card:hover {
-            transform: translateY(-8px);
-            border-color: rgba(233, 165, 68, 0.6);
-            box-shadow: 0 16px 48px rgba(233, 165, 68, 0.3);
-            background: rgba(255, 255, 255, 0.12);
-        }
-
-        .agent-card.hired {
-            border-color: rgba(233, 165, 68, 0.6);
-            background: rgba(233, 165, 68, 0.08);
-        }
-
-        /* Agent Icon */
-        .agent-icon {
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, #E9A544 0%, #E8BF4F 100%);
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .agent-card:hover .agent-icon {
-            transform: scale(1.1) rotate(5deg);
-        }
-
-        .agent-icon svg {
-            width: 32px;
-            height: 32px;
-            color: #ffffff;
-        }
-
-        /* Agent Name */
-        .agent-name {
-            font-size: 1.25rem;
-            font-weight: 300;
-            color: #ffffff;
-            margin-bottom: 6px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', sans-serif;
-        }
-
-        /* Agent Role */
-        .agent-role {
-            font-size: 0.8125rem;
-            color: #E9A544;
-            font-weight: 400;
-            margin-bottom: 16px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        /* Capability Badges */
-        .capability-badges {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-
-        .capability-badge {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .badge-datahub {
-            background: rgba(59, 130, 246, 0.2);
-            color: #93c5fd;
-            border: 1px solid rgba(59, 130, 246, 0.4);
-        }
-
-        .badge-charts {
-            background: rgba(34, 197, 94, 0.2);
-            color: #86efac;
-            border: 1px solid rgba(34, 197, 94, 0.4);
-        }
-
-        .badge-news {
-            background: rgba(168, 85, 247, 0.2);
-            color: #d8b4fe;
-            border: 1px solid rgba(168, 85, 247, 0.4);
-        }
-
-        .badge-ai {
-            background: rgba(236, 72, 153, 0.2);
-            color: #f9a8d4;
-            border: 1px solid rgba(236, 72, 153, 0.4);
-        }
-
-        /* Agent Description */
-        .agent-description {
-            font-size: 0.8125rem;
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.5;
-            margin-bottom: 20px;
-            flex-grow: 1;
-        }
-
-        /* Hire Button */
-        .hire-btn {
-            width: 100%;
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #E9A544 0%, #E8BF4F 100%);
-            color: #ffffff;
-            font-size: 0.875rem;
-            font-weight: 600;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .hire-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(233, 165, 68, 0.4);
-        }
-
-        .hire-btn.hired {
-            background: rgba(34, 197, 94, 0.2);
-            border: 2px solid rgba(34, 197, 94, 0.6);
-            color: #86efac;
-            cursor: default;
-        }
-
-        .hire-btn.hired:hover {
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* Responsive */
-        @media (max-width: 1400px) {
-            .page-container {
-                padding: 40px 0px 40px 24px;
-            }
-        }
-
-        @media (max-width: 1100px) {
-            .page-container {
-                padding: 32px 0px 32px 24px;
-            }
-
-            .sidebar {
-                width: 260px;
-            }
-
-            .agents-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        @media (max-width: 1024px) {
-            .container {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: 100%;
-                height: auto;
-                min-height: auto;
-                position: relative;
-                border-right: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            }
-
-            .sidebar-card {
-                min-height: auto;
-                padding: 32px;
-            }
-
-            .page-container {
-                padding: 32px;
-            }
-
-            .agents-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .page-container {
-                padding: 24px 16px;
-            }
-
-            .page-title {
-                font-size: 2rem;
-            }
-
-            .page-subtitle {
-                font-size: 1rem;
-            }
-
-            .agents-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Hide scrollbar but keep functionality */
-        ::-webkit-scrollbar {
-            width: 0px;
-            background: transparent;
-        }
-
-        /* Success/Error Notification */
-        .notification {
-            position: fixed;
-            top: 24px;
-            right: 120px;
-            padding: 16px 24px;
-            border-radius: 12px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            z-index: 1000;
-            display: none;
-            animation: slideIn 0.3s ease;
-        }
-
-        .notification.success {
-            background: rgba(34, 197, 94, 0.2);
-            border: 1px solid rgba(34, 197, 94, 0.6);
-            color: #86efac;
-        }
-
-        .notification.error {
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid rgba(239, 68, 68, 0.6);
-            color: #fca5a5;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateY(-20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        /* Beta Badge - Corner Text Badge */
-        .beta-badge-corner {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            padding: 3px 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            background: linear-gradient(135deg, #E9A544 0%, #E8BF4F 100%);
-            color: #ffffff;
-            font-weight: 600;
-            font-size: 0.6rem;
-            letter-spacing: 0.05em;
-            z-index: 10;
-            cursor: help;
-            text-transform: uppercase;
-        }
-
-    </style>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
-    <!-- Header -->
-    <div class="header">
-        <div class="max-w-7xl mx-auto px-6 lg:px-8">
-            <div class="flex items-center justify-between">
-                <!-- Logo -->
-                <a href="{{ url_for('static.landing') }}">
-                    <img src="{{ url_for('static', filename='logos/new_logo.svg') }}" alt="Solar Intelligence" class="logo">
-                </a>
-
-                <!-- User Info and Actions -->
-                <div class="user-info">
-                    <span class="user-name">{{ current_user.full_name or current_user.username }}</span>
-                    <a href="{{ url_for('auth.profile') }}" class="header-btn secondary">Profile</a>
-                    <a href="{{ url_for('auth.logout') }}" class="header-btn">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
+<body class="agents-page">
     <!-- Notification -->
-    <div id="notification" class="notification"></div>
+    <div id="notification" class="agents-notification"></div>
 
     <!-- Main Container -->
-    <div class="container">
+    <div class="agents-container">
         <!-- Sidebar: My Team -->
-        <aside class="sidebar">
-            <div class="sidebar-card">
-                <div class="sidebar-logo">
-                    <a href="{{ url_for('static.landing') }}">
-                        <img src="{{ url_for('static', filename='logos/new_logo.svg') }}" alt="Solar Intelligence">
+        <aside class="agents-sidebar">
+            <div class="agents-sidebar__card">
+                <!-- Logo -->
+                <div class="agents-sidebar__logo">
+                    <a href="{{ url_for('static.landing') }}" style="text-decoration: none;">
+                        <span class="agents-sidebar__logo-text">SolarIntelligence</span>
                     </a>
                 </div>
 
-                <div class="sidebar-header">
-                    <h2 class="sidebar-title">My Team</h2>
-                    <p class="sidebar-subtitle">Agents you've hired for analysis</p>
+                <!-- Header -->
+                <div class="agents-sidebar__header">
+                    <h2 class="agents-sidebar__title">My Team</h2>
+                    <p class="agents-sidebar__subtitle">Agents you've hired for analysis</p>
                 </div>
 
-                <div id="hired-agents-container" class="hired-agents-list">
-                    <!-- Hired agents will be rendered here by JavaScript -->
-                </div>
+                <!-- Hired Agents List (populated by JS) -->
+                <div id="hired-agents-container" class="agents-hired-list"></div>
 
-                <a href="/dashboard" class="go-to-chat-btn" id="go-to-chat-btn">
+                <!-- Start Chat Button -->
+                <a href="/dashboard" class="agents-start-chat-btn" id="start-chat-btn">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                     </svg>
-                    Start Chat with Team
+                    Start Chat
                 </a>
             </div>
         </aside>
 
         <!-- Top Right User Menu -->
-        <div class="top-user-menu">
-            <a href="{{ url_for('auth.profile') }}" class="user-icon-btn" title="Profile">
+        <div class="agents-user-menu">
+            <a href="{{ url_for('auth.profile') }}" class="agents-user-menu__btn" title="Profile" aria-label="Go to profile page">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                 </svg>
             </a>
-            <a href="{{ url_for('auth.logout') }}" class="user-icon-btn logout" title="Logout">
+            <a href="{{ url_for('auth.logout') }}" class="agents-user-menu__btn agents-user-menu__btn--logout" title="Logout" aria-label="Logout">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                 </svg>
@@ -713,349 +65,171 @@
         </div>
 
         <!-- Main Content: Available Agents -->
-        <div class="page-container">
-            <div class="page-header">
-                <h1 class="page-title">
-                    Hire Your <span class="accent-color">AI Team</span>
+        <main class="agents-main-content">
+            <!-- Page Header -->
+            <header class="agents-header">
+                <h1 class="agents-header__title">
+                    Hire Your <span class="agents-header__title--accent">AI Team</span>
                 </h1>
-                <p class="page-subtitle">
+                <p class="agents-header__subtitle">
                     Build your custom team of AI specialists. Each agent brings unique expertise to analyze solar market data, pricing trends, or industry news.
                 </p>
-            </div>
+            </header>
 
             <!-- Agent Cards Grid -->
             <div class="agents-grid">
                 <!-- Price Analysis Agent - Maya -->
-                <div class="agent-card" data-agent="price" style="position: relative;">
-                    <div class="beta-badge-corner" title="Beta Version - Features under active development">
-                        BETA
-                    </div>
-                    <div class="agent-icon">
-                        <svg fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"></path>
+                <article class="agent-card" data-agent-card="price" data-color="gold">
+                    <div class="agent-card__beta-badge" title="Beta Version - Features under active development">BETA</div>
+                    <div class="agent-card__check">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                         </svg>
                     </div>
 
-                    <h3 class="agent-name">Maya</h3>
-                    <p class="agent-role">Price Analysis</p>
-
-                    <div class="capability-badges">
-                        <span class="capability-badge badge-datahub">DataHub</span>
-                        <span class="capability-badge badge-charts">Charts</span>
-                    </div>
-
-                    <p class="agent-description">
-                        Tracks solar module pricing, cost breakdowns, and technology comparisons with interactive charts
-                    </p>
-
-                    <button class="hire-btn" data-agent="price" onclick="toggleHire('price')">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                        Hire Agent
-                    </button>
-                </div>
-
-                <!-- News Analyst Agent - Emma -->
-                <div class="agent-card" data-agent="news">
-                    <div class="agent-icon">
-                        <svg fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 002 2H4a2 2 0 01-2-2V5zm3 1h6v4H5V6zm6 6H5v2h6v-2z" clip-rule="evenodd"></path>
-                            <path d="M15 7h1a2 2 0 012 2v5.5a1.5 1.5 0 01-3 0V7z"></path>
-                        </svg>
-                    </div>
-
-                    <h3 class="agent-name">Emma</h3>
-                    <p class="agent-role">News Analyst</p>
-
-                    <div class="capability-badges">
-                        <span class="capability-badge badge-news">News DB</span>
-                    </div>
-
-                    <p class="agent-description">
-                        Latest PV industry news, developments, and trends from curated news sources
-                    </p>
-
-                    <button class="hire-btn" data-agent="news" onclick="toggleHire('news')">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                        Hire Agent
-                    </button>
-                </div>
-
-                <!-- Digitalization Expert Agent - Nova -->
-                <div class="agent-card" data-agent="digitalization">
-                    <div class="agent-icon">
-                        <svg fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M13 7H7v6h6V7z"></path>
-                            <path fill-rule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2zM5 5h10v10H5V5z" clip-rule="evenodd"></path>
-                        </svg>
-                    </div>
-
-                    <h3 class="agent-name">Nova</h3>
-                    <p class="agent-role">Digitalization Expert</p>
-
-                    <div class="capability-badges">
-                        <span class="capability-badge badge-ai">AI Reports</span>
-                    </div>
-
-                    <p class="agent-description">
-                        Expert in digitalization and AI integration across the PV value chain
-                    </p>
-
-                    <button class="hire-btn" data-agent="digitalization" onclick="toggleHire('digitalization')">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                        Hire Agent
-                    </button>
-                </div>
-
-                <!-- Market Analysis Agent - Alex -->
-                <div class="agent-card" data-agent="market" style="position: relative;">
-                    <div class="beta-badge-corner" title="Beta Version - Features under active development">
-                        BETA
-                    </div>
-                    <div class="agent-icon">
-                        <svg fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                        </svg>
-                    </div>
-
-                    <h3 class="agent-name">Alex</h3>
-                    <p class="agent-role">PV Capacity</p>
-
-                    <div class="capability-badges">
-                        <span class="capability-badge badge-datahub">DataHub</span>
-                        <span class="capability-badge badge-charts">Charts</span>
-                        <span class="capability-badge badge-ai">Code Interpreter</span>
-                    </div>
-
-                    <p class="agent-description">
-                        Advanced PV capacity analysis with code interpreter - analyzes complex PV market data, installations, and forecasts
-                    </p>
-
-                    <button class="hire-btn" data-agent="market" onclick="toggleHire('market')">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                        Hire Agent
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Agent metadata
-        const agentData = {
-            market: {
-                name: 'Alex',
-                role: 'PV Capacity',
-                icon: '<path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>'
-            },
-            price: {
-                name: 'Maya',
-                role: 'Price Analysis',
-                icon: '<path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"></path>'
-            },
-            news: {
-                name: 'Emma',
-                role: 'News Analyst',
-                icon: '<path fill-rule="evenodd" d="M2 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 002 2H4a2 2 0 01-2-2V5zm3 1h6v4H5V6zm6 6H5v2h6v-2z" clip-rule="evenodd"></path><path d="M15 7h1a2 2 0 012 2v5.5a1.5 1.5 0 01-3 0V7z"></path>'
-            },
-            digitalization: {
-                name: 'Nova',
-                role: 'Digitalization Expert',
-                icon: '<path d="M13 7H7v6h6V7z"></path><path fill-rule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2zM5 5h10v10H5V5z" clip-rule="evenodd"></path>'
-            },
-            om: {
-                name: 'Leo',
-                role: 'O&M Expert',
-                icon: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>'
-            }
-        };
-
-        // State
-        let hiredAgents = {{ hired_agents | tojson }};
-
-        // Get CSRF token
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            updateUI();
-        });
-
-        // Update UI based on hired agents
-        function updateUI() {
-            // Update sidebar
-            renderHiredAgents();
-
-            // Reset all buttons first
-            const allCards = document.querySelectorAll('.agent-card');
-            const allButtons = document.querySelectorAll('.hire-btn');
-
-            allCards.forEach(card => card.classList.remove('hired'));
-            allButtons.forEach(button => {
-                button.classList.remove('hired');
-                const agentType = button.getAttribute('data-agent');
-                button.innerHTML = `
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    Hire Agent
-                `;
-            });
-
-            // Update hire buttons for hired agents
-            hiredAgents.forEach(agentType => {
-                const card = document.querySelector(`.agent-card[data-agent="${agentType}"]`);
-                const button = document.querySelector(`.hire-btn[data-agent="${agentType}"]`);
-
-                if (card && button) {
-                    card.classList.add('hired');
-                    button.classList.add('hired');
-                    button.innerHTML = `
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        Hired
-                    `;
-                }
-            });
-
-            // Enable/disable "Go to Chat" button
-            const goToChatBtn = document.getElementById('go-to-chat-btn');
-            if (hiredAgents.length === 0) {
-                goToChatBtn.style.opacity = '0.5';
-                goToChatBtn.style.cursor = 'not-allowed';
-                goToChatBtn.onclick = (e) => {
-                    e.preventDefault();
-                    showNotification('Please hire at least one agent first', 'error');
-                };
-            } else {
-                goToChatBtn.style.opacity = '1';
-                goToChatBtn.style.cursor = 'pointer';
-                goToChatBtn.onclick = null;
-            }
-        }
-
-        // Render hired agents in sidebar
-        function renderHiredAgents() {
-            const container = document.getElementById('hired-agents-container');
-
-            if (hiredAgents.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <svg fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.536 5.879a1 1 0 001.415 0 3 3 0 014.242 0 1 1 0 001.415-1.415 5 5 0 00-7.072 0 1 1 0 000 1.415z" clip-rule="evenodd"></path>
-                        </svg>
-                        <p>No agents hired yet.<br>Hire agents to build your team!</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = hiredAgents.map(agentType => {
-                const agent = agentData[agentType];
-                return `
-                    <div class="hired-agent-item">
-                        <div class="hired-agent-info">
-                            <div class="hired-agent-icon">
-                                <svg fill="currentColor" viewBox="0 0 20 20">
-                                    ${agent.icon}
-                                </svg>
-                            </div>
-                            <div class="hired-agent-details">
-                                <h4>${agent.name}</h4>
-                                <p>${agent.role}</p>
+                    <div class="agent-card__content">
+                        <div class="agent-card__header">
+                            <div class="agent-card__initial">M</div>
+                            <div class="agent-card__title-wrapper">
+                                <h3 class="agent-card__name">Maya</h3>
+                                <p class="agent-card__role">Price Analysis</p>
                             </div>
                         </div>
-                        <button class="unhire-btn" onclick="unhireAgent('${agentType}')">Remove</button>
+
+                        <div class="agent-card__badges">
+                            <span class="agent-card__badge agent-card__badge--datahub">DataHub</span>
+                            <span class="agent-card__badge agent-card__badge--charts">Charts</span>
+                        </div>
+
+                        <p class="agent-card__description">
+                            Tracks solar module pricing, cost breakdowns, and technology comparisons with interactive charts
+                        </p>
                     </div>
-                `;
-            }).join('');
-        }
 
-        // Toggle hire/unhire agent
-        async function toggleHire(agentType) {
-            const isHired = hiredAgents.includes(agentType);
+                    <button class="agent-card__btn" data-hire-btn="price" aria-label="Hire Maya, the Price Analysis agent">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Hire Agent
+                    </button>
+                </article>
 
-            if (isHired) {
-                await unhireAgent(agentType);
-            } else {
-                await hireAgent(agentType);
-            }
-        }
+                <!-- News Analyst Agent - Emma -->
+                <article class="agent-card" data-agent-card="news" data-color="navy-light">
+                    <div class="agent-card__check">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
 
-        // Hire an agent
-        async function hireAgent(agentType) {
-            try {
-                const response = await fetch('/api/agents/hire', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: JSON.stringify({ agent_type: agentType })
-                });
+                    <div class="agent-card__content">
+                        <div class="agent-card__header">
+                            <div class="agent-card__initial">E</div>
+                            <div class="agent-card__title-wrapper">
+                                <h3 class="agent-card__name">Emma</h3>
+                                <p class="agent-card__role">News Analyst</p>
+                            </div>
+                        </div>
 
-                const data = await response.json();
+                        <div class="agent-card__badges">
+                            <span class="agent-card__badge agent-card__badge--news">News DB</span>
+                        </div>
 
-                if (data.success) {
-                    hiredAgents.push(agentType);
-                    updateUI();
-                    showNotification(`${agentData[agentType].name} has joined your team!`, 'success');
-                } else {
-                    showNotification(data.message || 'Failed to hire agent', 'error');
-                }
-            } catch (error) {
-                console.error('Error hiring agent:', error);
-                showNotification('Failed to hire agent', 'error');
-            }
-        }
+                        <p class="agent-card__description">
+                            Latest PV industry news, developments, and trends from curated news sources
+                        </p>
+                    </div>
 
-        // Unhire an agent
-        async function unhireAgent(agentType) {
-            try {
-                const response = await fetch('/api/agents/unhire', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: JSON.stringify({ agent_type: agentType })
-                });
+                    <button class="agent-card__btn" data-hire-btn="news" aria-label="Hire Emma, the News Analyst agent">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Hire Agent
+                    </button>
+                </article>
 
-                const data = await response.json();
+                <!-- Digitalization Expert Agent - Nova -->
+                <article class="agent-card" data-agent-card="digitalization" data-color="navy">
+                    <div class="agent-card__check">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
 
-                if (data.success) {
-                    hiredAgents = hiredAgents.filter(type => type !== agentType);
-                    updateUI();
-                    showNotification(`${agentData[agentType].name} has been removed from your team`, 'success');
-                } else {
-                    showNotification(data.message || 'Failed to remove agent', 'error');
-                }
-            } catch (error) {
-                console.error('Error unhiring agent:', error);
-                showNotification('Failed to remove agent', 'error');
-            }
-        }
+                    <div class="agent-card__content">
+                        <div class="agent-card__header">
+                            <div class="agent-card__initial">N</div>
+                            <div class="agent-card__title-wrapper">
+                                <h3 class="agent-card__name">Nova</h3>
+                                <p class="agent-card__role">Digitalization Expert</p>
+                            </div>
+                        </div>
 
-        // Show notification
-        function showNotification(message, type = 'success') {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `notification ${type}`;
-            notification.style.display = 'block';
+                        <div class="agent-card__badges">
+                            <span class="agent-card__badge agent-card__badge--ai">AI Reports</span>
+                        </div>
 
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 3000);
-        }
+                        <p class="agent-card__description">
+                            Expert in digitalization and AI integration across the PV value chain
+                        </p>
+                    </div>
+
+                    <button class="agent-card__btn" data-hire-btn="digitalization" aria-label="Hire Nova, the Digitalization Expert agent">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Hire Agent
+                    </button>
+                </article>
+
+                <!-- Market Analysis Agent - Alex -->
+                <article class="agent-card" data-agent-card="market" data-color="gold-dark">
+                    <div class="agent-card__beta-badge" title="Beta Version - Features under active development">BETA</div>
+                    <div class="agent-card__check">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+
+                    <div class="agent-card__content">
+                        <div class="agent-card__header">
+                            <div class="agent-card__initial">A</div>
+                            <div class="agent-card__title-wrapper">
+                                <h3 class="agent-card__name">Alex</h3>
+                                <p class="agent-card__role">PV Capacity</p>
+                            </div>
+                        </div>
+
+                        <div class="agent-card__badges">
+                            <span class="agent-card__badge agent-card__badge--datahub">DataHub</span>
+                            <span class="agent-card__badge agent-card__badge--charts">Charts</span>
+                            <span class="agent-card__badge agent-card__badge--code">Code Interpreter</span>
+                        </div>
+
+                        <p class="agent-card__description">
+                            Advanced PV capacity analysis with code interpreter - analyzes complex PV market data, installations, and forecasts
+                        </p>
+                    </div>
+
+                    <button class="agent-card__btn" data-hire-btn="market" aria-label="Hire Alex, the PV Capacity analyst agent">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Hire Agent
+                    </button>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- External JavaScript -->
+    <script src="{{ url_for('static', filename='js/pages/agents.js') }}"></script>
+    <script>
+        // Initialize the page with server-side data
+        document.addEventListener('DOMContentLoaded', function() {
+            const hiredAgents = {{ hired_agents | tojson }};
+            initializeAgentsPage(hiredAgents);
+        });
     </script>
 </body>
 </html>

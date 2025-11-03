@@ -1,0 +1,846 @@
+/**
+ * Agent Hire Page Styles - Matching Expert Cards Design
+ * Clean, modern design consistent with chat interface
+ */
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.agents-page {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f8fafc;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/* ============================================
+   LAYOUT
+   ============================================ */
+.agents-container {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    background: #f8fafc;
+    overflow-x: hidden;
+}
+
+.agents-main-content {
+    flex: 1;
+    padding: 2rem 2.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+/* ============================================
+   SIDEBAR - Left Side Team Panel
+   ============================================ */
+.agents-sidebar {
+    width: 260px;
+    min-height: 100vh;
+    background: white;
+    border-right: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.agents-sidebar__card {
+    padding: 0.875rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+.agents-sidebar__logo {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.agents-sidebar__logo-text {
+    font-size: 1.25rem;
+    font-weight: 300;
+    color: #1e293b;
+    letter-spacing: -0.02em;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+}
+
+.agents-sidebar__logo img {
+    height: 36px;
+    width: auto;
+    max-width: 100%;
+}
+
+.agents-sidebar__header {
+    margin-bottom: 1.25rem;
+}
+
+.agents-sidebar__title {
+    font-size: 1.125rem;
+    font-weight: 300;
+    color: #1e293b;
+    margin: 0 0 0.25rem 0;
+    letter-spacing: -0.02em;
+    word-wrap: break-word;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+}
+
+.agents-sidebar__subtitle {
+    font-size: 0.8125rem;
+    color: #64748b;
+    line-height: 1.4;
+    font-weight: 400;
+    margin: 0;
+    word-wrap: break-word;
+}
+
+/* ============================================
+   HIRED AGENTS LIST IN SIDEBAR
+   ============================================ */
+.agents-hired-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-bottom: 1rem;
+}
+
+.agents-hired-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.agents-hired-item:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.agents-hired-item__info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.agents-hired-item__icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.agents-hired-item__icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+.agents-hired-item__details {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.agents-hired-item__details h4 {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #1e293b;
+    margin: 0 0 0.125rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.agents-hired-item__details p {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.agents-unhire-btn {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0.375rem 0.75rem;
+    border-radius: 100px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.agents-unhire-btn:hover {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Empty state in sidebar */
+.agents-empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #94a3b8;
+}
+
+.agents-empty-state svg {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 1rem;
+    opacity: 0.5;
+}
+
+.agents-empty-state p {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* ============================================
+   START CHAT BUTTON - MATERIAL YOU PILL SHAPE
+   ============================================ */
+.agents-start-chat-btn {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    margin-top: auto;
+    letter-spacing: -0.01em;
+    box-sizing: border-box;
+}
+
+.agents-start-chat-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+}
+
+.agents-start-chat-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.agents-start-chat-btn svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+/* ============================================
+   TOP USER MENU
+   ============================================ */
+.agents-user-menu {
+    position: fixed;
+    top: 1.5rem;
+    right: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 1000;
+}
+
+.agents-user-menu__btn {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.agents-user-menu__btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #475569;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.agents-user-menu__btn--logout:hover {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
+.agents-user-menu__btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ============================================
+   PAGE HEADER
+   ============================================ */
+.agents-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.agents-header__title {
+    font-size: 1.875rem;
+    font-weight: 300;
+    color: #1e293b;
+    margin: 0 0 0.5rem 0;
+    letter-spacing: -0.02em;
+}
+
+.agents-header__title--accent {
+    font-weight: 600;
+    color: #2563eb;
+}
+
+.agents-header__subtitle {
+    font-size: 0.9375rem;
+    color: #64748b;
+    line-height: 1.6;
+    font-weight: 400;
+    margin: 0;
+    max-width: 700px;
+}
+
+/* ============================================
+   AGENT CARDS GRID
+   ============================================ */
+.agents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 1rem;
+    width: 100%;
+}
+
+/* ============================================
+   AGENT CARD - MATERIAL DESIGN 3 (MATERIAL YOU)
+   ============================================ */
+.agent-card {
+    position: relative;
+    background: white;
+    border: none;
+    border-radius: 24px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 180px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.agent-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* Color backgrounds with gradients matching expert cards */
+.agent-card[data-color="navy"] {
+    background: linear-gradient(135deg, rgba(0, 10, 85, 0.08) 0%, rgba(0, 10, 85, 0.12) 100%);
+    border: 2px solid rgba(0, 10, 85, 0.15);
+}
+
+.agent-card[data-color="gold"] {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(251, 191, 36, 0.18) 100%);
+    border: 2px solid rgba(251, 191, 36, 0.25);
+}
+
+.agent-card[data-color="navy-light"] {
+    background: linear-gradient(135deg, rgba(0, 10, 85, 0.06) 0%, rgba(0, 10, 85, 0.10) 100%);
+    border: 2px solid rgba(0, 10, 85, 0.12);
+}
+
+.agent-card[data-color="gold-dark"] {
+    background: linear-gradient(135deg, rgba(245, 158, 66, 0.12) 0%, rgba(245, 158, 66, 0.18) 100%);
+    border: 2px solid rgba(245, 158, 66, 0.25);
+}
+
+/* Hired state - full gradient background with Material You elevation */
+.agent-card--hired {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15), 0 16px 48px rgba(0, 0, 0, 0.1);
+}
+
+.agent-card--hired[data-color="navy"] {
+    background: linear-gradient(135deg, #000A55 0%, #001074 100%);
+    border-color: #000A55;
+}
+
+.agent-card--hired[data-color="gold"] {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e42 100%);
+    border-color: #fbbf24;
+}
+
+.agent-card--hired[data-color="navy-light"] {
+    background: linear-gradient(135deg, #001074 0%, #000A55 100%);
+    border-color: #001074;
+}
+
+.agent-card--hired[data-color="gold-dark"] {
+    background: linear-gradient(135deg, #f59e42 0%, #ea8020 100%);
+    border-color: #f59e42;
+}
+
+.agent-card--hired .agent-card__name,
+.agent-card--hired .agent-card__role,
+.agent-card--hired .agent-card__description {
+    color: white;
+}
+
+.agent-card--hired .agent-card__description {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 300;
+}
+
+
+.agent-card--hired .agent-card__badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Decorative corner accent */
+.agent-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 0 24px 0 100%;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+}
+
+.agent-card:hover::before {
+    opacity: 0.7;
+}
+
+.agent-card--hired::before {
+    background: rgba(255, 255, 255, 0.15);
+    opacity: 1;
+}
+
+/* Bottom accent line */
+.agent-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: white;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.agent-card--hired::after {
+    opacity: 0.3;
+}
+
+/* ============================================
+   BETA BADGE - MATERIAL YOU PILL SHAPE
+   ============================================ */
+.agent-card__beta-badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e42 100%);
+    color: white;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 0.375rem 0.75rem;
+    border-radius: 100px;
+    z-index: 3;
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+}
+
+/* ============================================
+   CHECKMARK - MATCHING EXPERT CARDS
+   ============================================ */
+.agent-card__check {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0) rotate(-180deg);
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    z-index: 3;
+}
+
+.agent-card__check svg {
+    width: 18px;
+    height: 18px;
+}
+
+.agent-card[data-color="navy"] .agent-card__check svg,
+.agent-card[data-color="navy-light"] .agent-card__check svg {
+    color: #000A55;
+}
+
+.agent-card[data-color="gold"] .agent-card__check svg,
+.agent-card[data-color="gold-dark"] .agent-card__check svg {
+    color: #fbbf24;
+}
+
+.agent-card--hired .agent-card__check {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+}
+
+/* ============================================
+   CARD HEADER WITH INITIAL
+   ============================================ */
+.agent-card__header {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    margin-bottom: 0.75rem;
+}
+
+.agent-card__initial {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.625rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    transition: all 0.3s ease;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.agent-card[data-color="navy"] .agent-card__initial {
+    background: linear-gradient(135deg, rgba(0, 10, 85, 0.12) 0%, rgba(0, 10, 85, 0.18) 100%);
+    color: #000A55;
+}
+
+.agent-card[data-color="gold"] .agent-card__initial {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.22) 100%);
+    color: #f59e42;
+}
+
+.agent-card[data-color="navy-light"] .agent-card__initial {
+    background: linear-gradient(135deg, rgba(0, 10, 85, 0.10) 0%, rgba(0, 10, 85, 0.15) 100%);
+    color: #000A55;
+}
+
+.agent-card[data-color="gold-dark"] .agent-card__initial {
+    background: linear-gradient(135deg, rgba(245, 158, 66, 0.15) 0%, rgba(245, 158, 66, 0.22) 100%);
+    color: #f59e42;
+}
+
+.agent-card--hired .agent-card__initial {
+    background: white !important;
+    transform: scale(1.05);
+}
+
+.agent-card--hired[data-color="navy"] .agent-card__initial,
+.agent-card--hired[data-color="navy-light"] .agent-card__initial {
+    color: #000A55 !important;
+}
+
+.agent-card--hired[data-color="gold"] .agent-card__initial,
+.agent-card--hired[data-color="gold-dark"] .agent-card__initial {
+    color: #f59e42 !important;
+}
+
+.agent-card:hover .agent-card__initial {
+    transform: scale(1.08);
+}
+
+.agent-card__title-wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ============================================
+   CARD CONTENT
+   ============================================ */
+.agent-card__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.agent-card__name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+    letter-spacing: -0.02em;
+    transition: color 0.3s ease;
+    line-height: 1.3;
+}
+
+.agent-card__role {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: #64748b;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    transition: color 0.3s ease;
+}
+
+.agent-card--hired .agent-card__name {
+    color: white;
+}
+
+.agent-card--hired .agent-card__role {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.agent-card__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-bottom: 0.25rem;
+}
+
+.agent-card__badge {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 0.375rem 0.75rem;
+    border-radius: 100px;
+    border: 1px solid;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+}
+
+.agent-card__badge--datahub {
+    background: rgba(251, 191, 36, 0.1);
+    color: #d97706;
+    border-color: rgba(251, 191, 36, 0.3);
+}
+
+.agent-card__badge--charts {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    border-color: rgba(37, 99, 235, 0.3);
+}
+
+.agent-card__badge--news {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    border-color: rgba(37, 99, 235, 0.3);
+}
+
+.agent-card__badge--ai {
+    background: rgba(0, 10, 85, 0.1);
+    color: #000A55;
+    border-color: rgba(0, 10, 85, 0.3);
+}
+
+.agent-card__badge--code {
+    background: rgba(139, 92, 246, 0.1);
+    color: #7c3aed;
+    border-color: rgba(139, 92, 246, 0.3);
+}
+
+.agent-card__description {
+    font-size: 0.8125rem;
+    color: #64748b;
+    line-height: 1.5;
+    margin: 0;
+    flex: 1;
+    font-weight: 300;
+    transition: color 0.3s ease;
+}
+
+/* ============================================
+   HIRE BUTTON - MATERIAL YOU PILL SHAPE
+   ============================================ */
+.agent-card__btn {
+    width: 100%;
+    padding: 0.875rem 1.25rem;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 100px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+.agent-card__btn:hover {
+    background: #1e40af;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+.agent-card__btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.agent-card__btn--hired {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.agent-card__btn--hired:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(0);
+}
+
+/* ============================================
+   NOTIFICATION - MATERIAL YOU PILL SHAPE
+   ============================================ */
+.agents-notification {
+    position: fixed;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 1rem 1.75rem;
+    border-radius: 100px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    z-index: 9999;
+    display: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.agents-notification--success {
+    background: #10b981;
+    color: white;
+}
+
+.agents-notification--error {
+    background: #ef4444;
+    color: white;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 1024px) {
+    .agents-grid {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    }
+
+    .agents-main-content {
+        padding: 1.5rem 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .agents-container {
+        flex-direction: column;
+    }
+
+    .agents-sidebar {
+        width: 100%;
+        min-height: auto;
+        position: relative;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .agents-sidebar__card {
+        min-height: auto;
+        padding: 1rem;
+    }
+
+    .agents-main-content {
+        padding: 1.5rem 1rem;
+    }
+
+    .agents-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .agents-user-menu {
+        top: 1rem;
+        right: 1rem;
+    }
+
+    .agents-header__title {
+        font-size: 1.5rem;
+    }
+
+    .agents-header__subtitle {
+        font-size: 0.875rem;
+    }
+
+    .agent-card {
+        min-height: 180px;
+        padding: 1.25rem;
+    }
+}

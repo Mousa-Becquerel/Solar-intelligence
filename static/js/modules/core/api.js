@@ -48,6 +48,14 @@ export class API {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
+
+                // Special handling for query limit (429 status)
+                if (response.status === 429 && errorData.upgrade_required) {
+                    const limitError = new Error(errorData.error || 'Query limit reached');
+                    limitError.queryLimitData = errorData; // Attach full data for frontend
+                    throw limitError;
+                }
+
                 throw new Error(errorData.error || errorData.message || `HTTP ${response.status}`);
             }
 
@@ -169,7 +177,7 @@ export class API {
      * Logout current user
      */
     async logout() {
-        return this.post('/logout');
+        return this.post('/auth/logout');
     }
 
     // === Export Endpoints ===

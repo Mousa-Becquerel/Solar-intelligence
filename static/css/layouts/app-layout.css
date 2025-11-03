@@ -206,6 +206,13 @@
         width: 100%;
         min-width: unset;
         max-width: unset;
+        /* Ensure it's truly hidden when closed */
+        display: none;
+    }
+
+    /* Only show when explicitly opened */
+    .main-layout[data-artifact-open="true"] .artifact-panel {
+        display: flex;
     }
 
     /* Force sidebar collapsed on mobile */

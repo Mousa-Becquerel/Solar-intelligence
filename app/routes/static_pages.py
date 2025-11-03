@@ -38,6 +38,18 @@ def landing():
         return render_template('landing.html')
 
 
+@static_bp.route('/login')
+def login_redirect():
+    """Redirect /login to /auth/login for convenience."""
+    return redirect(url_for('auth.login'))
+
+
+@static_bp.route('/register')
+def register_redirect():
+    """Redirect /register to /auth/register for convenience."""
+    return redirect(url_for('auth.register'))
+
+
 @static_bp.route('/waitlist', methods=['GET', 'POST'])
 @limiter.limit("10 per hour")
 def waitlist():

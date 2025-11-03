@@ -14,6 +14,7 @@ import { artifactPanel } from './modules/ui/artifactPanel.js'; // Imported for i
 import { contactFormHandler } from './modules/ui/contactFormHandler.js'; // Imported for initialization
 import { approvalFlow } from './modules/chat/approvalFlow.js';
 import { plotHandler } from './modules/chat/plotHandler.js';
+import { initializeSurveyModal } from './modules/ui/surveyModal.js';
 
 // === UTILITY IMPORTS ===
 import { qs, scrollToBottom, createElement } from './utils/dom.js';
@@ -58,6 +59,7 @@ class SolarIntelligenceApp {
             this.updateWelcomeMessage();
             this.updateWelcomeMessageVisibility();
             suggestedQueries.initialize();
+            initializeSurveyModal();
 
             // Show loading skeleton for conversations
             conversationManager.showLoadingSkeleton();
@@ -295,7 +297,13 @@ class SolarIntelligenceApp {
 
         } catch (error) {
             console.error('Error sending message:', error);
-            this.showError('Failed to send message. Please try again.');
+
+            // Check if this is a query limit error
+            if (error.queryLimitData) {
+                this.showQueryLimitReached(error.queryLimitData);
+            } else {
+                this.showError('Failed to send message. Please try again.');
+            }
         } finally {
             appState.setSubmitting(false);
         }
@@ -606,7 +614,13 @@ class SolarIntelligenceApp {
         } catch (error) {
             console.error('Stream error:', error);
             this.removeLoadingIndicator();
-            this.showError('Failed to get response. Please try again.');
+
+            // Don't show generic error if it's a query limit error
+            // (it will be handled by the sendMessage catch block)
+            if (!error.queryLimitData) {
+                this.showError('Failed to get response. Please try again.');
+            }
+
             appState.setSubmitting(false);
             throw error;
         }
@@ -685,6 +699,71 @@ class SolarIntelligenceApp {
     }
 
     /**
+     * Show query limit reached message with survey option
+     * @param {object} limitData - Query limit data from backend
+     */
+    async showQueryLimitReached(limitData) {
+        const { queries_used, query_limit, plan_type } = limitData;
+
+        // Check survey status to determine which option to show
+        let surveyStatus = { stage1_completed: true, stage2_completed: true };
+        try {
+            surveyStatus = await api.get('/check-survey-status');
+        } catch (error) {
+            console.error('Error checking survey status:', error);
+        }
+
+        let primaryButton = '';
+        let message = '';
+
+        if (!surveyStatus.stage1_completed) {
+            // Stage 1 not completed - offer FIRST survey
+            message = '<p><strong>Good news!</strong> Answer a quick 2-minute survey to unlock <strong>5 extra queries</strong> and help us tailor insights for your sector.</p>';
+            primaryButton = `<button onclick="window.showSurveyModal()" class="upgrade-btn primary" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1e3a8a; padding: 0.75rem 1.5rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-right: 0.5rem;">Get 5 Extra Queries</button>`;
+        } else if (!surveyStatus.stage2_completed) {
+            // Stage 1 done, Stage 2 not done - offer SECOND survey
+            message = '<p><strong>More bonus queries available!</strong> Complete a quick follow-up survey to unlock <strong>5 more queries</strong>.</p>';
+            primaryButton = `<button onclick="window.showSurveyStage2Modal()" class="upgrade-btn primary" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1e3a8a; padding: 0.75rem 1.5rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-right: 0.5rem;">Get 5 More Queries</button>`;
+        } else {
+            // Both surveys completed - only show upgrade option
+            message = '<p style="margin-top: 0.75rem;">Thank you for completing both surveys! To continue accessing solar market intelligence with unlimited queries, upgrade to Premium.</p>';
+            primaryButton = '';
+        }
+
+        const upgradeDiv = createElement('div', {
+            classes: 'upgrade-message'
+        });
+
+        upgradeDiv.innerHTML = `
+            <div class="upgrade-icon" style="font-size: 3rem; margin-bottom: 1rem;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+            </div>
+            <div class="upgrade-content">
+                <h3 style="color: #1e3a8a; margin-bottom: 0.5rem;">Query Limit Reached</h3>
+                <p>You've used all <strong>${queries_used}/${query_limit}</strong> of your ${surveyStatus.stage1_completed && surveyStatus.stage2_completed ? 'available' : 'free monthly'} queries.</p>
+                ${message}
+                <div class="upgrade-actions" style="margin-top: 1rem;">
+                    ${primaryButton}
+                    <a href="/profile" class="upgrade-btn ${primaryButton ? 'secondary' : 'primary'}" style="background: ${primaryButton ? '#6b7280' : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)'}; color: ${primaryButton ? '#fff' : '#1e3a8a'}; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+                        Upgrade to Premium
+                    </a>
+                </div>
+            </div>
+        `;
+
+        upgradeDiv.style.padding = '2rem';
+        upgradeDiv.style.backgroundColor = '#f3f4f6';
+        upgradeDiv.style.borderRadius = '12px';
+        upgradeDiv.style.margin = '1rem';
+        upgradeDiv.style.textAlign = 'center';
+
+        this.chatWrapper.appendChild(upgradeDiv);
+        scrollToBottom(this.chatMessages);
+    }
+
+    /**
      * Handle conversation selected
      * @param {object} detail - Event detail
      */
@@ -744,6 +823,7 @@ class SolarIntelligenceApp {
         // Handle different message types
         if (!isUser && parsed.type === 'plot' && parsed.value) {
             // Render plot message from history
+            console.log('📊 Loading plot from history. Plot data:', parsed.value);
             const eventData = {
                 type: 'plot',
                 content: parsed.value
