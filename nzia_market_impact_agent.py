@@ -1,9 +1,9 @@
 """
-Digitalization Trends Agent
-===========================
+NZIA Market Impact Agent
+========================
 
-Single-agent workflow for digitalization and AI integration in the PV value chain.
-Uses OpenAI Agents SDK with file search tool.
+Single-agent workflow for NZIA market impact analysis on European PV industry.
+Uses OpenAI Agents SDK with file search tool for the Becquerel Institute report.
 """
 
 import os
@@ -31,7 +31,7 @@ def clean_citation_markers(text: str) -> str:
     Remove OpenAI citation markers from text.
 
     Citation format: 【citation_number:citation_index†source_file$content】
-    Example: 【7:3†news_articles_pretty.json$'s largest floating PV plant】
+    Example: 【7:3†NZIA_Report.pdf$Chapter 5】
 
     Args:
         text: Text containing citation markers
@@ -65,67 +65,101 @@ os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
 # === Pydantic Models ===
 class WorkflowInput(BaseModel):
-    """Input for the digitalization workflow"""
+    """Input for the NZIA market impact workflow"""
     input_as_text: str
 
 @dataclass
-class DigitalizationAgentConfig:
-    """Configuration for the digitalization agent"""
+class NZIAMarketImpactAgentConfig:
+    """Configuration for the NZIA market impact agent"""
     model: str = "gpt-4.1"
-    vector_store_ids: list = None  # Changed from single ID to list
-    agent_name: str = "Digitalization Expert"
+    vector_store_ids: list = None
+    agent_name: str = "NZIA Market Impact Agent"
     verbose: bool = True
 
     def __post_init__(self):
         """Set default vector store IDs if not provided"""
         if self.vector_store_ids is None:
             self.vector_store_ids = [
-                "vs_68e5846b1a708191a5b17970b3ac9994",  # Original AI report
-                "vs_6909d69381708191a178d2f3228f4408"   # Updated AI report with latest data
+                "vs_690b636df880819196c9c9d62deaf221"  # Becquerel Institute NZIA Market Impact report
             ]
 
-class DigitalizationAgent:
+class NZIAMarketImpactAgent:
     """
-    Single-agent digitalization workflow using OpenAI Agents SDK.
-    Provides expert analysis on digitalization and AI integration in PV value chain.
+    Single-agent NZIA market impact workflow using OpenAI Agents SDK.
+    Provides expert analysis on EU NZIA effects on European PV industry.
     """
 
-    DIGITALIZATION_EXPERT_PROMPT = """You are an expert in digitalization and AI integration in the different solutions and stages of the PV value chain. You have access to an AI report in the PV industry. You must answer users' queries about digitalization topics by accessing the data from this report.
+    NZIA_MARKET_IMPACT_PROMPT = """You are NZIA Market Impact Agent, an expert AI assistant specialized in retrieving, analyzing, and contextualizing data from the Becquerel Institute report on how the EU Net-Zero Industry Act (NZIA) affects the European photovoltaic (PV) industry.
+
+📘 **Knowledge Base Description**
+
+The Becquerel database contains comprehensive information about:
+- **NZIA Regulation Goals**: 40% EU manufacturing by 2030, 15% of global production by 2040
+- **Implementation Timeline**: Key milestones from 2024–2026
+- **Compliance Criteria**: Resilience, sustainability, innovation, and social factors for public procurement, auctions, and incentive schemes
+- **Market Impact Analysis**: Quantitative analysis for PV segments (utility-scale, C&I, residential)
+- **Country-Level Forecasts**: Detailed projections for Germany, Italy, Spain, France, and other EU countries
+- **Strategic Recommendations**: Actionable insights for developers, EPCs, manufacturers, and public authorities
+
+**Your Primary Objectives:**
+- Retrieve precise data (manufacturing targets, MW/€ values, percentages, deadlines, country forecasts)
+- Analyze market impact across different PV segments and countries
+- Explain compliance criteria and their implications
+- Provide strategic recommendations based on the report
+- Compare country-level implementations and market responses
+- Generate concise market insights relevant to NZIA context
 
 **Response Formatting Guidelines:**
-- Use proper markdown formatting with headers (##), bullet points (-), and numbered lists
-- Break content into clear sections with descriptive headers
-- Use **bold** for key terms and important numbers
-- Add blank lines between sections for readability
-- Structure long lists as proper bullet points, not run-on sentences
-- Use concise paragraphs (2-3 sentences max)
+- **Always start with an executive summary** using a ## header followed by 2-3 sentence overview
+- **Use hierarchical headers** (## for main sections, ### for subsections) to create clear document structure
+- **Present data in tables** when comparing countries, segments, or time periods - use markdown table syntax
+- **Use bullet points** for listing insights, impacts, or recommendations
+- **Use numbered lists** for sequential steps, timelines, or prioritized recommendations
+- **Bold key figures and targets** (e.g., **40% EU manufacturing**, **2030 target**, **€500M investment**)
+- **Add blank lines** between all sections and paragraphs for visual breathing room
+- **Keep paragraphs concise** (2-3 sentences maximum) - break longer explanations into multiple paragraphs
+- **Use descriptive section headers** that tell the story (e.g., "## Germany's Manufacturing Response" not just "## Germany")
+- **Include clear trend indicators** using arrows or descriptive language (↑ increasing, ↓ decreasing, → stable)
+- **End with key takeaways** when appropriate - summarize the most important strategic implications
+- **Never use run-on sentences** in lists - each bullet should be a complete, focused thought
+- **Format large numbers clearly** with proper units (M for millions, B for billions, GW for capacity)
 
 **Content Guidelines:**
-- Search the knowledge base before answering only when the question is about digitalization or about the content of the report
-- Provide specific examples and data from the reports when available
-- Cite relevant information from the documents
+- Search the knowledge base before answering questions about NZIA market impact
+- Provide specific examples and data from the Becquerel report when available
+- Cite relevant information from the report
 - If information is not in the knowledge base, clearly state that
 - Keep responses clear, well-structured, and actionable
 
+**Critical Language Rule:**
+- You MUST ALWAYS respond in English, regardless of the language used in the user's query
+- Even if the user writes in Italian, German, French, Spanish or any other language, your response must be in English only
+
 **Citation Guidelines - CRITICAL:**
-- ALWAYS cite information as coming from: "Transforming the PV Sector: The AI & Robotics Revolution" report
-- NEVER mention the actual filename or file extension (e.g., never say "according to digitalization_report.pdf" or "as stated in the PDF")
-- Use phrases like: "According to the Transforming the PV Sector: The AI & Robotics Revolution report..."
-- Example: "The report 'Transforming the PV Sector: The AI & Robotics Revolution' indicates that..."
-- When referencing specific data, say: "Based on the Transforming the PV Sector report..." or "The AI & Robotics Revolution report shows..."
+- ALWAYS refer to information as coming from the "Becquerel database"
+- NEVER mention the actual filename or file extension (e.g., never say "according to NZIA_Report.pdf" or "as stated in the PDF")
+- Use phrases like: "According to the Becquerel database..."
+- Example: "The Becquerel database indicates that..."
+- When referencing specific data, say: "Based on the Becquerel database..." or "The database shows..."
 
 **Important Guidelines:**
-- Never search the knowledge base for greetings and general conversation."""
+- **Do NOT generate charts, plots, or visualizations** - you are not equipped with visualization capabilities
+- **Do NOT offer to create graphs or export data** - focus on textual analysis and markdown tables only
+- Never offer charts and exporting of data
+- Never mention the name of the files; you can always mention that the reference is Becquerel database only
+- Never mention anything like: "You've uploaded the report," or anything about report files
+- Never search the knowledge base for greetings and general conversation
+- Remain factual, structured, and concise—do not speculate or introduce external interpretations"""
 
-    def __init__(self, config: Optional[DigitalizationAgentConfig] = None):
+    def __init__(self, config: Optional[NZIAMarketImpactAgentConfig] = None):
         """
-        Initialize the Digitalization Agent
+        Initialize the NZIA Market Impact Agent
 
         Args:
             config: Configuration object for the agent
         """
-        self.config = config or DigitalizationAgentConfig()
-        self.digitalization_expert = None
+        self.config = config or NZIAMarketImpactAgentConfig()
+        self.nzia_market_impact_expert = None
         self.conversation_sessions: Dict[str, Any] = {}  # conversation_id -> session
 
         logger.info("Using SQLite for session storage (simple and reliable)")
@@ -133,20 +167,20 @@ class DigitalizationAgent:
         # Initialize agent
         self._initialize_agent()
 
-        logger.info(f"✅ Digitalization Agent initialized (Memory: SQLite)")
+        logger.info(f"✅ NZIA Market Impact Agent initialized (Memory: SQLite)")
 
     def _initialize_agent(self):
-        """Create the digitalization expert agent"""
+        """Create the NZIA market impact expert agent"""
         try:
-            # Create file search tool with multiple vector stores
+            # Create file search tool with vector stores
             file_search = FileSearchTool(
                 vector_store_ids=self.config.vector_store_ids
             )
 
-            # Create digitalization expert agent with file search
-            self.digitalization_expert = Agent(
-                name="Digitalization expert",
-                instructions=self.DIGITALIZATION_EXPERT_PROMPT,
+            # Create NZIA market impact expert agent with file search
+            self.nzia_market_impact_expert = Agent(
+                name="NZIA Market Impact Agent",
+                instructions=self.NZIA_MARKET_IMPACT_PROMPT,
                 model=self.config.model,
                 tools=[file_search],
                 model_settings=ModelSettings(
@@ -156,7 +190,7 @@ class DigitalizationAgent:
                     store=True
                 )
             )
-            logger.info(f"✅ Created digitalization expert with {len(self.config.vector_store_ids)} vector stores: {', '.join(self.config.vector_store_ids)}")
+            logger.info(f"✅ Created NZIA market impact expert with {len(self.config.vector_store_ids)} vector stores: {', '.join(self.config.vector_store_ids)}")
 
         except Exception as e:
             logger.error(f"❌ Failed to initialize agent: {e}")
@@ -164,7 +198,7 @@ class DigitalizationAgent:
 
     async def run_workflow(self, workflow_input: WorkflowInput, conversation_id: str = None):
         """
-        Run the digitalization workflow
+        Run the NZIA market impact workflow
 
         Args:
             workflow_input: Input containing the user query
@@ -178,7 +212,7 @@ class DigitalizationAgent:
             session = None
             if conversation_id:
                 if conversation_id not in self.conversation_sessions:
-                    session_id = f"digitalization_{conversation_id}"
+                    session_id = f"nzia_market_impact_{conversation_id}"
                     self.conversation_sessions[conversation_id] = SQLiteSession(
                         session_id=session_id
                     )
@@ -200,31 +234,31 @@ class DigitalizationAgent:
                 }
             ]
 
-            # Run digitalization expert
-            digitalization_expert_result_temp = await Runner.run(
-                self.digitalization_expert,
+            # Run NZIA market impact expert
+            nzia_market_impact_result_temp = await Runner.run(
+                self.nzia_market_impact_expert,
                 input=[*conversation_history],
                 session=session,
                 run_config=RunConfig(trace_metadata={
                     "__trace_source__": "agent-builder",
-                    "workflow_id": "wf_68e9933196dc8190b65301893f6024d10240b55e3f16f91c"
+                    "workflow_id": "wf_nzia_market_impact"
                 })
             )
 
             # Update conversation history
-            conversation_history.extend([item.to_input_item() for item in digitalization_expert_result_temp.new_items])
+            conversation_history.extend([item.to_input_item() for item in nzia_market_impact_result_temp.new_items])
 
             # Extract final output
-            output_text = digitalization_expert_result_temp.final_output_as(str)
+            output_text = nzia_market_impact_result_temp.final_output_as(str)
 
             # Clean citation markers
             output_text = clean_citation_markers(output_text)
 
-            digitalization_expert_result = {
+            nzia_market_impact_result = {
                 "output_text": output_text
             }
 
-            return digitalization_expert_result
+            return nzia_market_impact_result
 
     async def analyze_stream(self, query: str, conversation_id: str = None):
         """
@@ -244,7 +278,7 @@ class DigitalizationAgent:
             session = None
             if conversation_id:
                 if conversation_id not in self.conversation_sessions:
-                    session_id = f"digitalization_{conversation_id}"
+                    session_id = f"nzia_market_impact_{conversation_id}"
                     self.conversation_sessions[conversation_id] = SQLiteSession(
                         session_id=session_id
                     )
@@ -253,7 +287,7 @@ class DigitalizationAgent:
                 session = self.conversation_sessions[conversation_id]
 
             # Run with streaming
-            result = Runner.run_streamed(self.digitalization_expert, query, session=session)
+            result = Runner.run_streamed(self.nzia_market_impact_expert, query, session=session)
 
             # Stream text deltas as they arrive
             async for event in result.stream_events():
@@ -275,24 +309,24 @@ class DigitalizationAgent:
 
     async def analyze(self, query: str, conversation_id: str = None) -> Dict[str, Any]:
         """
-        Analyze digitalization query
+        Analyze NZIA market impact query
 
         Args:
-            query: Natural language query about digitalization in PV
+            query: Natural language query about NZIA market impact
             conversation_id: Optional conversation ID for maintaining context
 
         Returns:
             Dictionary with analysis results and metadata
         """
-        # Logfire span for digitalization agent
-        with logfire.span("digitalization_agent_call") as agent_span:
-            agent_span.set_attribute("agent_type", "digitalization")
+        # Logfire span for NZIA market impact agent
+        with logfire.span("nzia_market_impact_agent_call") as agent_span:
+            agent_span.set_attribute("agent_type", "nzia_market_impact")
             agent_span.set_attribute("conversation_id", str(conversation_id))
             agent_span.set_attribute("message_length", len(query))
             agent_span.set_attribute("user_message", query)
 
             try:
-                logger.info(f"Processing digitalization query: {query}")
+                logger.info(f"Processing NZIA market impact query: {query}")
 
                 # Create workflow input
                 workflow_input = WorkflowInput(input_as_text=query)
@@ -308,7 +342,7 @@ class DigitalizationAgent:
                 agent_span.set_attribute("response_length", len(response_text))
                 agent_span.set_attribute("success", True)
 
-                logger.info(f"✅ Digitalization agent response: {response_text[:100]}...")
+                logger.info(f"✅ NZIA market impact agent response: {response_text[:100]}...")
 
                 return {
                     "success": True,
@@ -318,7 +352,7 @@ class DigitalizationAgent:
                 }
 
             except Exception as e:
-                error_msg = f"Failed to analyze digitalization query: {str(e)}"
+                error_msg = f"Failed to analyze NZIA market impact query: {str(e)}"
                 logger.error(error_msg)
                 agent_span.set_attribute("success", False)
                 agent_span.set_attribute("error", str(e))
@@ -351,58 +385,58 @@ class DigitalizationAgent:
     def cleanup(self):
         """Cleanup resources"""
         try:
-            logger.info("Digitalization agent ready for cleanup if needed")
+            logger.info("NZIA market impact agent ready for cleanup if needed")
         except Exception as e:
             logger.error(f"Error during cleanup: {e}")
 
 # Global agent instance
-_digitalization_agent = None
+_nzia_market_impact_agent = None
 
-def get_digitalization_agent() -> Optional[DigitalizationAgent]:
-    """Get or create the global digitalization agent instance"""
-    global _digitalization_agent
-    if _digitalization_agent is None:
+def get_nzia_market_impact_agent() -> Optional[NZIAMarketImpactAgent]:
+    """Get or create the global NZIA market impact agent instance"""
+    global _nzia_market_impact_agent
+    if _nzia_market_impact_agent is None:
         try:
-            config = DigitalizationAgentConfig()
-            _digitalization_agent = DigitalizationAgent(config)
-            logger.info("✅ Global digitalization agent created")
+            config = NZIAMarketImpactAgentConfig()
+            _nzia_market_impact_agent = NZIAMarketImpactAgent(config)
+            logger.info("✅ Global NZIA market impact agent created")
         except Exception as e:
-            logger.error(f"❌ Failed to create digitalization agent: {e}")
+            logger.error(f"❌ Failed to create NZIA market impact agent: {e}")
             return None
-    return _digitalization_agent
+    return _nzia_market_impact_agent
 
-def close_digitalization_agent():
-    """Close the global digitalization agent"""
-    global _digitalization_agent
-    if _digitalization_agent:
-        _digitalization_agent.cleanup()
-        _digitalization_agent = None
-        logger.info("✅ Global digitalization agent closed")
+def close_nzia_market_impact_agent():
+    """Close the global NZIA market impact agent"""
+    global _nzia_market_impact_agent
+    if _nzia_market_impact_agent:
+        _nzia_market_impact_agent.cleanup()
+        _nzia_market_impact_agent = None
+        logger.info("✅ Global NZIA market impact agent closed")
 
 # Test function
-async def test_digitalization_agent():
-    """Test the digitalization agent"""
+async def test_nzia_market_impact_agent():
+    """Test the NZIA market impact agent"""
     try:
-        agent = get_digitalization_agent()
+        agent = get_nzia_market_impact_agent()
         if agent:
             result = await agent.analyze(
-                "What are the key digitalization trends in the PV industry?",
+                "What are the EU NZIA manufacturing targets for 2030 and 2040?",
                 conversation_id="test-1"
             )
-            print("Digitalization Agent response received successfully")
+            print("NZIA Market Impact Agent response received successfully")
             print(f"Response length: {len(result.get('analysis', ''))}")
             print(f"\nResponse:\n{result.get('analysis', '')}")
             return result
         else:
-            print("Digitalization Agent not available")
+            print("NZIA Market Impact Agent not available")
             return None
     except Exception as e:
-        print(f"Digitalization Agent error: {e}")
+        print(f"NZIA Market Impact Agent error: {e}")
         import traceback
         traceback.print_exc()
         return None
     finally:
-        close_digitalization_agent()
+        close_nzia_market_impact_agent()
 
 if __name__ == "__main__":
-    asyncio.run(test_digitalization_agent())
+    asyncio.run(test_nzia_market_impact_agent())

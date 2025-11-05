@@ -48,7 +48,7 @@ function showSuccessModal(message, newQueryCount) {
         max-width: 500px;
         width: 90%;
         text-align: center;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(30, 58, 138, 0.1);
         animation: slideUp 0.3s ease;
     `;
 
@@ -67,7 +67,7 @@ function showSuccessModal(message, newQueryCount) {
             </p>
         </div>
         <button id="success-modal-ok-btn" style="
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            background: #FFB74D;
             color: #1e3a8a;
             padding: 0.875rem 2.5rem;
             border: none;
@@ -75,8 +75,9 @@ function showSuccessModal(message, newQueryCount) {
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+            transition: background 0.2s ease;
+            position: relative;
+            overflow: hidden;
         ">
             OK
         </button>
@@ -99,12 +100,22 @@ function showSuccessModal(message, newQueryCount) {
                 transform: translateY(0);
             }
         }
-        #success-modal-ok-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(251, 191, 36, 0.4);
+        #success-modal-ok-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0);
+            transition: background 0.2s ease;
+            pointer-events: none;
         }
-        #success-modal-ok-btn:active {
-            transform: translateY(0);
+        #success-modal-ok-btn:hover::before {
+            background: rgba(0, 0, 0, 0.08);
+        }
+        #success-modal-ok-btn:active::before {
+            background: rgba(0, 0, 0, 0.12);
         }
     `;
     document.head.appendChild(style);

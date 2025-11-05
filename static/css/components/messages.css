@@ -3,10 +3,10 @@
  * Message styling, markdown, tables, and agent-specific styles
  */
 
-/* Price agent styling - white background to match other agents */
+/* Price agent styling - MD3 flat white */
 .bot-message.price-agent {
-    background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
-    color: #1f2937;
+    background: white;                              /* Flat white - MD3 */
+    color: #1e293b;
     box-shadow: none;
 }
 
@@ -26,8 +26,8 @@
 }
 
 .bot-message.price-agent table th {
-    color: #1f2937;
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #1e293b;
+    background: #FFB74D;                            /* Flat Material Gold - MD3 */
 }
 
 .bot-message.price-agent table td {
@@ -39,20 +39,20 @@
 }
 
 .bot-message.price-agent .table-toggle {
-    background: linear-gradient(135deg, var(--becq-gold) 0%, var(--becq-gold-dark) 100%);
-    color: var(--becq-blue);
+    background: #FFB74D;                            /* Flat Material Gold - MD3 */
+    color: #1e293b;
 }
 
-/* Market agent styling - keep default white background */
+/* Market agent styling - MD3 flat white */
 .bot-message.market-agent {
-    background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
-    color: #1f2937;
+    background: white;                              /* Flat white - MD3 */
+    color: #1e293b;
 }
 
-/* Digitalization agent styling - clean white like market agent */
+/* Digitalization agent styling - MD3 flat white */
 .bot-message.digitalization-agent {
-    background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
-    color: #1f2937;
+    background: white;                              /* Flat white - MD3 */
+    color: #1e293b;
     box-shadow: none;
     margin-left: 0;
     margin-right: 0;
@@ -83,17 +83,17 @@
     animation: containerAppear 0.3s ease forwards;
     margin-bottom: 0.5rem;
 }
+/* Material Design 3 input wrapper - flat design */
 .input-wrapper {
     position: relative;
     width: 100%;
     max-width: 900px;
     margin: 0 auto;
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    border-radius: 24px;
+    background: #F5F5F5; /* Flat gray background - MD3 */
+    border-radius: var(--md-sys-shape-corner-large, 16px); /* MD3 large corners */
     padding: 0.8rem;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
-    border: 1px solid rgba(251, 191, 36, 0.2);
-    backdrop-filter: blur(10px);
+    box-shadow: none; /* MD3 flat - no shadows */
+    border: none; /* MD3 flat - no borders */
     z-index: 100;
 }
 
@@ -150,28 +150,32 @@
     opacity: 0.8;
 }
 
+/* MD3 flat input field */
 input[type="text"]#user-input {
     font-family: 'Inter', 'Open Sans', Arial, sans-serif !important;
-    font-size: 0.95rem;
-    font-weight: 400;
-    letter-spacing: 0.01em;
-    border: 1.5px solid #e5e7eb;
-    background: transparent;
+    font-size: 0.9375rem;
+    font-weight: 300;
+    letter-spacing: -0.01em;
+    border: none; /* MD3 flat - no border */
+    background: white; /* Clean white background */
     box-shadow: none;
-    border-radius: 18px;
-    padding: 0.8rem 1.1rem;
+    border-radius: var(--md-sys-shape-corner-medium, 12px);
+    padding: 0.875rem 1.125rem;
     width: 100%;
     min-width: 0;
     outline: none;
     flex: 1;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     z-index: 2;
+    color: #1e293b;
 }
 
+/* MD3 focus state - no ring, just subtle background change */
 input[type="text"]#user-input:focus {
-    border-color: var(--becq-gold);
-    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+    border: none;
+    background: #fafafa; /* Subtle background change on focus */
+    box-shadow: none; /* MD3 flat - no focus ring */
 }
 
 input[type="text"]#user-input:disabled {
@@ -1487,74 +1491,107 @@ min-height: 150px;
     align-items: center;
     gap: 2rem;  /* Add spacing between title and selector */
 }
+/* Material Design 3 send button - flat design with state layers */
 .send-btn {
-    background: linear-gradient(90deg, var(--becq-gold), var(--becq-gold-dark));
-    color: var(--becq-blue);
+    background: #5C6BC0;                                /* Material Indigo - flat */
+    color: white;
     border: none;
-    border-radius: 50%;
+    border-radius: 50%;                                 /* Circular button */
     width: 48px;
     height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.15);
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;                                   /* MD3 flat - no shadows */
     font-family: 'Inter', 'Open Sans', Arial, sans-serif;
     margin-left: 0.75rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* MD3 State Layer for hover */
+.send-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 .send-btn:hover {
-    background: linear-gradient(90deg, var(--becq-gold-dark), var(--becq-gold));
-    transform: translateY(-1px) scale(1.05);
-    box-shadow: 0 4px 16px rgba(251, 191, 36, 0.25);
+    background: #5C6BC0;                                /* Keep same color */
+    transform: none;                                    /* MD3 flat - no lift */
+    box-shadow: none;
+}
+
+.send-btn:hover::before {
+    opacity: 0.08;                                      /* MD3 state layer opacity */
 }
 
 .send-btn:active {
-    transform: translateY(0) scale(1);
-    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.15);
+    transform: none;                                    /* MD3 flat - no press effect */
+    box-shadow: none;
+}
+
+.send-btn:active::before {
+    opacity: 0.12;                                      /* MD3 pressed state */
 }
 
 .send-btn:disabled {
-    opacity: 0.6;
+    opacity: 0.38;                                      /* MD3 disabled opacity */
     cursor: not-allowed;
     transform: none;
 }
 
+.send-btn:disabled::before {
+    display: none;
+}
+
 .send-btn svg {
-    transition: transform 0.2s ease;
+    transition: none;                                   /* MD3 flat - no icon animation */
+    position: relative;
+    z-index: 1;
 }
 
 .send-btn:hover svg {
-    transform: translateX(1px);
+    transform: none;                                    /* MD3 flat - no icon movement */
 }
 
-/* Enhanced markdown styling */
+/* Material Design 3 typography for message headings */
 .message h1, .message h2, .message h3, .message h4, .message h5, .message h6 {
-    color: var(--becq-blue);  /* Dark blue for all agent headers */
-    font-weight: 700;
+    color: #1e293b;                                 /* MD3 on-surface */
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+    font-weight: 500;                               /* MD3 medium weight for headings */
     margin: 1.2em 0 0.6em 0;
     line-height: 1.3;
+    letter-spacing: -0.015em;
 }
 
 .message h1 {
     font-size: 1.5rem;
-    border-bottom: 2px solid var(--becq-gold);
+    border-bottom: none;                            /* MD3 flat - no borders */
     padding-bottom: 0.3em;
 }
 
 .message h2 {
-    font-size: 1.3rem;
-    border-bottom: 1px solid #e5e7eb;
+    font-size: 1.25rem;                             /* Adjusted for hierarchy */
+    border-bottom: none;                            /* MD3 flat - no borders */
     padding-bottom: 0.2em;
 }
 
 .message h3 {
-    font-size: 1.15rem;
+    font-size: 1.125rem;
 }
 
 .message h4 {
-    font-size: 1.05rem;
+    font-size: 1rem;
 }
 
 .message ul {
@@ -1600,12 +1637,12 @@ min-height: 150px;
 }
 
 .message strong, .message b {
-    color: var(--becq-blue) !important;
-    font-weight: 700 !important;
+    color: #1e293b !important;                      /* MD3 on-surface */
+    font-weight: 600 !important;                    /* MD3 semi-bold */
 }
 
 .message em, .message i {
-    color: var(--becq-accent-blue);
+    color: #64748b;                                 /* MD3 on-surface-variant */
     font-style: italic;
 }
 
@@ -1680,10 +1717,10 @@ blockquote {
 
 .message hr {
     border: none;
-    height: 2px;
-    background: linear-gradient(90deg, var(--becq-gold) 0%, transparent 100%);
+    height: 1px;                                    /* MD3 thin divider */
+    background: #e5e7eb;                            /* Flat gray - MD3 */
     margin: 1.5em 0;
-    border-radius: 1px;
+    border-radius: 0;
 }
 
 .message table {
@@ -1703,9 +1740,10 @@ blockquote {
 }
 
 .message th {
-    background: var(--becq-gold);
-    color: var(--becq-blue);
-    font-weight: 600;
+    background: #FFB74D;                            /* Flat Material Gold - MD3 */
+    color: #1e293b;
+    font-weight: 500;                               /* MD3 medium weight */
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
 }
 
 .message tr:nth-child(even) {
@@ -1734,6 +1772,8 @@ blockquote {
 .message p {
     margin: 0.8em 0 !important;
     line-height: 1.6;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+    letter-spacing: -0.01em;
 }
 
 /* Custom confirmation modal */
@@ -1860,7 +1900,7 @@ blockquote {
     }
 }
 
-/* Approval Flow Styling */
+/* Approval Flow Styling - MD3 Flat Design */
 .approval-buttons {
     display: flex;
     gap: 1rem;
@@ -1872,44 +1912,76 @@ blockquote {
 .approval-btn {
     padding: 0.75rem 1.5rem;
     border: none;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    font-weight: 600;
+    border-radius: var(--md-sys-shape-corner-full, 9999px); /* MD3 pill shape */
+    font-size: 0.875rem;
+    font-weight: 500;                               /* MD3 medium weight */
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: 'Inter', 'Open Sans', Arial, sans-serif;
-    box-shadow: none;
+    box-shadow: none;                               /* MD3 flat - no shadows */
     min-width: 140px;
     text-align: center;
+    letter-spacing: -0.01em;
+    position: relative;
+    overflow: hidden;
+}
+
+/* MD3 State Layer */
+.approval-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 .approval-yes {
-    background: linear-gradient(135deg, var(--becq-gold) 0%, var(--becq-gold-dark) 100%);
-    color: var(--becq-blue);
+    background: #FFB74D;                            /* Flat Material Gold - MD3 */
+    color: #1e293b;                                 /* MD3 on-surface */
 }
 
 .approval-yes:hover:not(:disabled) {
-    background: linear-gradient(135deg, var(--becq-gold-dark) 0%, var(--becq-gold) 100%);
-    transform: translateY(-2px);
+    background: #FFB74D;                            /* Keep same color */
+    transform: none;                                /* MD3 flat - no lift */
     box-shadow: none;
+}
+
+.approval-yes:hover:not(:disabled)::before {
+    opacity: 0.08;                                  /* MD3 state layer opacity */
 }
 
 .approval-no {
-    background: #f3f4f6;
-    color: #374151;
-    border: 1.5px solid #d1d5db;
+    background: #F5F5F5;                            /* Flat gray - MD3 */
+    color: #64748b;
+    border: none;                                   /* MD3 flat - no borders */
+}
+
+.approval-no::before {
+    background: currentColor;                       /* Use text color for state layer */
 }
 
 .approval-no:hover:not(:disabled) {
-    background: #e5e7eb;
-    border-color: #9ca3af;
-    transform: translateY(-2px);
+    background: #EEEEEE;                            /* Darker gray - MD3 */
+    transform: none;                                /* MD3 flat - no lift */
     box-shadow: none;
 }
 
+.approval-no:hover:not(:disabled)::before {
+    opacity: 0.08;                                  /* MD3 state layer opacity */
+}
+
 .approval-btn:disabled {
-    opacity: 0.5;
+    opacity: 0.38;                                  /* MD3 disabled opacity */
     cursor: not-allowed;
+}
+
+.approval-btn:disabled::before {
+    display: none;
 }
 
 .approval-loading {

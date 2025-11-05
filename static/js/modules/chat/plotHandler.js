@@ -113,31 +113,48 @@ export class PlotHandler {
                 // Check if container is in DOM
                 const containerElement = document.getElementById(plotContainerId);
                 if (!containerElement) {
-                    console.error('Chart container not found in DOM:', plotContainerId);
+                    console.error('❌ Chart container not found in DOM:', plotContainerId);
                     return;
                 }
 
-                if (!plotData || !plotData.data) {
-                    console.error('Invalid plot data:', plotData);
-                    containerElement.innerHTML = '<div class="error-message">Plot data is missing or corrupted</div>';
+                // Enhanced validation of plot data
+                if (!plotData) {
+                    console.error('❌ Plot data is null or undefined');
+                    containerElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: #ef4444; background: #fef2f2; border-radius: 8px;">Plot data is missing. The chart may have failed to load from history.</div>';
+                    return;
+                }
+
+                console.log('🔍 Plot data structure:', {
+                    hasData: !!plotData.data,
+                    hasPlotType: !!plotData.plot_type,
+                    hasTitle: !!plotData.title,
+                    dataLength: plotData.data ? plotData.data.length : 0,
+                    plotType: plotData.plot_type,
+                    fullData: plotData
+                });
+
+                if (!plotData.data || !Array.isArray(plotData.data) || plotData.data.length === 0) {
+                    console.error('❌ Invalid plot data - missing or empty data array:', plotData);
+                    containerElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: #ef4444; background: #fef2f2; border-radius: 8px;">Plot data is corrupted or incomplete. The chart cannot be rendered.</div>';
                     return;
                 }
 
                 // Check if renderD3Chart is available
                 if (typeof window.renderD3Chart !== 'function') {
-                    console.error('renderD3Chart function not found');
-                    containerElement.innerHTML = '<div class="error-message">Chart rendering function not available</div>';
+                    console.error('❌ renderD3Chart function not found');
+                    containerElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: #ef4444; background: #fef2f2; border-radius: 8px;">Chart rendering function not available. Please refresh the page.</div>';
                     return;
                 }
 
-                console.log('🎨 Rendering D3 chart with data:', plotData);
+                console.log('✅ All validations passed. Rendering D3 chart...');
                 window.renderD3Chart(plotContainerId, plotData);
+                console.log('✅ D3 chart render complete');
 
             } catch (error) {
-                console.error('Error rendering D3 chart:', error);
+                console.error('❌ Error rendering D3 chart:', error);
                 const containerElement = document.getElementById(plotContainerId);
                 if (containerElement) {
-                    containerElement.innerHTML = `<div class="error-message">Error rendering chart: ${error.message}</div>`;
+                    containerElement.innerHTML = `<div style="padding: 2rem; text-align: center; color: #ef4444; background: #fef2f2; border-radius: 8px;">Error rendering chart: ${error.message}<br><br>Check console for details.</div>`;
                 }
             }
         }, 200);

@@ -501,7 +501,7 @@ height: 16px;
 .confirm-modal-title {
     font-size: 20px;
     font-weight: 700;
-    color: var(--becq-blue);
+    color: #1e3a8a;                                 /* Navy blue - MD3 */
     margin: 0;
     font-family: 'Inter', 'Open Sans', Arial, sans-serif;
     letter-spacing: -0.02em;

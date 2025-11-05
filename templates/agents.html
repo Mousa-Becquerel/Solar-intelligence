@@ -26,7 +26,7 @@
             <div class="agents-sidebar__card">
                 <!-- Logo -->
                 <div class="agents-sidebar__logo">
-                    <a href="{{ url_for('static.landing') }}" style="text-decoration: none;">
+                    <a href="{{ url_for('static.landing_page') }}" style="text-decoration: none;">
                         <span class="agents-sidebar__logo-text">SolarIntelligence</span>
                     </a>
                 </div>
@@ -80,7 +80,6 @@
             <div class="agents-grid">
                 <!-- Price Analysis Agent - Maya -->
                 <article class="agent-card" data-agent-card="price" data-color="gold">
-                    <div class="agent-card__beta-badge" title="Beta Version - Features under active development">BETA</div>
                     <div class="agent-card__check">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
@@ -184,7 +183,6 @@
 
                 <!-- Market Analysis Agent - Alex -->
                 <article class="agent-card" data-agent-card="market" data-color="gold-dark">
-                    <div class="agent-card__beta-badge" title="Beta Version - Features under active development">BETA</div>
                     <div class="agent-card__check">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
@@ -212,6 +210,112 @@
                     </div>
 
                     <button class="agent-card__btn" data-hire-btn="market" aria-label="Hire Alex, the PV Capacity analyst agent">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Hire Agent
+                    </button>
+                </article>
+
+                <!-- NZIA Policy Agent - Aniza -->
+                <article class="agent-card" data-agent-card="nzia_policy" data-color="purple">
+                    <div class="agent-card__check">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+
+                    <div class="agent-card__content">
+                        <div class="agent-card__header">
+                            <div class="agent-card__initial">A</div>
+                            <div class="agent-card__title-wrapper">
+                                <h3 class="agent-card__name">Aniza</h3>
+                                <p class="agent-card__role">NZIA Policy Expert</p>
+                            </div>
+                        </div>
+
+                        <div class="agent-card__badges">
+                            <span class="agent-card__badge agent-card__badge--policy">FERX Framework</span>
+                            <span class="agent-card__badge agent-card__badge--multilang">IT/EN</span>
+                        </div>
+
+                        <p class="agent-card__description">
+                            Expert in Italy's FERX framework and NZIA compliance - analyzes policy documents, eligibility, and auction procedures
+                        </p>
+                    </div>
+
+                    <button class="agent-card__btn" data-hire-btn="nzia_policy" aria-label="Hire Aniza, the NZIA Policy Expert agent">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Hire Agent
+                    </button>
+                </article>
+
+                <!-- Manufacturer Financial Agent - Finn -->
+                <article class="agent-card" data-agent-card="manufacturer_financial" data-color="emerald">
+                    <div class="agent-card__check">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+
+                    <div class="agent-card__content">
+                        <div class="agent-card__header">
+                            <div class="agent-card__initial">F</div>
+                            <div class="agent-card__title-wrapper">
+                                <h3 class="agent-card__name">Finn</h3>
+                                <p class="agent-card__role">Manufacturer Financial Analyst</p>
+                            </div>
+                        </div>
+
+                        <div class="agent-card__badges">
+                            <span class="agent-card__badge agent-card__badge--datahub">Becquerel DB</span>
+                            <span class="agent-card__badge agent-card__badge--code">Code Interpreter</span>
+                        </div>
+
+                        <p class="agent-card__description">
+                            Analyzes financial performance of major PV manufacturers - revenue, margins, profitability, and cross-company comparisons
+                        </p>
+                    </div>
+
+                    <button class="agent-card__btn" data-hire-btn="manufacturer_financial" aria-label="Hire Finn, the Manufacturer Financial Analyst agent">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Hire Agent
+                    </button>
+                </article>
+
+                <!-- NZIA Market Impact Agent - Nina -->
+                <article class="agent-card" data-agent-card="nzia_market_impact" data-color="teal">
+                    <div class="agent-card__premium-badge" title="Premium - Requires Premium plan or whitelist">PREMIUM</div>
+                    <div class="agent-card__check">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+
+                    <div class="agent-card__content">
+                        <div class="agent-card__header">
+                            <div class="agent-card__initial">N</div>
+                            <div class="agent-card__title-wrapper">
+                                <h3 class="agent-card__name">Nina</h3>
+                                <p class="agent-card__role">NZIA Market Impact Expert</p>
+                            </div>
+                        </div>
+
+                        <div class="agent-card__badges">
+                            <span class="agent-card__badge agent-card__badge--datahub">Becquerel DB</span>
+                            <span class="agent-card__badge agent-card__badge--policy">NZIA Reports</span>
+                        </div>
+
+                        <p class="agent-card__description">
+                            Expert in EU NZIA market impact analysis - manufacturing targets, compliance criteria, country forecasts, and strategic recommendations
+                        </p>
+                    </div>
+
+                    <button class="agent-card__btn" data-hire-btn="nzia_market_impact" aria-label="Hire Nina, the NZIA Market Impact Expert agent">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>

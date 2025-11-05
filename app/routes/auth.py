@@ -206,14 +206,15 @@ def profile():
             logger.error(f"❌ Error creating usage_stats: {e}", exc_info=True)
             raise
 
-        # Get recent conversations (last 5)
+        # Get contact requests (last 5)
         try:
-            recent_conversations = Conversation.query.filter_by(
+            from models import ContactRequest
+            contact_requests = ContactRequest.query.filter_by(
                 user_id=current_user.id
-            ).order_by(Conversation.created_at.desc()).limit(5).all()
-            logger.info(f"✅ Recent conversations: {len(recent_conversations)} found")
+            ).order_by(ContactRequest.created_at.desc()).limit(5).all()
+            logger.info(f"✅ Contact requests: {len(contact_requests)} found")
         except Exception as e:
-            logger.error(f"❌ Error getting recent conversations: {e}", exc_info=True)
+            logger.error(f"❌ Error getting contact requests: {e}", exc_info=True)
             raise
 
         logger.info("✅ Rendering profile template")
@@ -221,7 +222,7 @@ def profile():
                              user=current_user,
                              plan_info=plan_info,
                              usage_stats=usage_stats,
-                             recent_conversations=recent_conversations)
+                             contact_requests=contact_requests)
 
     except Exception as e:
         import logging
@@ -240,6 +241,15 @@ def current_user_info():
         JSON with user information
     """
     try:
+        from models import ContactRequest
+
+        # Get contact request counts
+        total_contact_requests = ContactRequest.query.filter_by(user_id=current_user.id).count()
+        pending_contact_requests = ContactRequest.query.filter_by(
+            user_id=current_user.id,
+            status='pending'
+        ).count()
+
         return jsonify({
             'id': current_user.id,
             'username': current_user.username,
@@ -248,7 +258,9 @@ def current_user_info():
             'plan_type': current_user.plan_type,
             'monthly_query_count': current_user.monthly_query_count,
             'query_limit': current_user.get_query_limit() if current_user.get_query_limit() != float('inf') else 'unlimited',
-            'is_admin': current_user.role == 'admin'
+            'is_admin': current_user.role == 'admin',
+            'total_contact_requests': total_contact_requests,
+            'pending_contact_requests': pending_contact_requests
         })
     except Exception as e:
         logger.error(f"Error getting current user info: {e}")

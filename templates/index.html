@@ -145,6 +145,7 @@
                 <!-- <option value="om">Leo - O&M Expert</option> -->
                 <option value="news">Emma - News Analyst</option>
                 <option value="digitalization">Nova - Digitalization Expert</option>
+                <option value="nzia_policy">Aniza - NZIA Policy Expert</option>
             </select>
         </div>
         <a href="/agents" class="back-to-agents-btn" title="Back to Agent Selection">
@@ -579,7 +580,10 @@
             market_intel: 'Titan - Market Intelligence',
             price: 'Maya - Price Analysis',
             news: 'Emma - News Analyst',
-            digitalization: 'Nova - Digitalization Expert'
+            digitalization: 'Nova - Digitalization Expert',
+            nzia_policy: 'Aniza - NZIA Policy Expert',
+            manufacturer_financial: 'Finn - Manufacturer Financial Analyst',
+            nzia_market_impact: 'Nina - NZIA Market Impact Expert'
         };
 
         // Initialize agent selector with only hired agents
@@ -635,27 +639,59 @@
             -webkit-text-fill-color: inherit !important;
         }
         
-        /* Back to Agents Button */
+        /* Back to Agents Button - Material Design 3 flat style */
         .back-to-agents-btn {
             display: flex;
             align-items: center;
             gap: 6px;
-            padding: 8px 12px;
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-            color: #1f2937;
+            padding: 10px 16px;
+            background: #F3F4F9;                                    /* Flat pastel - MD3 */
+            color: #1e293b;
             text-decoration: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(251, 191, 36, 0.2);
+            border-radius: var(--md-sys-shape-corner-full, 9999px); /* Pill shape - MD3 */
+            font-size: 0.8125rem;
+            font-weight: 400;
+            font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+            letter-spacing: -0.01em;
+            transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: none;                                       /* MD3 flat - no shadows */
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        /* MD3 State Layer */
+        .back-to-agents-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #5C6BC0;                                    /* Material Indigo */
+            opacity: 0;
+            transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
         .back-to-agents-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(251, 191, 36, 0.3);
-            color: #1f2937;
+            background: #E8EAF6;                                    /* Slightly darker pastel */
+            transform: none;                                        /* MD3 flat - no lift */
+            box-shadow: none;
+            color: #1e293b;
             text-decoration: none;
+        }
+
+        .back-to-agents-btn:hover::before {
+            opacity: 0.08;                                          /* MD3 state layer opacity */
+        }
+
+        .back-to-agents-btn:active::before {
+            opacity: 0.12;                                          /* MD3 pressed state */
+        }
+
+        .back-to-agents-btn svg {
+            position: relative;
+            z-index: 1;
         }
     </style>
 

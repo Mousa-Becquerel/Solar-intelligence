@@ -24,18 +24,28 @@ def landing():
     """
     Landing page route.
 
-    Shows the main landing page with product information.
+    Redirects non-authenticated users to waitlist.
     If user is authenticated, redirects to chat interface.
     """
     try:
         if current_user.is_authenticated:
             return redirect(url_for('chat.agents'))
 
-        return render_template('landing.html')
+        return redirect(url_for('static.waitlist'))
 
     except Exception as e:
         logger.error(f"Error loading landing page: {e}")
-        return render_template('landing.html')
+        return redirect(url_for('static.waitlist'))
+
+
+@static_bp.route('/landing_page')
+def landing_page():
+    """
+    Marketing landing page with full features showcase.
+
+    Shows the complete landing page with all sections.
+    """
+    return render_template('landing.html')
 
 
 @static_bp.route('/login')

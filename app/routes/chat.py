@@ -45,9 +45,10 @@ def agents():
     """
     Agent selection page.
 
-    Displays available agents for hiring.
+    Displays available agents for hiring with access control information.
     """
     from models import HiredAgent
+    from app.services.agent_access_service import AgentAccessService
 
     # Get user's hired agents
     hired_agents = HiredAgent.query.filter_by(
@@ -56,7 +57,12 @@ def agents():
     ).all()
     hired_agent_types = [agent.agent_type for agent in hired_agents]
 
-    return render_template('agents.html', hired_agents=hired_agent_types)
+    # Get agent access information for the user
+    agent_access_info = AgentAccessService.get_user_accessible_agents(current_user)
+
+    return render_template('agents.html',
+                         hired_agents=hired_agent_types,
+                         agent_access_info=agent_access_info)
 
 
 @chat_bp.route('/query', methods=['POST'])
@@ -140,6 +146,17 @@ def hire_agent():
         if not agent_type:
             return jsonify({'error': 'agent_type is required'}), 400
 
+        # Check if user has access to this agent
+        from app.services.agent_access_service import AgentAccessService
+        can_access, access_reason = AgentAccessService.can_user_access_agent(current_user, agent_type)
+
+        if not can_access:
+            return jsonify({
+                'error': access_reason or 'You do not have access to this agent',
+                'requires_upgrade': True,
+                'agent_type': agent_type
+            }), 403
+
         success, error = AgentService.hire_agent(current_user, agent_type)
 
         if success:
@@ -192,14 +209,20 @@ def api_hire_agent():
     try:
         from models import HiredAgent
         from app.extensions import db
+        from app.services.agent_access_service import AgentAccessService
 
         data = request.get_json()
         agent_type = data.get('agent_type')
 
         # Validate agent type
-        valid_agents = ['market', 'price', 'news', 'digitalization', 'om']
+        valid_agents = ['market', 'price', 'news', 'digitalization', 'nzia_policy', 'nzia_market_impact', 'manufacturer_financial', 'om']
         if agent_type not in valid_agents:
             return jsonify({'success': False, 'message': 'Invalid agent type'}), 400
+
+        # Check if user has access to this agent
+        can_access, reason = AgentAccessService.can_user_access_agent(current_user, agent_type)
+        if not can_access:
+            return jsonify({'success': False, 'message': reason or 'Access denied'}), 403
 
         # Check if agent exists (active or inactive)
         existing = HiredAgent.query.filter_by(

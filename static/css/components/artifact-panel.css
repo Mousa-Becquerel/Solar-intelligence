@@ -9,26 +9,26 @@
    (Positioning handled by app-layout.css)
    ============================================ */
 
-/* Artifact Container - Creates bordered box effect like Claude */
+/* Artifact Container - MD3 flat design */
 .artifact-container {
-    background: #ffffff;
-    border-radius: 12px;
-    border: 1px solid #d1d5db;
-    box-shadow: none;
+    background: #ffffff;                            /* MD3 surface */
+    border-radius: var(--md-sys-shape-corner-large, 12px); /* MD3 large corners */
+    border: none;                                   /* MD3 flat - no borders */
+    box-shadow: none;                               /* MD3 flat - no shadows */
     overflow: hidden;
     display: flex;
     flex-direction: column;
     height: calc(100vh - 3rem); /* Account for panel padding */
 }
 
-/* Artifact Header */
+/* Artifact Header - MD3 flat design */
 .artifact-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0.875rem 2rem;
-    background: linear-gradient(135deg, var(--becq-gold) 0%, var(--becq-gold-dark) 100%);
-    border-bottom: 1px solid #e5e7eb;
+    background: #FFB74D;                            /* Flat Material Gold - MD3 */
+    border-bottom: none;                            /* MD3 flat - no borders */
     position: relative;
     z-index: 10;
     flex-shrink: 0;
@@ -40,14 +40,14 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--becq-accent-blue) 0%, transparent 100%);
+    height: 0;                                      /* MD3 flat - no accent line */
+    background: none;
 }
 
 .artifact-title {
     font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--becq-blue);
+    font-weight: 700;                               /* MD3 bold weight */
+    color: white;                                   /* White text on gold background - MD3 */
     margin: 0;
     letter-spacing: -0.01em;
     font-family: 'Inter', 'Open Sans', Arial, sans-serif;
@@ -56,26 +56,29 @@
 .artifact-close-btn {
     background: transparent;
     border: none;
-    border-radius: 6px;
-    width: 28px;
-    height: 28px;
+    border-radius: var(--md-sys-shape-corner-full, 50%); /* MD3 circular */
+    width: 32px;                                    /* Slightly larger for better touch */
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    color: #6b7280;
+    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: white;                                   /* White icon on gold background - MD3 */
     padding: 0;
+    position: relative;
+    overflow: hidden;
 }
 
 .artifact-close-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-    color: #374151;
+    background: rgba(255, 255, 255, 0.12);          /* MD3 state layer on dark background */
+    color: white;
     box-shadow: none;
 }
 
 .artifact-close-btn:active {
-    transform: scale(0.95);
+    background: rgba(255, 255, 255, 0.16);          /* MD3 pressed state */
+    transform: none;                                /* MD3 flat - no scale */
 }
 
 .artifact-close-btn svg {
@@ -116,7 +119,7 @@
    ARTIFACT STATES
    ============================================ */
 
-/* Loading State */
+/* Loading State - MD3 flat design */
 .artifact-loading {
     display: flex;
     flex-direction: column;
@@ -129,8 +132,8 @@
 .artifact-loading-spinner {
     width: 48px;
     height: 48px;
-    border: 4px solid #f3f4f6;
-    border-top: 4px solid var(--becq-gold);
+    border: 4px solid #e5e7eb;                      /* MD3 outline */
+    border-top: 4px solid #FFB74D;                  /* Flat Material Gold - MD3 */
     border-radius: 50%;
     animation: artifact-spin 1s linear infinite;
     margin-bottom: 1rem;
@@ -143,8 +146,9 @@
 
 .artifact-loading-text {
     font-size: 1rem;
-    color: #6b7280;
-    font-weight: 500;
+    color: #64748b;                                 /* MD3 on-surface-variant */
+    font-weight: 400;                               /* MD3 regular weight */
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
 }
 
 /* Empty State */

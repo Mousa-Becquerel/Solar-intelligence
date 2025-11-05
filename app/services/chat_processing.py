@@ -21,6 +21,9 @@ _news_agent = None
 _leo_om_agent = None
 _digitalization_agent = None
 _market_intelligence_agent = None
+_nzia_policy_agent = None
+_manufacturer_financial_agent = None
+_nzia_market_impact_agent = None
 
 
 def get_price_agent():
@@ -92,6 +95,48 @@ def get_market_intelligence_agent_instance():
             logger.error(f"Failed to initialize Market Intelligence Agent: {e}", exc_info=True)
             raise
     return _market_intelligence_agent
+
+
+def get_nzia_policy_agent_instance():
+    """Get or create the NZIA policy agent instance."""
+    global _nzia_policy_agent
+    if _nzia_policy_agent is None:
+        try:
+            from nzia_policy_agent import get_nzia_policy_agent
+            _nzia_policy_agent = get_nzia_policy_agent()
+            logger.info("✅ NZIA Policy Agent initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize NZIA Policy Agent: {e}", exc_info=True)
+            raise
+    return _nzia_policy_agent
+
+
+def get_manufacturer_financial_agent_instance():
+    """Get or create the manufacturer financial agent instance."""
+    global _manufacturer_financial_agent
+    if _manufacturer_financial_agent is None:
+        try:
+            from manufacturer_financial_agent import get_manufacturer_financial_agent
+            _manufacturer_financial_agent = get_manufacturer_financial_agent()
+            logger.info("✅ Manufacturer Financial Agent initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize Manufacturer Financial Agent: {e}", exc_info=True)
+            raise
+    return _manufacturer_financial_agent
+
+
+def get_nzia_market_impact_agent_instance():
+    """Get or create the NZIA market impact agent instance."""
+    global _nzia_market_impact_agent
+    if _nzia_market_impact_agent is None:
+        try:
+            from nzia_market_impact_agent import get_nzia_market_impact_agent
+            _nzia_market_impact_agent = get_nzia_market_impact_agent()
+            logger.info("✅ NZIA Market Impact Agent initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize NZIA Market Impact Agent: {e}", exc_info=True)
+            raise
+    return _nzia_market_impact_agent
 
 
 def clean_nan_values(obj):
@@ -204,18 +249,21 @@ def process_price_agent(user_message: str, conv_id: int) -> dict:
         # Check if it's a PlotDataResult (D3/JSON plot data)
         elif hasattr(output, 'plot_type') and hasattr(output, 'data') and isinstance(output.data, list):
             if output.success:
+                # For fresh responses, keep 'interactive_chart' format for backward compatibility with frontend handler
+                # But also save the raw plot data for database storage to match market agent format
+                plot_data_dict = {
+                    'plot_type': output.plot_type,
+                    'title': output.title,
+                    'x_axis_label': output.x_axis_label,
+                    'y_axis_label': output.y_axis_label,
+                    'unit': output.unit,
+                    'data': output.data,
+                    'series_info': output.series_info
+                }
                 response_data = [{
                     'type': 'interactive_chart',
                     'value': output.title,
-                    'plot_data': {
-                        'plot_type': output.plot_type,
-                        'title': output.title,
-                        'x_axis_label': output.x_axis_label,
-                        'y_axis_label': output.y_axis_label,
-                        'unit': output.unit,
-                        'data': output.data,
-                        'series_info': output.series_info
-                    },
+                    'plot_data': plot_data_dict,
                     'comment': None
                 }]
             else:
@@ -253,7 +301,17 @@ def process_price_agent(user_message: str, conv_id: int) -> dict:
     try:
         for resp in response_data:
             cleaned_resp = clean_nan_values(resp)
-            bot_msg = Message(conversation_id=conv_id, sender='bot', content=json.dumps(cleaned_resp))
+
+            # Convert 'interactive_chart' to 'plot' format for database storage
+            # This ensures plots load correctly from chat history
+            db_resp = cleaned_resp.copy()
+            if db_resp.get('type') == 'interactive_chart' and 'plot_data' in db_resp:
+                db_resp = {
+                    'type': 'plot',
+                    'value': db_resp['plot_data']
+                }
+
+            bot_msg = Message(conversation_id=conv_id, sender='bot', content=json.dumps(db_resp))
             db.session.add(bot_msg)
         db.session.commit()
     except Exception as e:
@@ -640,6 +698,261 @@ def process_market_intelligence_agent_stream(user_message: str, conv_id: int, ap
     )
 
 
+def process_nzia_policy_agent_stream(user_message: str, conv_id: int, app):
+    """
+    Process a message with the NZIA policy agent (streaming).
+
+    Returns:
+        Flask Response with SSE stream
+    """
+    nzia_policy_agent = get_nzia_policy_agent_instance()
+
+    def generate_streaming_response():
+        """Generator function for Server-Sent Events streaming"""
+
+        async def stream_agent():
+            try:
+                full_response = ""
+
+                # Stream text chunks as they arrive
+                async for chunk in nzia_policy_agent.analyze_stream(user_message, conversation_id=str(conv_id)):
+                    full_response += chunk
+                    yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
+
+                # Save the complete response to database
+                try:
+                    with app.app_context():
+                        try:
+                            bot_msg = Message(
+                                conversation_id=conv_id,
+                                sender='bot',
+                                content=json.dumps({
+                                    'type': 'string',
+                                    'value': full_response,
+                                    'comment': None
+                                })
+                            )
+                            db.session.add(bot_msg)
+                            db.session.commit()
+                            logger.info(f"NZIA policy agent message saved: {len(full_response)} chars")
+                        except Exception as db_error:
+                            logger.error(f"Error saving NZIA policy agent message: {db_error}")
+                            db.session.rollback()
+                            raise
+                        finally:
+                            db.session.close()
+                except Exception as outer_error:
+                    logger.error(f"Failed to save message: {outer_error}")
+
+                # Send completion event
+                yield f"data: {json.dumps({'type': 'done', 'full_response': full_response})}\n\n"
+
+            except Exception as e:
+                error_msg = f"Streaming error: {str(e)}"
+                logger.error(error_msg)
+                yield f"data: {json.dumps({'type': 'error', 'message': error_msg})}\n\n"
+
+        # Run async generator
+        loop = asyncio.new_event_loop()
+        try:
+            asyncio.set_event_loop(loop)
+            async_gen = stream_agent()
+            while True:
+                try:
+                    chunk = loop.run_until_complete(async_gen.__anext__())
+                    yield chunk
+                except StopAsyncIteration:
+                    break
+        finally:
+            asyncio.set_event_loop(None)
+            try:
+                loop.close()
+            except Exception as e:
+                logger.error(f"Error closing event loop: {e}")
+
+    return Response(
+        generate_streaming_response(),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache, no-transform',
+            'X-Accel-Buffering': 'no',
+            'Connection': 'keep-alive',
+            'Content-Type': 'text/event-stream; charset=utf-8',
+            'X-Content-Type-Options': 'nosniff'
+        }
+    )
+
+
+def process_manufacturer_financial_agent_stream(user_message: str, conv_id: int, app):
+    """
+    Process a message with the manufacturer financial agent (streaming).
+
+    Returns:
+        Flask Response with SSE stream
+    """
+    manufacturer_financial_agent = get_manufacturer_financial_agent_instance()
+
+    def generate_streaming_response():
+        """Generator function for Server-Sent Events streaming"""
+
+        async def stream_agent():
+            try:
+                full_response = ""
+
+                # Stream text chunks as they arrive
+                async for chunk in manufacturer_financial_agent.analyze_stream(user_message, conversation_id=str(conv_id)):
+                    full_response += chunk
+                    yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
+
+                # Save the complete response to database
+                try:
+                    with app.app_context():
+                        try:
+                            bot_msg = Message(
+                                conversation_id=conv_id,
+                                sender='bot',
+                                content=json.dumps({
+                                    'type': 'string',
+                                    'value': full_response,
+                                    'comment': None
+                                })
+                            )
+                            db.session.add(bot_msg)
+                            db.session.commit()
+                            logger.info(f"Manufacturer financial agent message saved: {len(full_response)} chars")
+                        except Exception as db_error:
+                            logger.error(f"Error saving manufacturer financial agent message: {db_error}")
+                            db.session.rollback()
+                            raise
+                        finally:
+                            db.session.close()
+                except Exception as outer_error:
+                    logger.error(f"Failed to save message: {outer_error}")
+
+                # Send completion event
+                yield f"data: {json.dumps({'type': 'done', 'full_response': full_response})}\n\n"
+
+            except Exception as e:
+                error_msg = f"Streaming error: {str(e)}"
+                logger.error(error_msg)
+                yield f"data: {json.dumps({'type': 'error', 'message': error_msg})}\n\n"
+
+        # Run async generator
+        loop = asyncio.new_event_loop()
+        try:
+            asyncio.set_event_loop(loop)
+            async_gen = stream_agent()
+            while True:
+                try:
+                    chunk = loop.run_until_complete(async_gen.__anext__())
+                    yield chunk
+                except StopAsyncIteration:
+                    break
+        finally:
+            asyncio.set_event_loop(None)
+            try:
+                loop.close()
+            except Exception as e:
+                logger.error(f"Error closing event loop: {e}")
+
+    return Response(
+        generate_streaming_response(),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache, no-transform',
+            'X-Accel-Buffering': 'no',
+            'Connection': 'keep-alive',
+            'Content-Type': 'text/event-stream; charset=utf-8',
+            'X-Content-Type-Options': 'nosniff'
+        }
+    )
+
+
+def process_nzia_market_impact_agent_stream(user_message: str, conv_id: int, app):
+    """
+    Process a message with the NZIA market impact agent (streaming).
+
+    Returns:
+        Flask Response with SSE stream
+    """
+    nzia_market_impact_agent = get_nzia_market_impact_agent_instance()
+
+    def generate_streaming_response():
+        """Generator function for Server-Sent Events streaming"""
+
+        async def stream_agent():
+            try:
+                full_response = ""
+
+                # Stream text chunks as they arrive
+                async for chunk in nzia_market_impact_agent.analyze_stream(user_message, conversation_id=str(conv_id)):
+                    full_response += chunk
+                    yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
+
+                # Save the complete response to database
+                try:
+                    with app.app_context():
+                        try:
+                            bot_msg = Message(
+                                conversation_id=conv_id,
+                                sender='bot',
+                                content=json.dumps({
+                                    'type': 'string',
+                                    'value': full_response,
+                                    'comment': None
+                                })
+                            )
+                            db.session.add(bot_msg)
+                            db.session.commit()
+                            logger.info(f"NZIA market impact agent message saved: {len(full_response)} chars")
+                        except Exception as db_error:
+                            logger.error(f"Error saving NZIA market impact agent message: {db_error}")
+                            db.session.rollback()
+                            raise
+                        finally:
+                            db.session.close()
+                except Exception as outer_error:
+                    logger.error(f"Failed to save message: {outer_error}")
+
+                # Send completion event
+                yield f"data: {json.dumps({'type': 'done', 'full_response': full_response})}\n\n"
+
+            except Exception as e:
+                error_msg = f"Streaming error: {str(e)}"
+                logger.error(error_msg)
+                yield f"data: {json.dumps({'type': 'error', 'message': error_msg})}\n\n"
+
+        # Run async generator
+        loop = asyncio.new_event_loop()
+        try:
+            asyncio.set_event_loop(loop)
+            async_gen = stream_agent()
+            while True:
+                try:
+                    chunk = loop.run_until_complete(async_gen.__anext__())
+                    yield chunk
+                except StopAsyncIteration:
+                    break
+        finally:
+            asyncio.set_event_loop(None)
+            try:
+                loop.close()
+            except Exception as e:
+                logger.error(f"Error closing event loop: {e}")
+
+    return Response(
+        generate_streaming_response(),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache, no-transform',
+            'X-Accel-Buffering': 'no',
+            'Connection': 'keep-alive',
+            'Content-Type': 'text/event-stream; charset=utf-8',
+            'X-Content-Type-Options': 'nosniff'
+        }
+    )
+
+
 def process_chat_request(request_obj, current_user):
     """
     Process a chat request with agent interaction.
@@ -679,6 +992,16 @@ def process_chat_request(request_obj, current_user):
         conversation = db.session.get(Conversation, conv_id)
         if not conversation or conversation.user_id != current_user.id:
             return jsonify({'error': 'Conversation not found or access denied'}), 404
+
+        # Check if user has access to the requested agent
+        from app.services.agent_access_service import AgentAccessService
+        can_access, reason = AgentAccessService.can_user_access_agent(current_user, agent_type)
+        if not can_access:
+            return jsonify({
+                'error': reason or 'You do not have access to this agent',
+                'requires_upgrade': True,
+                'agent_type': agent_type
+            }), 403
 
         # Update conversation agent type if changed
         if conversation.agent_type != agent_type:
@@ -744,6 +1067,15 @@ def process_chat_request(request_obj, current_user):
 
             elif agent_type == "market":
                 return process_market_intelligence_agent_stream(user_message, conv_id, current_app._get_current_object())
+
+            elif agent_type == "nzia_policy":
+                return process_nzia_policy_agent_stream(user_message, conv_id, current_app._get_current_object())
+
+            elif agent_type == "manufacturer_financial":
+                return process_manufacturer_financial_agent_stream(user_message, conv_id, current_app._get_current_object())
+
+            elif agent_type == "nzia_market_impact":
+                return process_nzia_market_impact_agent_stream(user_message, conv_id, current_app._get_current_object())
 
             else:
                 return jsonify({'error': f'Unknown agent type: {agent_type}'}), 400

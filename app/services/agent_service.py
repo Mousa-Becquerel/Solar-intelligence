@@ -25,6 +25,9 @@ class AgentService:
         'price': 'Module Prices Agent',
         'news': 'News Agent',
         'digitalization': 'Digitalization Trends Agent',
+        'nzia_policy': 'NZIA Policy Agent',
+        'nzia_market_impact': 'NZIA Market Impact Agent',
+        'manufacturer_financial': 'Manufacturer Financial Agent',
         'leo_om': 'O&M Agent',
         'weaviate': 'Database Query Agent'
     }
@@ -197,6 +200,9 @@ class AgentService:
             'price': ['price', 'cost', 'module', 'wafer', 'polysilicon', 'cell', 'pv glass', 'usd', 'yuan', 'rmb'],
             'news': ['news', 'article', 'report', 'latest', 'update', 'announcement', 'press release'],
             'digitalization': ['digital', 'automation', 'ai', 'machine learning', 'iot', 'smart', 'technology'],
+            'nzia_policy': ['nzia', 'ferx', 'italy', 'italian', 'policy', 'compliance', 'auction', 'eligibility', 'regulatory'],
+            'nzia_market_impact': ['nzia', 'market impact', 'eu manufacturing', 'european pv', 'nzia target', 'nzia compliance', 'resilience', 'sustainability', 'procurement', 'germany', 'spain', 'france', 'country forecast'],
+            'manufacturer_financial': ['manufacturer', 'financial', 'revenue', 'profit', 'margin', 'ebitda', 'jinko', 'longi', 'trina', 'canadian solar', 'ja solar', 'risen', 'tongwei', 'gcl'],
             'leo_om': ['operation', 'maintenance', 'o&m', 'om', 'monitoring', 'performance', 'efficiency']
         }
 
@@ -271,6 +277,29 @@ class AgentService:
                 'Automation trends',
                 'AI/ML applications',
                 'Smart grid technology'
+            ],
+            'nzia_policy': [
+                'FERX framework analysis',
+                'NZIA compliance guidance',
+                'Italian PV auction procedures',
+                'Policy document interpretation',
+                'Multilingual support (IT/EN)'
+            ],
+            'nzia_market_impact': [
+                'EU NZIA market impact analysis',
+                'EU manufacturing targets (40% by 2030)',
+                'Implementation timeline and milestones',
+                'Compliance criteria analysis',
+                'Country-level PV market forecasts',
+                'Strategic recommendations for EU PV industry'
+            ],
+            'manufacturer_financial': [
+                'Financial performance analysis',
+                'Cross-company comparisons',
+                'Quarterly and yearly trend analysis',
+                'Margin and profitability metrics',
+                'Manufacturing capacity tracking',
+                'Revenue per watt analysis'
             ],
             'leo_om': [
                 'O&M best practices',

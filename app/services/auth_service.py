@@ -137,6 +137,11 @@ class AuthService:
             if not user:
                 return None, "Invalid username or password"
 
+            # Verify user has a password hash
+            if not user.password_hash:
+                logger.error(f"User {username} has no password hash set")
+                return None, "Invalid username or password"
+
             # Check password
             if not user.check_password(password):
                 return None, "Invalid username or password"
@@ -159,9 +164,10 @@ class AuthService:
             return user, None
 
         except Exception as e:
-            logger.error(f"Authentication error: {e}")
-            db.session.rollback()
-            return None, "Database connection error. Please try again."
+            logger.error(f"Authentication error: {e}", exc_info=True)
+            # No rollback needed - this is a read-only operation
+            # Rollback can interfere with Flask-Login session management
+            return None, "An error occurred during authentication. Please try again."
 
     @staticmethod
     def get_user_by_id(user_id: int) -> Optional[User]:

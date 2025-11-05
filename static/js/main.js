@@ -105,8 +105,13 @@ class SolarIntelligenceApp {
                 sidebarUserAvatar.textContent = displayName.charAt(0).toUpperCase();
             }
             if (sidebarUserPlan) {
-                // Show user role/plan
-                sidebarUserPlan.textContent = user.role === 'admin' ? 'Admin' : 'Max plan';
+                // Show user role/plan - capitalize first letter of plan type
+                if (user.role === 'admin') {
+                    sidebarUserPlan.textContent = 'Admin';
+                } else {
+                    const planType = user.plan_type || 'free';
+                    sidebarUserPlan.textContent = planType.charAt(0).toUpperCase() + planType.slice(1) + ' plan';
+                }
             }
 
             // Show admin button if user is admin (both in header and dropdown)
@@ -719,11 +724,11 @@ class SolarIntelligenceApp {
         if (!surveyStatus.stage1_completed) {
             // Stage 1 not completed - offer FIRST survey
             message = '<p><strong>Good news!</strong> Answer a quick 2-minute survey to unlock <strong>5 extra queries</strong> and help us tailor insights for your sector.</p>';
-            primaryButton = `<button onclick="window.showSurveyModal()" class="upgrade-btn primary" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1e3a8a; padding: 0.75rem 1.5rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-right: 0.5rem;">Get 5 Extra Queries</button>`;
+            primaryButton = `<button onclick="window.showSurveyModal()" class="upgrade-btn primary" style="background: #FFB74D; color: #1e3a8a; padding: 0.75rem 1.5rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-right: 0.5rem; position: relative; overflow: hidden; transition: background 0.2s ease;">Get 5 Extra Queries</button>`;
         } else if (!surveyStatus.stage2_completed) {
             // Stage 1 done, Stage 2 not done - offer SECOND survey
             message = '<p><strong>More bonus queries available!</strong> Complete a quick follow-up survey to unlock <strong>5 more queries</strong>.</p>';
-            primaryButton = `<button onclick="window.showSurveyStage2Modal()" class="upgrade-btn primary" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1e3a8a; padding: 0.75rem 1.5rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-right: 0.5rem;">Get 5 More Queries</button>`;
+            primaryButton = `<button onclick="window.showSurveyStage2Modal()" class="upgrade-btn primary" style="background: #FFB74D; color: #1e3a8a; padding: 0.75rem 1.5rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-right: 0.5rem; position: relative; overflow: hidden; transition: background 0.2s ease;">Get 5 More Queries</button>`;
         } else {
             // Both surveys completed - only show upgrade option
             message = '<p style="margin-top: 0.75rem;">Thank you for completing both surveys! To continue accessing solar market intelligence with unlimited queries, upgrade to Premium.</p>';
@@ -746,7 +751,7 @@ class SolarIntelligenceApp {
                 ${message}
                 <div class="upgrade-actions" style="margin-top: 1rem;">
                     ${primaryButton}
-                    <a href="/profile" class="upgrade-btn ${primaryButton ? 'secondary' : 'primary'}" style="background: ${primaryButton ? '#6b7280' : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)'}; color: ${primaryButton ? '#fff' : '#1e3a8a'}; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+                    <a href="/profile" class="upgrade-btn ${primaryButton ? 'secondary' : 'primary'}" style="background: ${primaryButton ? '#6b7280' : '#FFB74D'}; color: ${primaryButton ? '#fff' : '#1e3a8a'}; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block; position: relative; overflow: hidden; transition: background 0.2s ease;">
                         Upgrade to Premium
                     </a>
                 </div>
@@ -922,7 +927,10 @@ class SolarIntelligenceApp {
             market_intel: 'Market Intelligence',
             price: 'Price Analysis',
             news: 'News & Insights',
-            digitalization: 'Digitalization Expert'
+            digitalization: 'Digitalization Expert',
+            nzia_policy: 'NZIA Policy Expert',
+            manufacturer_financial: 'Manufacturer Financial Analyst',
+            nzia_market_impact: 'NZIA Market Impact Expert'
         };
 
         const title = agentTitles[agentType] || 'Solar Intelligence';

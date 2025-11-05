@@ -1,6 +1,7 @@
 /**
- * Expert Selection Cards Component
- * Modern, fancy card-based UI for selecting human experts
+ * Expert Selection Cards Component - Material Design 3
+ * Material You design language for selecting human experts
+ * Uses MD3 tokens from agents.css
  */
 
 .expert-selection-section {
@@ -51,7 +52,7 @@
     position: relative;
     background: white;
     border: none;
-    border-radius: 24px;
+    border-radius: var(--md-sys-shape-corner-extra-large, 28px);
     padding: 1.5rem;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -60,119 +61,117 @@
     gap: 1rem;
     min-height: 160px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: none;
 }
 
-/* Color backgrounds with gradients using app palette */
+/* Flat color backgrounds - Material You style */
 .expert-card[data-color="navy"] {
-    background: linear-gradient(135deg, rgba(0, 10, 85, 0.08) 0%, rgba(0, 10, 85, 0.12) 100%);
-    border: 2px solid rgba(0, 10, 85, 0.15);
+    background: #E8EAF6;
+    border: none;
 }
 
 .expert-card[data-color="gold"] {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(251, 191, 36, 0.18) 100%);
-    border: 2px solid rgba(251, 191, 36, 0.25);
+    background: #FFF8E1;
+    border: none;
 }
 
 .expert-card[data-color="navy-light"] {
-    background: linear-gradient(135deg, rgba(0, 10, 85, 0.06) 0%, rgba(0, 10, 85, 0.10) 100%);
-    border: 2px solid rgba(0, 10, 85, 0.12);
+    background: #F3F4F9;
+    border: none;
 }
 
 .expert-card[data-color="gold-dark"] {
-    background: linear-gradient(135deg, rgba(245, 158, 66, 0.12) 0%, rgba(245, 158, 66, 0.18) 100%);
-    border: 2px solid rgba(245, 158, 66, 0.25);
+    background: #FFE9D5;
+    border: none;
 }
 
-/* Hover state - Material You elevation */
+/* Hover state - Flat design */
 .expert-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.08);
+    transform: none;
+    box-shadow: none;
 }
 
-/* Selected state - Material You elevation */
+/* Selected state - Solid flat colors */
 .expert-card.selected {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15), 0 16px 48px rgba(0, 0, 0, 0.1);
+    transform: none;
+    box-shadow: none;
 }
 
 .expert-card.selected[data-color="navy"] {
-    background: linear-gradient(135deg, #000A55 0%, #001074 100%);
-    border-color: #000A55;
+    background: #5C6BC0;
+    border: none;
 }
 
 .expert-card.selected[data-color="gold"] {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e42 100%);
-    border-color: #fbbf24;
+    background: #FFB74D;
+    border: none;
 }
 
 .expert-card.selected[data-color="navy-light"] {
-    background: linear-gradient(135deg, #001074 0%, #000A55 100%);
-    border-color: #001074;
+    background: #7986CB;
+    border: none;
 }
 
 .expert-card.selected[data-color="gold-dark"] {
-    background: linear-gradient(135deg, #f59e42 0%, #ea8020 100%);
-    border-color: #f59e42;
+    background: #FFA726;
+    border: none;
 }
 
-/* Icon circle - Material You rounded */
+/* Icon - Material You flat */
 .expert-card-icon {
     width: 56px;
     height: 56px;
-    border-radius: 18px;
+    border-radius: var(--md-sys-shape-corner-large, 16px);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Icon color based on card type */
+/* Icon color based on card type - Flat */
 .expert-card[data-color="navy"] .expert-card-icon {
-    background: linear-gradient(135deg, rgba(0, 10, 85, 0.15) 0%, rgba(0, 10, 85, 0.2) 100%);
-    color: #000A55;
+    background: #C5CAE9;
+    color: #3F51B5;
 }
 
 .expert-card[data-color="gold"] .expert-card-icon {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(251, 191, 36, 0.25) 100%);
-    color: #f59e42;
+    background: #FFE082;
+    color: #F57C00;
 }
 
 .expert-card[data-color="navy-light"] .expert-card-icon {
-    background: linear-gradient(135deg, rgba(0, 10, 85, 0.12) 0%, rgba(0, 10, 85, 0.18) 100%);
-    color: #000A55;
+    background: #D1D5E8;
+    color: #5C6BC0;
 }
 
 .expert-card[data-color="gold-dark"] .expert-card-icon {
-    background: linear-gradient(135deg, rgba(245, 158, 66, 0.2) 0%, rgba(245, 158, 66, 0.28) 100%);
-    color: #f59e42;
+    background: #FFCC80;
+    color: #F57C00;
 }
 
-/* Selected card icons */
+/* Selected card icons - Flat */
 .expert-card.selected .expert-card-icon {
     background: white;
-    transform: scale(1.05);
+    transform: none;
 }
 
 .expert-card.selected[data-color="navy"] .expert-card-icon,
 .expert-card.selected[data-color="navy-light"] .expert-card-icon {
-    color: #000A55;
+    color: #3F51B5;
 }
 
 .expert-card.selected[data-color="gold"] .expert-card-icon,
 .expert-card.selected[data-color="gold-dark"] .expert-card-icon {
-    color: #f59e42;
+    color: #F57C00;
 }
 
 .expert-card:hover .expert-card-icon {
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0, 10, 85, 0.15);
+    transform: none;
 }
 
 .expert-card.selected:hover .expert-card-icon {
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.3);
+    transform: none;
 }
 
 .expert-card-content {
@@ -248,45 +247,7 @@
     transform: scale(1) rotate(0deg);
 }
 
-/* Decorative corner accent */
-.expert-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 80px;
-    height: 80px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 0 24px 0 100%;
-    opacity: 0.5;
-    transition: opacity 0.3s ease;
-}
-
-.expert-card:hover::before {
-    opacity: 0.7;
-}
-
-.expert-card.selected::before {
-    background: rgba(255, 255, 255, 0.15);
-    opacity: 1;
-}
-
-/* Bottom accent line */
-.expert-card::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: white;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.expert-card.selected::after {
-    opacity: 0.3;
-}
+/* Remove decorative accents for flat design */
 
 /* Responsive adjustments */
 @media (max-width: 768px) {

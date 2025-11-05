@@ -93,36 +93,59 @@
     }
 }
 
+/* Material Design 3 flat suggestion chips */
 .suggested-query-item {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.65rem 1rem;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(37, 99, 235, 0.15);
-    border-radius: 20px;
+    gap: 0.625rem;
+    padding: 0.75rem 1.125rem;
+    background: #F3F4F9; /* Flat pastel background - Material Design 3 */
+    border: none; /* MD3 flat - no borders */
+    border-radius: var(--md-sys-shape-corner-full, 9999px); /* Pill shape */
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #4b5563;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: #1e293b;
     letter-spacing: -0.01em;
-    box-shadow: none;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    box-shadow: none; /* MD3 flat - no shadows */
+    position: relative;
+    overflow: hidden;
+}
+
+/* MD3 State Layer for hover */
+.suggested-query-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #5C6BC0; /* Material Indigo */
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 .suggested-query-item:hover {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(37, 99, 235, 0.08) 100%);
-    border-color: rgba(251, 191, 36, 0.4);
-    transform: translateY(-2px);
+    background: #E8EAF6; /* Slightly darker pastel on hover */
+    border: none;
+    transform: none; /* MD3 flat - no lift */
     box-shadow: none;
-    color: #1f2937;
+    color: #1e293b;
+}
+
+.suggested-query-item:hover::before {
+    opacity: 0.08; /* MD3 state layer opacity */
+}
+
+.suggested-query-item:active::before {
+    opacity: 0.12; /* MD3 pressed state */
 }
 
 .suggested-query-item:active {
-    transform: translateY(0);
+    transform: none;
     box-shadow: none;
 }
 
@@ -136,11 +159,11 @@
 }
 
 .suggested-query-icon svg {
-    transition: all 0.25s ease;
+    transition: none; /* MD3 flat - no icon animation */
 }
 
 .suggested-query-item:hover .suggested-query-icon svg {
-    transform: scale(1.1);
+    transform: none; /* MD3 flat - no scaling */
 }
 
 .suggested-query-text {

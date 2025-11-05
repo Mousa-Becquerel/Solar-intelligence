@@ -3,10 +3,10 @@
  * All elements perfectly centered when collapsed
  */
 
-/* ===== SIDEBAR PANEL (CSS Grid Architecture) ===== */
+/* ===== SIDEBAR PANEL (CSS Grid Architecture) - Material Design 3 ===== */
 .sidebar-panel {
-    background: #f6f8fa;
-    color: #4b5563;
+    background: #F5F5F5;                            /* MD3 flat gray surface */
+    color: #64748b;
     display: grid !important;
     grid-template-rows: auto 1fr auto;
     grid-template-areas:
@@ -14,21 +14,21 @@
         "content"
         "footer";
     padding: 0;
-    border-top-right-radius: 18px;
-    border-bottom-right-radius: 18px;
+    border-top-right-radius: var(--md-sys-shape-corner-large, 16px); /* MD3 large */
+    border-bottom-right-radius: var(--md-sys-shape-corner-large, 16px);
     overflow: hidden;
     height: 100%;
 }
 
-/* ===== HEADER SECTION ===== */
+/* ===== HEADER SECTION - Material Design 3 ===== */
 .sidebar-top {
     grid-area: header;
     display: flex !important;
     align-items: center;
     justify-content: space-between;
     padding: 1rem;
-    border-bottom: 1px solid #e5e7eb;
-    background: #f6f8fa;
+    border-bottom: none;                            /* MD3 flat - no borders */
+    background: #F5F5F5;                            /* MD3 flat gray */
     flex-shrink: 0;
 }
 
@@ -39,22 +39,24 @@
     padding: 1rem 0.5rem;
 }
 
-/* === EXPAND BUTTON === */
+/* === EXPAND BUTTON - Material Design 3 Flat === */
 .sidebar-expand-btn {
-    width: 40px; /* ✅ Match icon button size */
+    width: 40px;
     height: 40px;
-    border: 1.5px solid #e5e7eb; /* ✅ Match icon button border */
-    background: #ffffff;
-    color: #2563eb;
+    border: none;                                   /* MD3 flat - no borders */
+    background: white;
+    color: #5C6BC0;                                 /* Material Indigo */
     cursor: pointer;
-    border-radius: 10px;
+    border-radius: var(--md-sys-shape-corner-medium, 12px); /* MD3 medium */
     display: none;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); /* ✅ Match icon buttons */
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); /* ✅ Match icon buttons */
-    margin: 0 auto; /* ✅ Center using flexbox like icon buttons */
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;                               /* MD3 flat - no shadows */
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
 }
 
 .sidebar-panel[data-expanded="false"] .sidebar-expand-btn,
@@ -66,16 +68,37 @@
     display: none !important;
 }
 
+/* MD3 State Layer */
+.sidebar-expand-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #5C6BC0;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
 .sidebar-expand-btn:hover {
-    background: #eff6ff; /* ✅ Match icon button hover */
-    border-color: #2563eb;
-    transform: translateY(-1px); /* ✅ Match icon button hover effect */
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    background: #E8EAF6;                            /* Light indigo on hover */
+    transform: none;                                /* MD3 flat - no lift */
+    box-shadow: none;
+}
+
+.sidebar-expand-btn:hover::before {
+    opacity: 0.08;
 }
 
 .sidebar-expand-btn:active {
-    transform: translateY(0); /* ✅ Press effect */
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    transform: none;                                /* MD3 flat - no press effect */
+    box-shadow: none;
+}
+
+.sidebar-expand-btn:active::before {
+    opacity: 0.12;
 }
 
 /* === COLLAPSE BUTTON === */
@@ -107,16 +130,16 @@
     background: rgba(37, 99, 235, 0.1);
 }
 
-/* === TITLE === */
+/* === TITLE - Material Design 3 Typography === */
 .sidebar-title {
     display: none;
     align-items: center;
-    font-family: 'Inter', 'Open Sans', 'Segoe UI', Arial, sans-serif;
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--becq-blue);
-    letter-spacing: 0.08em;
-    line-height: 1.1;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+    font-size: 1rem;
+    font-weight: 500;                               /* MD3 medium weight */
+    color: #1e293b;                                 /* MD3 on-surface */
+    letter-spacing: -0.02em;                        /* MD3 negative spacing */
+    line-height: 1.4;
     flex: 1;
     min-width: 0;
 }
@@ -178,44 +201,70 @@
     display: block;
 }
 
+/* Material Design 3 New Chat Button - Flat filled button */
 .new-chat-btn {
-    background: linear-gradient(135deg, var(--becq-gold) 0%, var(--becq-gold-dark) 100%);
-    color: var(--becq-blue);
-    font-weight: 700;
+    background: #5C6BC0;                            /* MD3 Material Indigo */
+    color: white;
+    font-weight: 500;                               /* MD3 medium weight */
     border: none;
-    border-radius: 12px; /* ✅ Slightly reduced radius for cleaner look */
-    padding: 0.85rem 1.5rem;
-    font-size: 0.85rem;
+    border-radius: var(--md-sys-shape-corner-full, 9999px); /* MD3 pill shape */
+    padding: 0.875rem 1.5rem;
+    font-size: 0.875rem;
     cursor: pointer;
-    box-shadow: none; /* ✅ Removed glow/shadow */
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;                               /* MD3 flat - no shadows */
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     width: 100%;
-    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+    letter-spacing: -0.01em;
+    text-transform: none;                           /* MD3 - no uppercase */
+    position: relative;
+    overflow: hidden;
+}
+
+/* MD3 State Layer */
+.new-chat-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 .new-chat-btn:hover {
-    background: linear-gradient(135deg, var(--becq-gold-dark) 0%, var(--becq-gold) 100%);
-    transform: translateY(-1px); /* ✅ Subtle lift */
-    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2); /* ✅ Minimal shadow on hover only */
-}
-
-.new-chat-btn:active {
-    transform: translateY(0); /* ✅ Press effect */
+    background: #5C6BC0;                            /* Keep same color */
+    transform: none;                                /* MD3 flat - no lift */
     box-shadow: none;
 }
 
+.new-chat-btn:hover::before {
+    opacity: 0.08;                                  /* MD3 state layer opacity */
+}
+
+.new-chat-btn:active {
+    transform: none;                                /* MD3 flat - no press effect */
+    box-shadow: none;
+}
+
+.new-chat-btn:active::before {
+    opacity: 0.12;                                  /* MD3 pressed state */
+}
+
+/* Material Design 3 Section Title */
 .sidebar-section-title {
-    font-size: 0.8rem;
-    color: var(--becq-accent-blue);
-    font-weight: 800;
+    font-size: 0.75rem;
+    color: #64748b;                                 /* MD3 on-surface-variant */
+    font-weight: 600;                               /* MD3 semi-bold */
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.05em;
     margin: 1rem 0 0.75rem 0;
     opacity: 0;
     transition: opacity 0.3s ease;
-    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
 }
 
 .sidebar-panel[data-expanded="true"] .sidebar-section-title {
@@ -235,35 +284,58 @@
     opacity: 1;
 }
 
+/* Material Design 3 Conversation List Items - Flat */
 .conversation-item {
     background: transparent;
     color: #64748b;
-    border-radius: 12px;
-    padding: 0.9rem 1.1rem;
-    margin: 0.15rem 0;
-    font-size: 0.9rem;
+    border-radius: var(--md-sys-shape-corner-medium, 12px); /* MD3 medium */
+    padding: 0.875rem 1rem;
+    margin: 0.25rem 0;
+    font-size: 0.875rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-    border: 1px solid transparent;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    border: none;                                   /* MD3 flat - no borders */
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+/* MD3 State Layer */
+.conversation-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #5C6BC0;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 .conversation-item:hover {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.05) 0%, rgba(37, 99, 235, 0.02) 100%);
-    color: var(--becq-blue);
-    transform: translateX(4px);
+    background: #EEEEEE;                            /* Flat gray on hover - MD3 */
+    color: #1e293b;
+    transform: none;                                /* MD3 flat - no slide */
+}
+
+.conversation-item:hover::before {
+    opacity: 0.08;
 }
 
 .conversation-item.active {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.08) 0%, rgba(37, 99, 235, 0.04) 100%);
-    color: var(--becq-blue);
-    font-weight: 600;
+    background: #E8EAF6;                            /* Light indigo - MD3 */
+    color: #1e293b;
+    font-weight: 500;                               /* MD3 medium weight */
 }
 
 /* === COLLAPSED STATE ICONS === */
@@ -279,33 +351,57 @@
     display: none;
 }
 
-/* ALL COLLAPSED BUTTONS - CONSISTENT SIZING */
+/* ALL COLLAPSED BUTTONS - Material Design 3 Flat */
 .sidebar-icon-btn {
-    width: 40px; /* ✅ Match expand button */
+    width: 40px;
     height: 40px;
-    background: #ffffff;
-    border: 1.5px solid #e5e7eb;
-    border-radius: 10px;
+    background: white;
+    border: none;                                   /* MD3 flat - no borders */
+    border-radius: var(--md-sys-shape-corner-medium, 12px); /* MD3 medium */
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); /* ✅ Smooth transition */
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     flex-shrink: 0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); /* ✅ Match expand button */
-    margin: 0 auto; /* ✅ Ensure centering */
+    box-shadow: none;                               /* MD3 flat - no shadows */
+    margin: 0 auto;
+    color: #5C6BC0;                                 /* Material Indigo */
+    position: relative;
+    overflow: hidden;
+}
+
+/* MD3 State Layer */
+.sidebar-icon-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #5C6BC0;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 .sidebar-icon-btn:hover {
-    background: #eff6ff;
-    border-color: #2563eb;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    background: #E8EAF6;                            /* Light indigo on hover */
+    transform: none;                                /* MD3 flat - no lift */
+    box-shadow: none;
+}
+
+.sidebar-icon-btn:hover::before {
+    opacity: 0.08;
 }
 
 .sidebar-icon-btn:active {
-    transform: translateY(0); /* ✅ Press effect */
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    transform: none;                                /* MD3 flat - no press effect */
+    box-shadow: none;
+}
+
+.sidebar-icon-btn:active::before {
+    opacity: 0.12;
 }
 
 /* === CONVERSATIONS INDICATOR === */
@@ -335,17 +431,17 @@
     font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
 }
 
-/* ===== FOOTER SECTION ===== */
+/* ===== FOOTER SECTION - Material Design 3 ===== */
 .sidebar-footer {
     grid-area: footer;
     padding: 1rem;
-    border-top: 1px solid #e5e7eb;
-    background: #f6f8fa;
+    border-top: none;                               /* MD3 flat - no borders */
+    background: #F5F5F5;                            /* MD3 flat gray */
     flex-shrink: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    position: relative; /* ✅ For dropdown positioning */
+    position: relative;
 }
 
 .sidebar-panel[data-expanded="false"] .sidebar-footer,
@@ -354,68 +450,91 @@
     width: 72px;
 }
 
-/* === USER PROFILE === */
+/* === USER PROFILE - Material Design 3 === */
 .sidebar-user-profile {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
+    background: white;
+    border: none;                                   /* MD3 flat - no borders */
+    border-radius: var(--md-sys-shape-corner-medium, 12px); /* MD3 medium */
     text-decoration: none;
     color: inherit;
-    transition: all 0.2s ease;
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     width: 100%;
+    position: relative;
+    overflow: hidden;
 }
 
 /* Collapsed state: just show avatar */
 .sidebar-panel[data-expanded="false"] .sidebar-user-profile,
 .sidebar-panel:not([data-expanded="true"]) .sidebar-user-profile {
-    width: 36px; /* ✅ Match avatar size exactly */
-    height: 36px;
+    width: 40px;                                    /* Match icon button size */
+    height: 40px;
     padding: 0;
-    margin: 0 auto; /* ✅ Perfect centering */
+    margin: 0 auto;
     justify-content: center;
     border: none;
     background: transparent;
-    border-radius: 50%; /* ✅ Circular container */
+    border-radius: 50%;
+    overflow: visible;                              /* Ensure avatar is not clipped */
+}
+
+/* MD3 State Layer */
+.sidebar-user-profile::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #5C6BC0;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 .sidebar-user-profile:hover {
-    background: #f3f4f6;
-    border-color: #d1d5db;
+    background: #EEEEEE;                            /* Flat gray - MD3 */
+    transform: none;                                /* MD3 flat - no lift */
+}
+
+.sidebar-user-profile:hover::before {
+    opacity: 0.08;
 }
 
 .sidebar-panel[data-expanded="false"] .sidebar-user-profile:hover,
 .sidebar-panel:not([data-expanded="true"]) .sidebar-user-profile:hover {
     background: transparent;
-    transform: translateY(-1px); /* ✅ Consistent hover lift */
+    transform: none;                                /* MD3 flat - no lift */
 }
 
+/* Material Design 3 User Avatar */
 .user-avatar {
-    width: 32px; /* Default size when expanded */
-    height: 32px;
-    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    width: 40px;                                    /* Match icon button size */
+    height: 40px;
+    background: #5C6BC0;                            /* Material Indigo - MD3 */
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     color: white;
-    font-weight: 600;
+    font-weight: 500;                               /* MD3 medium weight */
     font-size: 0.875rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); /* ✅ Match button shadow */
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+    box-shadow: none;                               /* MD3 flat - no shadows */
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Slightly smaller avatar when collapsed to match visual hierarchy */
+/* Avatar size when collapsed - match icon buttons */
 .sidebar-panel[data-expanded="false"] .user-avatar,
 .sidebar-panel:not([data-expanded="true"]) .user-avatar {
-    width: 36px; /* ✅ Slightly smaller than buttons (36px vs 40px) */
-    height: 36px;
-    font-size: 0.8rem; /* ✅ Smaller font */
+    width: 40px;                                    /* Match icon button size */
+    height: 40px;
+    font-size: 0.875rem;
 }
 
 .user-info-text {
@@ -429,10 +548,13 @@
     opacity: 1;
 }
 
+/* Material Design 3 User Info Text */
 .user-name-text {
     font-size: 0.875rem;
-    font-weight: 600;
-    color: #1f2937;
+    font-weight: 500;                               /* MD3 medium weight */
+    color: #1e293b;                                 /* MD3 on-surface */
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+    letter-spacing: -0.01em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -440,7 +562,9 @@
 
 .user-plan-text {
     font-size: 0.75rem;
-    color: #6b7280;
+    color: #64748b;                                 /* MD3 on-surface-variant */
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+    font-weight: 400;
 }
 
 .user-profile-chevron {
@@ -454,19 +578,19 @@
     opacity: 1;
 }
 
-/* ===== USER DROPDOWN MENU ===== */
+/* ===== USER DROPDOWN MENU - Material Design 3 ===== */
 .user-dropdown-menu {
     position: absolute;
     bottom: 100%;
     left: 1rem;
     margin-bottom: 0.5rem;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    background: white;
+    border: none;                                   /* MD3 flat - no borders */
+    border-radius: var(--md-sys-shape-corner-medium, 12px); /* MD3 medium */
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);     /* Subtle shadow for elevation */
     min-width: 220px;
     padding: 0.5rem;
-    display: none; /* Hidden by default */
+    display: none;
     flex-direction: column;
     gap: 0.25rem;
     z-index: 1000;
@@ -491,32 +615,57 @@
     margin-bottom: 0;
 }
 
-/* Dropdown menu items */
+/* Dropdown menu items - Material Design 3 */
 .dropdown-menu-item {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-    border-radius: 8px;
+    border-radius: var(--md-sys-shape-corner-small, 8px); /* MD3 small */
     background: transparent;
     border: none;
-    color: #4b5563;
-    font-size: 0.9rem;
-    font-weight: 500;
+    color: #64748b;                                 /* MD3 on-surface-variant */
+    font-size: 0.875rem;
+    font-weight: 400;                               /* MD3 body weight */
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     text-decoration: none;
     width: 100%;
-    font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+    letter-spacing: -0.01em;
+    position: relative;
+    overflow: hidden;
+}
+
+/* MD3 State Layer */
+.dropdown-menu-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #5C6BC0;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 .dropdown-menu-item:hover {
-    background: #f3f4f6;
-    color: #2563eb;
+    background: #EEEEEE;                            /* Flat gray - MD3 */
+    color: #1e293b;
+}
+
+.dropdown-menu-item:hover::before {
+    opacity: 0.08;
 }
 
 .dropdown-menu-item:active {
-    background: #e5e7eb;
+    background: #EEEEEE;
+}
+
+.dropdown-menu-item:active::before {
+    opacity: 0.12;
 }
 
 .dropdown-menu-item svg {

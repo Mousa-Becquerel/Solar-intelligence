@@ -258,6 +258,86 @@ class HiredAgent(db.Model):
     user = db.relationship('User', backref=db.backref('hired_agents', lazy='dynamic'))
 
 
+class AgentAccess(db.Model):
+    """Model for agent-level access control configuration"""
+    __tablename__ = 'agent_access'
+    __table_args__ = (
+        db.Index('idx_agent_access_agent_type', 'agent_type'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    agent_type = db.Column(db.String(50), unique=True, nullable=False)  # 'market', 'price', 'news', etc.
+    required_plan = db.Column(db.String(20), default='free')  # 'free', 'premium', 'max', 'admin'
+    is_enabled = db.Column(db.Boolean, default=True)  # Global on/off switch
+    description = db.Column(db.Text, nullable=True)  # Description of access requirements
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def can_user_access(self, user):
+        """
+        Check if a user can access this agent.
+
+        Args:
+            user: User object
+
+        Returns:
+            bool: True if user has access, False otherwise
+        """
+        # Agent must be enabled
+        if not self.is_enabled:
+            return False
+
+        # Admins always have access
+        if user.role == 'admin':
+            return True
+
+        # Check if user is in whitelist
+        whitelist_entry = AgentWhitelist.query.filter_by(
+            agent_type=self.agent_type,
+            user_id=user.id,
+            is_active=True
+        ).first()
+        if whitelist_entry:
+            return True
+
+        # Check plan-based access
+        plan_hierarchy = {
+            'free': 0,
+            'premium': 1,
+            'max': 2,
+            'admin': 3
+        }
+
+        user_plan_level = plan_hierarchy.get(user.plan_type, 0)
+        required_plan_level = plan_hierarchy.get(self.required_plan, 0)
+
+        return user_plan_level >= required_plan_level
+
+
+class AgentWhitelist(db.Model):
+    """Model for whitelisting specific users for agent access"""
+    __tablename__ = 'agent_whitelist'
+    __table_args__ = (
+        db.UniqueConstraint('agent_type', 'user_id', name='unique_agent_user_whitelist'),
+        db.Index('idx_agent_whitelist_user_id', 'user_id'),
+        db.Index('idx_agent_whitelist_agent_type', 'agent_type'),
+        db.Index('idx_agent_whitelist_is_active', 'is_active'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    agent_type = db.Column(db.String(50), nullable=False)  # 'market', 'price', 'news', etc.
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    granted_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Admin who granted access
+    granted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=True)  # Optional expiration date
+    is_active = db.Column(db.Boolean, default=True)
+    reason = db.Column(db.Text, nullable=True)  # Why access was granted
+
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('agent_whitelist_entries', lazy='dynamic'))
+    granter = db.relationship('User', foreign_keys=[granted_by])
+
+
 class ContactRequest(db.Model):
     """Model for storing contact form submissions from users"""
     __tablename__ = 'contact_request'

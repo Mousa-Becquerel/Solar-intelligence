@@ -124,9 +124,9 @@ export class ConversationManager {
         // Create title span
         const titleSpan = createElement('span', {
             classes: 'conversation-title',
-            textContent: conv.preview || conv.title || `Conversation ${conv.id}`,
+            textContent: conv.preview || conv.title || 'New Chat',
             attributes: {
-                title: conv.preview || conv.title || `Conversation ${conv.id}`
+                title: conv.preview || conv.title || 'New Chat'
             }
         });
 

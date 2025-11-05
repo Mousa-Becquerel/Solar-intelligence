@@ -49,7 +49,7 @@ def init_extensions(app):
     # Authentication
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'  # Will update when we create auth blueprint
-    login_manager.login_message = 'Please log in to access DH Agents.'
+    login_manager.login_message = None  # Disable automatic flash messages to prevent duplicates
     login_manager.login_message_category = 'info'
 
     # CSRF Protection

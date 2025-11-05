@@ -295,3 +295,153 @@ def reset_user_queries(user_id):
     except Exception as e:
         logger.error(f"Error resetting queries for user {user_id}: {e}")
         return jsonify({'success': False, 'error': 'Failed to reset query count'}), 500
+
+
+# ==================== Agent Access Control Routes ====================
+
+@admin_bp.route('/agent-access')
+@login_required
+@admin_required
+@limiter.limit("100 per hour")
+def agent_access():
+    """Agent access control management page."""
+    try:
+        from models import AgentAccess
+        from app.services.agent_access_service import AgentAccessService
+
+        # Get all agent configurations
+        agents = AgentAccess.query.all()
+
+        return render_template('admin_agent_access.html', agents=agents)
+
+    except Exception as e:
+        logger.error(f"Error loading agent access page: {e}")
+        flash('Failed to load agent access management', 'error')
+        return redirect(url_for('admin.users'))
+
+
+@admin_bp.route('/agent-access/<string:agent_type>/config', methods=['GET'])
+@login_required
+@admin_required
+@limiter.limit("100 per hour")
+def get_agent_config(agent_type):
+    """Get agent access configuration."""
+    try:
+        from models import AgentAccess
+        from app.services.agent_access_service import AgentAccessService
+
+        agent_config = AgentAccess.query.filter_by(agent_type=agent_type).first()
+
+        if not agent_config:
+            return jsonify({'error': 'Agent not found'}), 404
+
+        # Get whitelisted users
+        whitelisted_users = AgentAccessService.get_whitelisted_users(agent_type)
+
+        return jsonify({
+            'agent_type': agent_config.agent_type,
+            'required_plan': agent_config.required_plan,
+            'is_enabled': agent_config.is_enabled,
+            'description': agent_config.description,
+            'whitelisted_users': whitelisted_users
+        })
+
+    except Exception as e:
+        logger.error(f"Error getting agent config for {agent_type}: {e}")
+        return jsonify({'error': 'Failed to get agent configuration'}), 500
+
+
+@admin_bp.route('/agent-access/<string:agent_type>/update', methods=['POST'])
+@login_required
+@admin_required
+@limiter.limit("50 per hour")
+def update_agent_config(agent_type):
+    """Update agent access configuration."""
+    try:
+        from app.services.agent_access_service import AgentAccessService
+
+        data = request.get_json()
+
+        success, error = AgentAccessService.update_agent_config(
+            agent_type=agent_type,
+            required_plan=data.get('required_plan'),
+            is_enabled=data.get('is_enabled'),
+            description=data.get('description')
+        )
+
+        if success:
+            return jsonify({'success': True, 'message': 'Agent configuration updated successfully'})
+        else:
+            return jsonify({'success': False, 'error': error}), 400
+
+    except Exception as e:
+        logger.error(f"Error updating agent config for {agent_type}: {e}")
+        return jsonify({'success': False, 'error': 'Failed to update agent configuration'}), 500
+
+
+@admin_bp.route('/agent-access/<string:agent_type>/whitelist', methods=['POST'])
+@login_required
+@admin_required
+@limiter.limit("50 per hour")
+def add_to_whitelist(agent_type):
+    """Add user to agent whitelist."""
+    try:
+        from app.services.agent_access_service import AgentAccessService
+        from datetime import datetime
+
+        data = request.get_json()
+        user_id = data.get('user_id')
+        reason = data.get('reason')
+        expires_at = data.get('expires_at')
+
+        if not user_id:
+            return jsonify({'error': 'user_id is required'}), 400
+
+        # Parse expiration date if provided
+        expires_datetime = None
+        if expires_at:
+            try:
+                expires_datetime = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+            except:
+                return jsonify({'error': 'Invalid expiration date format'}), 400
+
+        success, error = AgentAccessService.grant_user_access(
+            agent_type=agent_type,
+            user_id=user_id,
+            granted_by_id=current_user.id,
+            expires_at=expires_datetime,
+            reason=reason
+        )
+
+        if success:
+            return jsonify({'success': True, 'message': 'User added to whitelist successfully'})
+        else:
+            return jsonify({'success': False, 'error': error}), 400
+
+    except Exception as e:
+        logger.error(f"Error adding user to whitelist for {agent_type}: {e}")
+        return jsonify({'success': False, 'error': 'Failed to add user to whitelist'}), 500
+
+
+@admin_bp.route('/agent-access/<string:agent_type>/whitelist/<int:user_id>', methods=['DELETE'])
+@login_required
+@admin_required
+@limiter.limit("50 per hour")
+def remove_from_whitelist(agent_type, user_id):
+    """Remove user from agent whitelist."""
+    try:
+        from app.services.agent_access_service import AgentAccessService
+
+        success, error = AgentAccessService.revoke_user_access(
+            agent_type=agent_type,
+            user_id=user_id
+        )
+
+        if success:
+            return jsonify({'success': True, 'message': 'User removed from whitelist successfully'})
+        else:
+            return jsonify({'success': False, 'error': error}), 400
+
+    except Exception as e:
+        logger.error(f"Error removing user from whitelist for {agent_type}: {e}")
+        return jsonify({'success': False, 'error': 'Failed to remove user from whitelist'}), 500

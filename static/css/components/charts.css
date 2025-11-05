@@ -449,7 +449,7 @@ div.message blockquote,
 .survey-header {
     text-align: center;
     padding: 1.25rem 2rem 1rem 2rem;
-    background: linear-gradient(135deg, var(--becq-blue) 0%, #0f2764 100%);
+    background: #1e3a8a;                            /* Navy blue - MD3 flat */
     color: white;
     border-radius: 12px 12px 0 0;
     position: relative;
@@ -459,7 +459,7 @@ div.message blockquote,
 .survey-icon {
     font-size: 2.5rem;
     margin-bottom: 0.5rem;
-    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+    /* MD3 flat - no shadows */
 }
 
 .survey-title {
@@ -495,7 +495,7 @@ div.message blockquote,
 
 .survey-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--becq-gold) 0%, var(--becq-gold-dark) 100%);
+    background: #FFB74D;                            /* Material Gold - MD3 flat */
     border-radius: 10px;
     transition: width 0.3s ease;
     width: 20%;
@@ -695,7 +695,7 @@ div.message blockquote,
 /* Survey error message styling */
 .survey-error-message {
     display: none;
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    background: #fee2e2;                            /* MD3 flat - no gradient */
     border: 1.5px solid #ef4444;
     border-radius: 8px;
     padding: 0.75rem 1rem;
@@ -750,27 +750,58 @@ div.message blockquote,
 }
 
 .survey-btn-primary {
-    background: linear-gradient(135deg, var(--becq-gold) 0%, var(--becq-gold-dark) 100%);
-    color: var(--becq-blue);
-    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.25);
+    background: #FFB74D;                            /* Material Gold - MD3 flat */
+    color: #1e3a8a;                                 /* Navy blue text - MD3 */
+    position: relative;
+    overflow: hidden;
 }
 
-.survey-btn-primary:hover {
-    background: linear-gradient(135deg, var(--becq-gold-dark) 0%, #e89539 100%);
-    box-shadow: 0 6px 16px rgba(251, 191, 36, 0.35);
-    transform: translateY(-2px);
+.survey-btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0);
+    transition: background 0.2s ease;
+    pointer-events: none;
+}
+
+.survey-btn-primary:hover::before {
+    background: rgba(0, 0, 0, 0.08);                /* MD3 state layer */
+}
+
+.survey-btn-primary:active::before {
+    background: rgba(0, 0, 0, 0.12);                /* MD3 pressed state */
 }
 
 .survey-btn-secondary {
     background: var(--becq-white);
-    color: var(--becq-blue);
-    border: 1.5px solid rgba(10, 24, 80, 0.15);
+    color: #1e3a8a;                                 /* Navy blue - MD3 */
+    border: 1.5px solid rgba(30, 58, 138, 0.2);     /* MD3 outline */
+    position: relative;
+    overflow: hidden;
 }
 
-.survey-btn-secondary:hover {
-    background: rgba(10, 24, 80, 0.03);
-    border-color: var(--becq-blue);
-    transform: translateY(-1px);
+.survey-btn-secondary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(30, 58, 138, 0);
+    transition: background 0.2s ease;
+    pointer-events: none;
+}
+
+.survey-btn-secondary:hover::before {
+    background: rgba(30, 58, 138, 0.04);            /* MD3 state layer */
+}
+
+.survey-btn-secondary:active::before {
+    background: rgba(30, 58, 138, 0.08);            /* MD3 pressed state */
 }
 
 /* Mobile responsiveness for survey */

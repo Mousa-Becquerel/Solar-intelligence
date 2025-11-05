@@ -1,7 +1,34 @@
 /**
- * Agent Hire Page Styles - Matching Expert Cards Design
- * Clean, modern design consistent with chat interface
+ * Agent Hire Page Styles - Material Design 3 (Material You)
+ * Following official Material Design 3 specifications
+ * https://m3.material.io/
  */
+
+/* ============================================
+   MATERIAL DESIGN 3 TOKENS
+   ============================================ */
+:root {
+    /* MD3 Elevation Tokens */
+    --md-sys-elevation-1: 0px 1px 2px 0px rgba(0, 0, 0, 0.30), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+    --md-sys-elevation-2: 0px 1px 2px 0px rgba(0, 0, 0, 0.30), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+    --md-sys-elevation-3: 0px 1px 3px 0px rgba(0, 0, 0, 0.30), 0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+    --md-sys-elevation-4: 0px 2px 3px 0px rgba(0, 0, 0, 0.30), 0px 6px 10px 4px rgba(0, 0, 0, 0.15);
+    --md-sys-elevation-5: 0px 4px 4px 0px rgba(0, 0, 0, 0.30), 0px 8px 12px 6px rgba(0, 0, 0, 0.15);
+
+    /* MD3 Shape Tokens */
+    --md-sys-shape-corner-none: 0px;
+    --md-sys-shape-corner-extra-small: 4px;
+    --md-sys-shape-corner-small: 8px;
+    --md-sys-shape-corner-medium: 12px;
+    --md-sys-shape-corner-large: 16px;
+    --md-sys-shape-corner-extra-large: 28px;
+    --md-sys-shape-corner-full: 9999px;
+
+    /* MD3 State Layer Opacity */
+    --md-sys-state-hover-opacity: 0.08;
+    --md-sys-state-focus-opacity: 0.12;
+    --md-sys-state-pressed-opacity: 0.12;
+}
 
 /* ============================================
    BASE STYLES
@@ -37,8 +64,8 @@ html, body {
     flex: 1;
     padding: 2rem 2.5rem;
     max-width: 1400px;
-    margin: 0 auto;
-    width: 100%;
+    margin-left: 260px; /* Account for fixed sidebar width */
+    width: calc(100% - 260px);
     overflow-x: hidden;
     box-sizing: border-box;
 }
@@ -51,13 +78,16 @@ html, body {
     min-height: 100vh;
     background: white;
     border-right: 1px solid #e2e8f0;
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    bottom: 0;
     height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
+    z-index: 10;
 }
 
 .agents-sidebar__card {
@@ -75,10 +105,10 @@ html, body {
 }
 
 .agents-sidebar__logo-text {
-    font-size: 1.25rem;
-    font-weight: 300;
-    color: #1e293b;
-    letter-spacing: -0.02em;
+    font-size: 1.5rem;                              /* Larger for better visibility */
+    font-weight: 400;                               /* Light and modern - MD3 */
+    color: #1e3a8a;                                 /* Navy blue - MD3 */
+    letter-spacing: -0.025em;
     font-family: 'Inter', 'Open Sans', Arial, sans-serif;
 }
 
@@ -94,9 +124,9 @@ html, body {
 
 .agents-sidebar__title {
     font-size: 1.125rem;
-    font-weight: 300;
-    color: #1e293b;
-    margin: 0 0 0.25rem 0;
+    font-weight: 500;
+    color: #1e3a8a;                                 /* Navy blue - MD3 */
+    margin: 0 0 0.375rem 0;
     letter-spacing: -0.02em;
     word-wrap: break-word;
     font-family: 'Inter', 'Open Sans', Arial, sans-serif;
@@ -104,11 +134,13 @@ html, body {
 
 .agents-sidebar__subtitle {
     font-size: 0.8125rem;
-    color: #64748b;
-    line-height: 1.4;
-    font-weight: 400;
+    color: #1e3a8a;                                 /* Navy blue - MD3 */
+    line-height: 1.5;
+    font-weight: 300;
     margin: 0;
     word-wrap: break-word;
+    letter-spacing: -0.01em;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
 }
 
 /* ============================================
@@ -117,29 +149,49 @@ html, body {
 .agents-hired-list {
     display: flex;
     flex-direction: column;
-    gap: 0.625rem;
+    gap: 0.5rem; /* Slightly tighter spacing for better density */
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
     margin-bottom: 1rem;
+    max-height: calc(100vh - 280px); /* Reserve space for logo, header, and button */
+    padding-right: 0.25rem; /* Space for scrollbar */
+}
+
+/* Custom scrollbar styling for hired agents list */
+.agents-hired-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.agents-hired-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.agents-hired-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.agents-hired-list::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
 .agents-hired-item {
     background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 0.75rem;
+    border: none;
+    border-radius: var(--md-sys-shape-corner-large);
+    padding: 0.625rem 0.75rem; /* Slightly more compact vertical padding */
     display: flex;
     align-items: center;
     justify-content: space-between;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: none;
+    min-height: 56px; /* Ensure consistent height */
 }
 
 .agents-hired-item:hover {
     background: #f1f5f9;
-    border-color: #cbd5e1;
 }
 
 .agents-hired-item__info {
@@ -155,7 +207,7 @@ html, body {
     width: 32px;
     height: 32px;
     border-radius: 12px;
-    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    background: #5C6BC0;
     color: white;
     display: flex;
     align-items: center;
@@ -200,15 +252,34 @@ html, body {
     font-size: 0.75rem;
     cursor: pointer;
     padding: 0.375rem 0.75rem;
-    border-radius: 100px;
-    transition: all 0.2s ease;
+    border-radius: var(--md-sys-shape-corner-full);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     white-space: nowrap;
     flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+/* MD3 State Layer */
+.agents-unhire-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #dc2626;
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 .agents-unhire-btn:hover {
-    background: #fee2e2;
     color: #dc2626;
+}
+
+.agents-unhire-btn:hover::before {
+    opacity: 0.1;
 }
 
 /* Empty state in sidebar */
@@ -232,33 +303,56 @@ html, body {
 }
 
 /* ============================================
-   START CHAT BUTTON - MATERIAL YOU PILL SHAPE
+   START CHAT BUTTON - MATERIAL YOU FAB (Floating Action Button)
    ============================================ */
 .agents-start-chat-btn {
     width: 100%;
     padding: 1rem 1.25rem;
-    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    background: #5C6BC0;
     color: white;
     font-size: 0.875rem;
     font-weight: 500;
     border: none;
-    border-radius: 100px;
+    border-radius: var(--md-sys-shape-corner-large);
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     text-decoration: none;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    box-shadow: none;
     margin-top: auto;
     letter-spacing: -0.01em;
     box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+}
+
+/* MD3 State Layer */
+.agents-start-chat-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 .agents-start-chat-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+    box-shadow: none;
+}
+
+.agents-start-chat-btn:hover:not(:disabled)::before {
+    opacity: var(--md-sys-state-hover-opacity);
+}
+
+.agents-start-chat-btn:active:not(:disabled)::before {
+    opacity: var(--md-sys-state-pressed-opacity);
 }
 
 .agents-start-chat-btn:disabled {
@@ -288,30 +382,45 @@ html, body {
 .agents-user-menu__btn {
     width: 40px;
     height: 40px;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    background: #F5F5F5;
+    border: none;
+    border-radius: var(--md-sys-shape-corner-medium);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #64748b;
     text-decoration: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: none;
+    position: relative;
+    overflow: hidden;
+}
+
+/* MD3 State Layer */
+.agents-user-menu__btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 .agents-user-menu__btn:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
-    color: #475569;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: #EEEEEE;
+}
+
+.agents-user-menu__btn:hover::before {
+    opacity: var(--md-sys-state-hover-opacity);
 }
 
 .agents-user-menu__btn--logout:hover {
-    background: #fef2f2;
-    border-color: #fecaca;
+    background: #FFEBEE;
     color: #dc2626;
 }
 
@@ -326,29 +435,31 @@ html, body {
 .agents-header {
     margin-bottom: 2rem;
     padding-bottom: 1.25rem;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: none;
 }
 
 .agents-header__title {
-    font-size: 1.875rem;
-    font-weight: 300;
-    color: #1e293b;
-    margin: 0 0 0.5rem 0;
-    letter-spacing: -0.02em;
+    font-size: 2rem;
+    font-weight: 400;
+    color: #1e3a8a;                                 /* Navy blue - MD3 */
+    margin: 0 0 0.75rem 0;
+    letter-spacing: -0.025em;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
 }
 
 .agents-header__title--accent {
-    font-weight: 600;
-    color: #2563eb;
+    font-weight: 500;
+    color: #1e3a8a;                                 /* Navy blue - MD3 */
 }
 
 .agents-header__subtitle {
     font-size: 0.9375rem;
-    color: #64748b;
-    line-height: 1.6;
-    font-weight: 400;
+    color: #1e3a8a;                                 /* Navy blue - MD3 */
+    line-height: 1.65;
+    font-weight: 300;
     margin: 0;
-    max-width: 700px;
+    letter-spacing: -0.01em;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
 }
 
 /* ============================================
@@ -368,7 +479,7 @@ html, body {
     position: relative;
     background: white;
     border: none;
-    border-radius: 24px;
+    border-radius: var(--md-sys-shape-corner-extra-large);
     padding: 1.5rem;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -377,59 +488,99 @@ html, body {
     gap: 1rem;
     min-height: 180px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: none;
 }
 
 .agent-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.08);
+    transform: none;
+    box-shadow: none;
 }
 
-/* Color backgrounds with gradients matching expert cards */
+/* Flat color backgrounds - Material You style */
 .agent-card[data-color="navy"] {
-    background: linear-gradient(135deg, rgba(0, 10, 85, 0.08) 0%, rgba(0, 10, 85, 0.12) 100%);
-    border: 2px solid rgba(0, 10, 85, 0.15);
+    background: #E8EAF6;
+    border: none;
 }
 
 .agent-card[data-color="gold"] {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(251, 191, 36, 0.18) 100%);
-    border: 2px solid rgba(251, 191, 36, 0.25);
+    background: #FFF8E1;
+    border: none;
 }
 
 .agent-card[data-color="navy-light"] {
-    background: linear-gradient(135deg, rgba(0, 10, 85, 0.06) 0%, rgba(0, 10, 85, 0.10) 100%);
-    border: 2px solid rgba(0, 10, 85, 0.12);
+    background: #F3F4F9;
+    border: none;
 }
 
 .agent-card[data-color="gold-dark"] {
-    background: linear-gradient(135deg, rgba(245, 158, 66, 0.12) 0%, rgba(245, 158, 66, 0.18) 100%);
-    border: 2px solid rgba(245, 158, 66, 0.25);
+    background: #FFE9D5;
+    border: none;
 }
 
-/* Hired state - full gradient background with Material You elevation */
+.agent-card[data-color="purple"] {
+    background: #F3E5F5;
+    border: none;
+}
+
+.agent-card[data-color="emerald"] {
+    background: #E8F5E9;
+    border: none;
+}
+
+.agent-card[data-color="indigo"] {
+    background: #E8EAF6;
+    border: none;
+}
+
+.agent-card[data-color="teal"] {
+    background: #E0F2F1;
+    border: none;
+}
+
+/* Hired state - solid flat colors */
 .agent-card--hired {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15), 0 16px 48px rgba(0, 0, 0, 0.1);
+    transform: none;
+    box-shadow: none;
 }
 
 .agent-card--hired[data-color="navy"] {
-    background: linear-gradient(135deg, #000A55 0%, #001074 100%);
-    border-color: #000A55;
+    background: #5C6BC0;
+    border: none;
 }
 
 .agent-card--hired[data-color="gold"] {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e42 100%);
-    border-color: #fbbf24;
+    background: #FFB74D;
+    border: none;
 }
 
 .agent-card--hired[data-color="navy-light"] {
-    background: linear-gradient(135deg, #001074 0%, #000A55 100%);
-    border-color: #001074;
+    background: #7986CB;
+    border: none;
 }
 
 .agent-card--hired[data-color="gold-dark"] {
-    background: linear-gradient(135deg, #f59e42 0%, #ea8020 100%);
-    border-color: #f59e42;
+    background: #FFA726;
+    border: none;
+}
+
+.agent-card--hired[data-color="purple"] {
+    background: #AB47BC;
+    border: none;
+}
+
+.agent-card--hired[data-color="emerald"] {
+    background: #66BB6A;
+    border: none;
+}
+
+.agent-card--hired[data-color="indigo"] {
+    background: #5C6BC0;
+    border: none;
+}
+
+.agent-card--hired[data-color="teal"] {
+    background: #26A69A;
+    border: none;
 }
 
 .agent-card--hired .agent-card__name,
@@ -450,45 +601,7 @@ html, body {
     border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* Decorative corner accent */
-.agent-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 80px;
-    height: 80px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 0 24px 0 100%;
-    opacity: 0.5;
-    transition: opacity 0.3s ease;
-}
-
-.agent-card:hover::before {
-    opacity: 0.7;
-}
-
-.agent-card--hired::before {
-    background: rgba(255, 255, 255, 0.15);
-    opacity: 1;
-}
-
-/* Bottom accent line */
-.agent-card::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: white;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.agent-card--hired::after {
-    opacity: 0.3;
-}
+/* Remove decorative accents for flat design */
 
 /* ============================================
    BETA BADGE - MATERIAL YOU PILL SHAPE
@@ -497,15 +610,33 @@ html, body {
     position: absolute;
     top: 1rem;
     left: 1rem;
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e42 100%);
+    background: #EF6C00;
     color: white;
     font-size: 0.625rem;
     font-weight: 700;
     letter-spacing: 0.05em;
     padding: 0.375rem 0.75rem;
-    border-radius: 100px;
+    border-radius: var(--md-sys-shape-corner-full);
     z-index: 3;
-    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+    box-shadow: none;
+}
+
+/* ============================================
+   PREMIUM BADGE - MATERIAL YOU PILL SHAPE
+   ============================================ */
+.agent-card__premium-badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: #FFA726;
+    color: white;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--md-sys-shape-corner-full);
+    z-index: 3;
+    box-shadow: none;
 }
 
 /* ============================================
@@ -543,6 +674,22 @@ html, body {
     color: #fbbf24;
 }
 
+.agent-card[data-color="purple"] .agent-card__check svg {
+    color: #AB47BC;
+}
+
+.agent-card[data-color="emerald"] .agent-card__check svg {
+    color: #66BB6A;
+}
+
+.agent-card[data-color="indigo"] .agent-card__check svg {
+    color: #5C6BC0;
+}
+
+.agent-card[data-color="teal"] .agent-card__check svg {
+    color: #26A69A;
+}
+
 .agent-card--hired .agent-card__check {
     opacity: 1;
     transform: scale(1) rotate(0deg);
@@ -561,7 +708,7 @@ html, body {
 .agent-card__initial {
     width: 56px;
     height: 56px;
-    border-radius: 18px;
+    border-radius: var(--md-sys-shape-corner-large);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -569,48 +716,83 @@ html, body {
     font-size: 1.625rem;
     font-weight: 600;
     letter-spacing: -0.02em;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: 'Inter', 'Open Sans', Arial, sans-serif;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .agent-card[data-color="navy"] .agent-card__initial {
-    background: linear-gradient(135deg, rgba(0, 10, 85, 0.12) 0%, rgba(0, 10, 85, 0.18) 100%);
-    color: #000A55;
+    background: #C5CAE9;
+    color: #3F51B5;
 }
 
 .agent-card[data-color="gold"] .agent-card__initial {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.22) 100%);
-    color: #f59e42;
+    background: #FFE082;
+    color: #F57C00;
 }
 
 .agent-card[data-color="navy-light"] .agent-card__initial {
-    background: linear-gradient(135deg, rgba(0, 10, 85, 0.10) 0%, rgba(0, 10, 85, 0.15) 100%);
-    color: #000A55;
+    background: #D1D5E8;
+    color: #5C6BC0;
 }
 
 .agent-card[data-color="gold-dark"] .agent-card__initial {
-    background: linear-gradient(135deg, rgba(245, 158, 66, 0.15) 0%, rgba(245, 158, 66, 0.22) 100%);
-    color: #f59e42;
+    background: #FFCC80;
+    color: #F57C00;
+}
+
+.agent-card[data-color="purple"] .agent-card__initial {
+    background: #E1BEE7;
+    color: #7B1FA2;
+}
+
+.agent-card[data-color="emerald"] .agent-card__initial {
+    background: #C8E6C9;
+    color: #388E3C;
+}
+
+.agent-card[data-color="indigo"] .agent-card__initial {
+    background: #C5CAE9;
+    color: #283593;
+}
+
+.agent-card[data-color="teal"] .agent-card__initial {
+    background: #B2DFDB;
+    color: #00695C;
 }
 
 .agent-card--hired .agent-card__initial {
     background: white !important;
-    transform: scale(1.05);
+    transform: none;
 }
 
 .agent-card--hired[data-color="navy"] .agent-card__initial,
 .agent-card--hired[data-color="navy-light"] .agent-card__initial {
-    color: #000A55 !important;
+    color: #3F51B5 !important;
 }
 
 .agent-card--hired[data-color="gold"] .agent-card__initial,
 .agent-card--hired[data-color="gold-dark"] .agent-card__initial {
-    color: #f59e42 !important;
+    color: #F57C00 !important;
+}
+
+.agent-card--hired[data-color="purple"] .agent-card__initial {
+    color: #7B1FA2 !important;
+}
+
+.agent-card--hired[data-color="emerald"] .agent-card__initial {
+    color: #388E3C !important;
+}
+
+.agent-card--hired[data-color="indigo"] .agent-card__initial {
+    color: #283593 !important;
+}
+
+.agent-card--hired[data-color="teal"] .agent-card__initial {
+    color: #00695C !important;
 }
 
 .agent-card:hover .agent-card__initial {
-    transform: scale(1.08);
+    transform: none;
 }
 
 .agent-card__title-wrapper {
@@ -630,12 +812,13 @@ html, body {
 
 .agent-card__name {
     font-size: 1.125rem;
-    font-weight: 600;
+    font-weight: 500;
     color: #1e293b;
     margin: 0;
     letter-spacing: -0.02em;
     transition: color 0.3s ease;
     line-height: 1.3;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
 }
 
 .agent-card__role {
@@ -644,8 +827,9 @@ html, body {
     color: #64748b;
     margin: 0;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     transition: color 0.3s ease;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
 }
 
 .agent-card--hired .agent-card__name {
@@ -668,10 +852,10 @@ html, body {
     font-size: 0.6875rem;
     font-weight: 500;
     padding: 0.375rem 0.75rem;
-    border-radius: 100px;
+    border-radius: var(--md-sys-shape-corner-full);
     border: 1px solid;
     white-space: nowrap;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .agent-card__badge--datahub {
@@ -707,39 +891,63 @@ html, body {
 .agent-card__description {
     font-size: 0.8125rem;
     color: #64748b;
-    line-height: 1.5;
+    line-height: 1.6;
     margin: 0;
     flex: 1;
     font-weight: 300;
     transition: color 0.3s ease;
+    letter-spacing: -0.01em;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
 }
 
 /* ============================================
-   HIRE BUTTON - MATERIAL YOU PILL SHAPE
+   HIRE BUTTON - MATERIAL YOU FILLED BUTTON
    ============================================ */
 .agent-card__btn {
     width: 100%;
     padding: 0.875rem 1.25rem;
-    background: #2563eb;
+    background: #5C6BC0;
     color: white;
     border: none;
-    border-radius: 100px;
+    border-radius: var(--md-sys-shape-corner-full);
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     margin-top: 0.5rem;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    box-shadow: none;
+    position: relative;
+    overflow: hidden;
+}
+
+/* MD3 State Layer for hover */
+.agent-card__btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 .agent-card__btn:hover {
-    background: #1e40af;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    box-shadow: none;
+}
+
+.agent-card__btn:hover::before {
+    opacity: var(--md-sys-state-hover-opacity);
+}
+
+.agent-card__btn:active::before {
+    opacity: var(--md-sys-state-pressed-opacity);
 }
 
 .agent-card__btn svg {
@@ -759,7 +967,7 @@ html, body {
 }
 
 /* ============================================
-   NOTIFICATION - MATERIAL YOU PILL SHAPE
+   NOTIFICATION - MATERIAL YOU SNACKBAR
    ============================================ */
 .agents-notification {
     position: fixed;
@@ -767,12 +975,12 @@ html, body {
     left: 50%;
     transform: translateX(-50%);
     padding: 1rem 1.75rem;
-    border-radius: 100px;
+    border-radius: var(--md-sys-shape-corner-extra-small);
     font-size: 0.875rem;
     font-weight: 500;
     z-index: 9999;
     display: none;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    box-shadow: none;
 }
 
 .agents-notification--success {
@@ -819,6 +1027,8 @@ html, body {
 
     .agents-main-content {
         padding: 1.5rem 1rem;
+        margin-left: 0;
+        width: 100%;
     }
 
     .agents-grid {

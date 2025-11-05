@@ -1,7 +1,20 @@
 /**
- * Chat Component
+ * Chat Component - Material Design 3 (Material You)
  * Messages container and message bubbles
+ * Following Material Design 3 flat design specifications
  */
+
+/* ============================================
+   MATERIAL DESIGN 3 TOKENS (inherited from agents.css)
+   ============================================ */
+:root {
+    /* MD3 Design Tokens are defined in agents.css and inherited globally */
+    /* Colors for chat interface */
+    --md-chat-primary: #5C6BC0; /* Material Indigo */
+    --md-chat-surface: #f8fafc;
+    --md-chat-on-surface: #1e293b;
+    --md-chat-on-surface-variant: #64748b;
+}
 
 /* ===== MESSAGES (MessageList - Grows and scrolls) ===== */
 .chat-messages {
@@ -69,21 +82,23 @@
 
 .welcome-title {
     display: block;
-    font-size: 3.5rem;
-    font-weight: 200;
+    font-size: 3rem;
+    font-weight: 400;
     margin-bottom: 1.5rem;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.025em;
     line-height: 1.2;
-    color: #000755;
+    color: #1e3a8a;                                 /* Navy blue - MD3 */
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
 }
 
 .welcome-subtitle {
     display: block;
     font-size: 1.125rem;
-    color: #000755;
-    line-height: 1.6;
+    color: #1e3a8a;                                 /* Navy blue - MD3 */
+    line-height: 1.65;
     font-weight: 300;
     margin: 0;
-    opacity: 0.7;
+    letter-spacing: -0.01em;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
 }
 

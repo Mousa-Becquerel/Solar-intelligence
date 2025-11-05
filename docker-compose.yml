@@ -10,7 +10,7 @@ services:
       - FLASK_ENV=development  # Use 'production' for AWS deployment
       - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
       - LOGFIRE_TOKEN=${LOGFIRE_TOKEN}
-      - DATABASE_URL=${DATABASE_URL}  # SECURITY: Never hardcode credentials
+      - DATABASE_URL=${DATABASE_URL}  # Uses PostgreSQL from .env
       - WEAVIATE_URL=${WEAVIATE_URL}
       - WEAVIATE_API_KEY=${WEAVIATE_API_KEY}
     volumes:
@@ -18,6 +18,9 @@ services:
       - ./static:/app/static
       - ./exports:/app/exports
       - ./memory_dumps:/app/memory_dumps
+      # Database persistence - CRITICAL for conversation history
+      # Using named volume for better portability and persistence
+      - app_database:/app/instance
       # Mount the refactored app structure (writable for live development)
       - ./app:/app/app
       - ./templates:/app/templates
@@ -35,4 +38,9 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s 
+      start_period: 40s
+
+# Named volumes for persistence
+volumes:
+  app_database:
+    driver: local

@@ -14,172 +14,201 @@
             box-sizing: border-box;
         }
 
+        /* Material Design 3 Profile Page */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Text', sans-serif;
-            background:
-                radial-gradient(circle at 20% 30%, rgba(251, 191, 36, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, rgba(4, 11, 89, 0.4) 0%, transparent 70%),
-                linear-gradient(135deg, #0a1850 0%, #1e1b4b 30%, #312e81 60%, #3730a3 100%);
-            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
-            background-attachment: fixed;
+            font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+            background: #f5f5f5;                            /* MD3 surface-variant */
             min-height: 100vh;
-            color: #ffffff;
+            color: #1e293b;                                 /* MD3 on-surface */
         }
 
-        /* Header */
+        /* Header - MD3 flat design */
         .header {
             padding: 24px 0;
             position: relative;
             z-index: 10;
+            background: white;                              /* MD3 surface */
+            border-bottom: none;                            /* MD3 flat - no borders */
         }
 
         .logo {
             height: 50px;
             width: auto;
-            filter: brightness(0) invert(1);
-            opacity: 0.95;
+            opacity: 1;
+            filter: none;                                   /* Show logo in original colors */
         }
 
         .header-btn {
             padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: rgba(255, 255, 255, 0.9);
+            background: transparent;
+            border: none;                                   /* MD3 flat - no borders */
+            color: #64748b;                                 /* MD3 on-surface-variant */
             font-size: 0.875rem;
             font-weight: 500;
-            border-radius: 10px;
+            border-radius: var(--md-sys-shape-corner-full, 9999px); /* MD3 pill shape */
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             text-decoration: none;
-            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
         }
 
         .header-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-1px);
+            background: rgba(0, 0, 0, 0.05);                /* MD3 state layer */
+            border: none;
+            transform: none;                                /* MD3 flat - no lift */
         }
 
-        /* Glass Card */
+        /* Card - MD3 flat design */
         .glass-card {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 20px;
+            background: white;                              /* MD3 surface */
+            border: none;                                   /* MD3 flat - no borders */
+            border-radius: var(--md-sys-shape-corner-large, 16px); /* MD3 large corners */
             padding: 32px;
-            transition: all 0.3s ease;
+            transition: none;                               /* MD3 flat - no hover effects */
+            box-shadow: none;
         }
 
         .glass-card:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.18);
+            background: white;
+            border: none;
+            transform: none;                                /* MD3 flat - no lift */
         }
 
-        /* Page Title */
+        /* Page Title - MD3 typography */
         .page-title {
             font-size: 2.5rem;
-            font-weight: 300;
-            color: #ffffff;
+            font-weight: 400;                               /* MD3 regular weight for display */
+            color: #1e293b;                                 /* MD3 on-surface */
             margin-bottom: 12px;
             letter-spacing: -0.02em;
         }
 
         .page-subtitle {
             font-size: 1.125rem;
-            color: rgba(255, 255, 255, 0.6);
+            color: #64748b;                                 /* MD3 on-surface-variant */
+            font-weight: 300;                               /* MD3 light weight */
         }
 
-        /* Section Title */
+        /* Section Title - MD3 typography */
         .section-title {
             font-size: 1.25rem;
-            font-weight: 600;
-            color: #ffffff;
+            font-weight: 500;                               /* MD3 medium weight */
+            color: #1e293b;                                 /* MD3 on-surface */
             margin-bottom: 24px;
         }
 
-        /* Input Fields */
+        /* Input Fields - MD3 flat design */
         .input-field {
             width: 100%;
             padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            color: #ffffff;
+            background: #f5f5f5;                            /* MD3 surface-variant */
+            border: none;                                   /* MD3 flat - no borders */
+            border-radius: var(--md-sys-shape-corner-small, 8px); /* MD3 small corners */
+            color: #1e293b;                                 /* MD3 on-surface */
             font-size: 0.875rem;
-            transition: all 0.3s ease;
+            font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+            transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .input-field:focus {
             outline: none;
-            background: rgba(255, 255, 255, 0.12);
-            border-color: rgba(233, 165, 68, 0.5);
-            box-shadow: 0 0 0 3px rgba(233, 165, 68, 0.1);
+            background: #eeeeee;                            /* Slightly darker on focus */
+            border: none;
+            box-shadow: none;                               /* MD3 flat - no focus ring */
         }
 
         .input-field::placeholder {
-            color: rgba(255, 255, 255, 0.4);
+            color: #9ca3af;                                 /* MD3 placeholder text */
         }
 
-        /* Buttons */
+        /* Buttons - MD3 flat design with state layers */
         .btn-primary {
             padding: 12px 24px;
-            background: linear-gradient(135deg, #E9A544 0%, #E8BF4F 100%);
-            color: #ffffff;
+            background: #FFB74D;                            /* Flat Material Gold - MD3 */
+            color: #1e293b;                                 /* MD3 on-surface */
             font-size: 0.875rem;
-            font-weight: 600;
+            font-weight: 500;                               /* MD3 medium weight */
+            font-family: 'Inter', 'Open Sans', Arial, sans-serif;
             border: none;
-            border-radius: 10px;
+            border-radius: var(--md-sys-shape-corner-full, 9999px); /* MD3 pill shape */
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: none;                               /* MD3 flat - no shadows */
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            opacity: 0;
+            transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(233, 165, 68, 0.3);
+            background: #FFB74D;
+            transform: none;                                /* MD3 flat - no lift */
+            box-shadow: none;
+        }
+
+        .btn-primary:hover::before {
+            opacity: 0.08;                                  /* MD3 state layer */
         }
 
         .btn-secondary {
             padding: 12px 24px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: rgba(255, 255, 255, 0.9);
+            background: #f5f5f5;                            /* MD3 surface-variant */
+            border: none;                                   /* MD3 flat - no borders */
+            color: #64748b;                                 /* MD3 on-surface-variant */
             font-size: 0.875rem;
             font-weight: 500;
-            border-radius: 10px;
+            font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+            border-radius: var(--md-sys-shape-corner-full, 9999px); /* MD3 pill shape */
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: none;
         }
 
         .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.3);
+            background: #eeeeee;                            /* Darker gray */
+            border: none;
+            transform: none;                                /* MD3 flat - no lift */
         }
 
         .btn-danger {
             padding: 12px 24px;
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #f87171;
+            background: #fee2e2;                            /* MD3 error container */
+            border: none;                                   /* MD3 flat - no borders */
+            color: #dc2626;                                 /* MD3 error */
             font-size: 0.875rem;
             font-weight: 500;
-            border-radius: 10px;
+            font-family: 'Inter', 'Open Sans', Arial, sans-serif;
+            border-radius: var(--md-sys-shape-corner-full, 9999px); /* MD3 pill shape */
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: none;
         }
 
         .btn-danger:hover {
-            background: rgba(239, 68, 68, 0.25);
-            border-color: rgba(239, 68, 68, 0.5);
+            background: #fecaca;                            /* Darker error container */
+            border: none;
+            transform: none;                                /* MD3 flat - no lift */
         }
 
-        /* Stats Grid */
+        /* Stats Grid - MD3 flat design */
         .stat-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 16px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid #e5e7eb;               /* MD3 outline */
         }
 
         .stat-item:last-child {
@@ -188,105 +217,105 @@
 
         .stat-label {
             font-size: 0.875rem;
-            color: rgba(255, 255, 255, 0.6);
+            color: #64748b;                                 /* MD3 on-surface-variant */
+            font-weight: 400;
         }
 
         .stat-value {
             font-size: 0.875rem;
-            font-weight: 600;
-            color: #ffffff;
+            font-weight: 500;                               /* MD3 medium weight */
+            color: #1e293b;                                 /* MD3 on-surface */
         }
 
-        /* Progress Bar */
+        /* Progress Bar - MD3 flat design */
         .progress-bar {
             width: 100%;
             height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+            background: #e5e7eb;                            /* MD3 outline */
+            border-radius: var(--md-sys-shape-corner-full, 9999px);
             overflow: hidden;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #E9A544 0%, #E8BF4F 100%);
-            border-radius: 10px;
-            transition: width 0.5s ease;
+            background: #FFB74D;                            /* Flat Material Gold - MD3 */
+            border-radius: var(--md-sys-shape-corner-full, 9999px);
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Plan Badge */
+        /* Plan Badge - MD3 flat design */
         .plan-badge {
-            background: linear-gradient(135deg, #E9A544 0%, #E8BF4F 100%);
+            background: #FFB74D;                            /* Flat Material Gold - MD3 */
             padding: 24px;
-            border-radius: 16px;
+            border-radius: var(--md-sys-shape-corner-large, 16px);
             text-align: center;
-            box-shadow: 0 10px 30px rgba(233, 165, 68, 0.2);
+            box-shadow: none;                               /* MD3 flat - no shadows */
         }
 
         .plan-type {
             font-size: 2rem;
-            font-weight: 700;
-            color: #ffffff;
+            font-weight: 700;                               /* MD3 bold weight */
+            color: #1e293b;                                 /* MD3 on-surface */
             text-transform: capitalize;
             margin-bottom: 8px;
         }
 
         .plan-status {
             font-size: 0.875rem;
-            color: rgba(255, 255, 255, 0.9);
+            color: #475569;                                 /* MD3 on-surface-variant */
+            font-weight: 400;
         }
 
-        /* Label */
+        /* Label - MD3 typography */
         .label {
             display: block;
             font-size: 0.75rem;
-            font-weight: 600;
+            font-weight: 500;                               /* MD3 medium weight */
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            color: rgba(255, 255, 255, 0.5);
+            color: #64748b;                                 /* MD3 on-surface-variant */
             margin-bottom: 8px;
+            font-family: 'Inter', 'Open Sans', Arial, sans-serif;
         }
 
         .value {
             font-size: 0.95rem;
-            color: rgba(255, 255, 255, 0.9);
+            color: #1e293b;                                 /* MD3 on-surface */
             font-weight: 400;
         }
 
-        /* Alert */
+        /* Alert - MD3 flat design */
         .alert {
             padding: 16px;
-            border-radius: 12px;
+            border-radius: var(--md-sys-shape-corner-small, 8px);
             margin-bottom: 24px;
-            backdrop-filter: blur(10px);
-            border: 1px solid;
+            border: none;                                   /* MD3 flat - no borders */
         }
 
         .alert-success {
-            background: rgba(34, 197, 94, 0.15);
-            border-color: rgba(34, 197, 94, 0.3);
-            color: #86efac;
+            background: #f0fdf4;                            /* MD3 success container */
+            color: #166534;                                 /* MD3 on-success-container */
         }
 
         .alert-error {
-            background: rgba(239, 68, 68, 0.15);
-            border-color: rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
+            background: #fee2e2;                            /* MD3 error container */
+            color: #991b1b;                                 /* MD3 on-error-container */
         }
 
-        /* Activity Item */
+        /* Activity Item - MD3 flat design */
         .activity-item {
             padding: 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            transition: all 0.3s ease;
+            background: #f5f5f5;                            /* MD3 surface-variant */
+            border: none;                                   /* MD3 flat - no borders */
+            border-radius: var(--md-sys-shape-corner-small, 8px);
+            transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
         }
 
         .activity-item:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.15);
-            transform: translateX(4px);
+            background: #eeeeee;                            /* Darker gray */
+            border: none;
+            transform: none;                                /* MD3 flat - no movement */
         }
     </style>
 </head>
@@ -366,7 +395,7 @@
                         <div>
                             <label for="new-password" class="label">New Password</label>
                             <input type="password" id="new-password" name="new_password" required class="input-field">
-                            <p style="margin-top: 6px; font-size: 0.75rem; color: rgba(255, 255, 255, 0.5);">Minimum 8 characters</p>
+                            <p style="margin-top: 6px; font-size: 0.75rem; color: #9ca3af;">Minimum 8 characters</p>
                         </div>
                         <div>
                             <label for="confirm-password" class="label">Confirm New Password</label>
@@ -381,11 +410,11 @@
                 <!-- Data & Privacy -->
                 <div class="glass-card">
                     <h2 class="section-title">Data & Privacy</h2>
-                    <p style="font-size: 0.875rem; color: rgba(255, 255, 255, 0.6); margin-bottom: 24px;">
+                    <p style="font-size: 0.875rem; color: #64748b; margin-bottom: 24px; font-weight: 400;">
                         Download a copy of your data or request account deletion.
                     </p>
                     <div style="display: flex; gap: 12px;">
-                        <button id="export-data-btn" class="btn-primary" disabled title="Feature coming soon">
+                        <button id="export-data-btn" class="btn-primary" disabled title="Feature coming soon" style="opacity: 0.38; cursor: not-allowed;">
                             Export My Data
                         </button>
                         <a href="{{ url_for('auth.request_deletion') }}" class="btn-danger" style="text-decoration: none; display: inline-block;">
@@ -402,11 +431,11 @@
                     <p class="plan-type">{{ plan_info.type }}</p>
                     <p class="plan-status">{{ plan_info.status }}</p>
                     {% if plan_info.type == 'free' %}
-                    <button id="upgrade-plan-btn" style="margin-top: 20px; width: 100%; padding: 12px; background: #ffffff; color: #E9A544; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                    <button id="upgrade-plan-btn" style="margin-top: 20px; width: 100%; padding: 12px; background: white; color: #1e293b; border: none; border-radius: var(--md-sys-shape-corner-full, 9999px); font-weight: 500; cursor: pointer; transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1); font-family: 'Inter', 'Open Sans', Arial, sans-serif;">
                         Upgrade to Premium
                     </button>
                     {% else %}
-                    <p style="margin-top: 16px; font-size: 0.875rem; color: rgba(255, 255, 255, 0.8);">
+                    <p style="margin-top: 16px; font-size: 0.875rem; color: #475569; font-weight: 400;">
                         Expires: {{ plan_info.end_date.strftime('%B %d, %Y') if plan_info.end_date else 'N/A' }}
                     </p>
                     {% endif %}
@@ -419,8 +448,8 @@
                     <!-- Queries This Month -->
                     <div style="margin-bottom: 28px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <span style="font-size: 0.875rem; color: rgba(255, 255, 255, 0.7); font-weight: 500;">Queries This Month</span>
-                            <span style="font-size: 0.875rem; font-weight: 700; color: #E9A544;">{{ usage_stats.monthly_queries }} / {{ usage_stats.query_limit }}</span>
+                            <span style="font-size: 0.875rem; color: #64748b; font-weight: 500;">Queries This Month</span>
+                            <span style="font-size: 0.875rem; font-weight: 700; color: #FFB74D;">{{ usage_stats.monthly_queries }} / {{ usage_stats.query_limit }}</span>
                         </div>
                         <div class="progress-bar">
                             {% if usage_stats.query_limit == 'Unlimited' %}
@@ -429,7 +458,7 @@
                             <div class="progress-fill" style="width: {{ (usage_stats.monthly_queries / usage_stats.query_limit * 100) if usage_stats.query_limit > 0 else 0 }}%"></div>
                             {% endif %}
                         </div>
-                        <p style="margin-top: 8px; font-size: 0.75rem; color: rgba(255, 255, 255, 0.5);">
+                        <p style="margin-top: 8px; font-size: 0.75rem; color: #9ca3af;">
                             {{ usage_stats.queries_remaining }} queries remaining
                         </p>
                     </div>
@@ -455,37 +484,126 @@
                     </div>
 
                     {% if usage_stats.last_query_date %}
-                    <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
-                        <p style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.5);">
+                    <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
+                        <p style="font-size: 0.75rem; color: #9ca3af;">
                             Last activity: {{ usage_stats.last_query_date.strftime('%b %d, %Y at %I:%M %p') }}
                         </p>
                     </div>
                     {% endif %}
                 </div>
 
-                <!-- Recent Activity -->
-                {% if recent_conversations %}
+                <!-- Contact Requests -->
                 <div class="glass-card">
-                    <h2 class="section-title">Recent Activity</h2>
+                    <h2 class="section-title">Contact Requests</h2>
+                    {% if contact_requests and contact_requests|length > 0 %}
                     <div style="display: grid; gap: 12px;">
-                        {% for conv in recent_conversations %}
+                        {% for request in contact_requests %}
                         <div class="activity-item">
-                            <p style="font-size: 0.875rem; font-weight: 600; color: #ffffff; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                {{ conv.title or 'Untitled Conversation' }}
-                            </p>
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-size: 0.75rem; color: rgba(233, 165, 68, 0.9); text-transform: capitalize;">
-                                    {{ conv.agent_type }} Agent
+                            <!-- Header with status -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 0.75rem; color: #FFB74D; text-transform: capitalize; font-weight: 600;">
+                                        {{ request.source.replace('_', ' ') }}
+                                    </span>
+                                    <span style="font-size: 0.75rem; color: #cbd5e1;">•</span>
+                                    <span style="font-size: 0.75rem; color: #9ca3af;">
+                                        {{ request.created_at.strftime('%b %d, %Y') if request.created_at else 'N/A' }}
+                                    </span>
+                                </div>
+                                <span style="font-size: 0.75rem; padding: 4px 12px; border-radius: 12px; font-weight: 500; white-space: nowrap;
+                                    {% if request.status == 'pending' %}
+                                    background: #FEF3C7; color: #92400E;
+                                    {% elif request.status == 'contacted' %}
+                                    background: #DBEAFE; color: #1E40AF;
+                                    {% else %}
+                                    background: #D1FAE5; color: #065F46;
+                                    {% endif %}">
+                                    {{ request.status|capitalize }}
                                 </span>
-                                <span style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.4);">
-                                    {{ conv.created_at.strftime('%b %d, %Y') if conv.created_at else 'N/A' }}
-                                </span>
+                            </div>
+
+                            <!-- Message -->
+                            <div style="margin-bottom: 12px;">
+                                {% set message_text = request.message|string %}
+                                {% set clean_message = message_text.strip('"') %}
+
+                                {# Check if this is from artifact panel with expert selection #}
+                                {% if 'Requested Experts:' in clean_message %}
+                                    {# Split by the closing bracket followed by space #}
+                                    {% if ']' in clean_message %}
+                                        {% set split_parts = clean_message.split(']') %}
+                                        {% set expert_part = split_parts[0] %}
+                                        {% set message_part = split_parts[1]|trim if split_parts|length > 1 else '' %}
+
+                                        {# Extract expert names #}
+                                        {% set expert_text = expert_part.replace('Requested Experts:', '').strip() %}
+
+                                        {# Show requested experts as badges #}
+                                        <div style="margin-bottom: 12px;">
+                                            <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 6px; font-weight: 500;">Requested Experts:</p>
+                                            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                                {% set experts = expert_text.split(', ') %}
+                                                {% for expert in experts %}
+                                                    {% set clean_expert = expert.strip().strip('[]') %}
+                                                    {% if clean_expert %}
+                                                    <span style="font-size: 0.75rem; padding: 4px 10px; background: #FFB74D; color: white; border-radius: 12px; font-weight: 500;">
+                                                        {{ clean_expert }}
+                                                    </span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+
+                                        {# Show the actual message if it exists #}
+                                        {% if message_part %}
+                                        <div style="font-size: 0.875rem; font-weight: 400; color: #1e293b; line-height: 1.6; padding: 16px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #FFB74D;">
+                                            <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 8px; font-weight: 500;">Message:</p>
+                                            {{ message_part[:150] }}{{ '...' if message_part|length > 150 else '' }}
+                                        </div>
+                                        {% endif %}
+                                    {% else %}
+                                        {# Fallback if no bracket found #}
+                                        <div style="font-size: 0.875rem; font-weight: 400; color: #1e293b; line-height: 1.6; padding: 16px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #FFB74D;">
+                                            {{ clean_message[:150] }}{{ '...' if clean_message|length > 150 else '' }}
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    {# Regular message without expert selection #}
+                                    <div style="font-size: 0.875rem; font-weight: 400; color: #1e293b; line-height: 1.6; padding: 16px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #FFB74D;">
+                                        {{ clean_message[:150] }}{{ '...' if clean_message|length > 150 else '' }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Sender info -->
+                            <div style="display: flex; align-items: center; gap: 12px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #FFB74D 0%, #E8BF4F 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.75rem;">
+                                        {{ request.name[0].upper() if request.name else '?' }}
+                                    </div>
+                                    <div>
+                                        <p style="font-size: 0.8125rem; font-weight: 500; color: #1e293b; margin-bottom: 2px;">
+                                            {{ request.name }}
+                                        </p>
+                                        <p style="font-size: 0.75rem; color: #64748b;">
+                                            {{ request.email }}{% if request.company %} • {{ request.company }}{% endif %}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
+                    {% else %}
+                    <div style="text-align: center; padding: 32px; color: #9ca3af;">
+                        <svg style="width: 48px; height: 48px; margin: 0 auto 16px; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        <p style="font-size: 0.875rem;">No contact requests yet</p>
+                        <p style="font-size: 0.75rem; margin-top: 4px;">Your contact form submissions will appear here</p>
+                    </div>
+                    {% endif %}
                 </div>
-                {% endif %}
             </div>
         </div>
     </main>

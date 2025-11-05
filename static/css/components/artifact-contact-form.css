@@ -28,27 +28,28 @@
     font-weight: 400;
 }
 
-/* Form Inputs */
+/* Form Inputs - MD3 flat design */
 .form-input,
 .form-textarea {
     width: 100%;
     padding: 0.625rem 0.75rem;
     font-size: 0.875rem;
     font-family: 'Inter', 'Open Sans', Arial, sans-serif;
-    color: #1f2937;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #1e293b;                                /* MD3 on-surface */
+    background: white;
+    border: none;                                   /* MD3 flat - no borders */
+    border-radius: var(--md-sys-shape-corner-small, 8px); /* MD3 small corners */
+    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     outline: none;
     box-sizing: border-box;
+    box-shadow: none;                               /* MD3 flat - no shadows */
 }
 
 .form-input:focus,
 .form-textarea:focus {
-    border-color: var(--becq-gold);
-    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
-    background: #fffbf0;
+    border: none;                                   /* MD3 flat - no border */
+    box-shadow: none;                               /* MD3 flat - no shadow */
+    background: #fafafa;                            /* Subtle background change */
 }
 
 .form-input::placeholder,
@@ -62,25 +63,27 @@
     line-height: 1.5;
 }
 
-/* Form Validation States */
+/* Form Validation States - MD3 flat design */
 .form-input.error,
 .form-textarea.error {
-    border-color: #ef4444;
-    background: #fef2f2;
+    border: none;                                   /* MD3 flat - no borders */
+    background: #fef2f2;                            /* MD3 error container */
 }
 
 .form-input.error:focus,
 .form-textarea.error:focus {
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    box-shadow: none;                               /* MD3 flat - no shadows */
+    background: #fee2e2;                            /* Slightly darker on focus */
 }
 
 .form-error {
     display: block;
     font-size: 0.875rem;
-    color: #ef4444;
+    color: #dc2626;                                 /* MD3 error color */
     margin-top: 0.375rem;
     min-height: 1.25rem;
-    font-weight: 500;
+    font-weight: 400;                               /* MD3 regular weight */
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
 }
 
 /* Form Actions */
@@ -90,6 +93,7 @@
     justify-content: flex-end;
 }
 
+/* MD3 Submit Button - Flat design with state layers */
 .btn-submit {
     display: inline-flex;
     align-items: center;
@@ -100,39 +104,69 @@
     font-family: 'Inter', 'Open Sans', Arial, sans-serif;
     letter-spacing: -0.01em;
     color: white;
-    background: var(--becq-blue);
+    background: #1e3a8a;                            /* Navy blue - MD3 */
     border: none;
-    border-radius: 8px;
+    border-radius: var(--md-sys-shape-corner-full, 9999px); /* MD3 pill shape */
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 1px 3px rgba(0, 10, 85, 0.1), 0 1px 2px rgba(0, 10, 85, 0.06);
+    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;                               /* MD3 flat - no shadows */
+    position: relative;
+    overflow: hidden;
+}
+
+/* MD3 State Layer */
+.btn-submit::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 .btn-submit:hover:not(:disabled) {
-    background: #001074;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 10, 85, 0.2), 0 2px 4px rgba(0, 10, 85, 0.1);
+    background: #1e3a8a;                            /* Keep same color */
+    transform: none;                                /* MD3 flat - no lift */
+    box-shadow: none;
+}
+
+.btn-submit:hover:not(:disabled)::before {
+    opacity: 0.08;                                  /* MD3 state layer opacity */
 }
 
 .btn-submit:active:not(:disabled) {
-    transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(0, 10, 85, 0.1);
+    transform: none;                                /* MD3 flat - no press */
+    box-shadow: none;
+}
+
+.btn-submit:active:not(:disabled)::before {
+    opacity: 0.12;                                  /* MD3 pressed state */
 }
 
 .btn-submit:disabled {
-    opacity: 0.6;
+    opacity: 0.38;                                  /* MD3 disabled opacity */
     cursor: not-allowed;
     transform: none;
+}
+
+.btn-submit:disabled::before {
+    display: none;
 }
 
 .btn-submit svg {
     width: 18px;
     height: 18px;
-    transition: transform 0.25s ease;
+    transition: none;                               /* MD3 flat - no icon animation */
+    position: relative;
+    z-index: 1;
 }
 
 .btn-submit:hover:not(:disabled) svg {
-    transform: translateX(3px);
+    transform: none;                                /* MD3 flat - no icon movement */
 }
 
 /* Loading state */
@@ -165,35 +199,37 @@
     100% { transform: rotate(360deg); }
 }
 
-/* Form Messages */
+/* Form Messages - MD3 flat design */
 .form-message {
     margin-top: 1.5rem;
     padding: 1rem 1.25rem;
-    border-radius: 10px;
+    border-radius: var(--md-sys-shape-corner-small, 8px); /* MD3 small corners */
     font-size: 0.9375rem;
-    font-weight: 500;
+    font-weight: 400;                               /* MD3 regular weight */
     line-height: 1.5;
+    font-family: 'Inter', 'Open Sans', Arial, sans-serif;
 }
 
 .form-message.success {
-    background: #f0fdf4;
-    color: #166534;
-    border: 1.5px solid #86efac;
+    background: #f0fdf4;                            /* MD3 success container */
+    color: #166534;                                 /* MD3 on-success-container */
+    border: none;                                   /* MD3 flat - no borders */
 }
 
 .form-message.error {
-    background: #fef2f2;
-    color: #991b1b;
-    border: 1.5px solid #fca5a5;
+    background: #fef2f2;                            /* MD3 error container */
+    color: #991b1b;                                 /* MD3 on-error-container */
+    border: none;                                   /* MD3 flat - no borders */
 }
 
-/* Success Screen */
+/* Success Screen - MD3 flat design */
 .artifact-success {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
     padding: 3rem 2rem;
+    background: white;                              /* MD3 surface */
 }
 
 .success-icon {
@@ -201,13 +237,14 @@
     animation: success-pop 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* MD3 Flat animation - subtle scale only */
 @keyframes success-pop {
     0% {
         opacity: 0;
-        transform: scale(0.5);
+        transform: scale(0.8);                      /* Less dramatic start */
     }
     50% {
-        transform: scale(1.1);
+        transform: scale(1.05);                     /* Subtle overshoot */
     }
     100% {
         opacity: 1;
@@ -217,8 +254,8 @@
 
 .success-title {
     font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--becq-blue);
+    font-weight: 700;                               /* MD3 bold weight for display */
+    color: #1e293b;                                 /* MD3 on-surface text */
     margin: 0 0 1rem 0;
     letter-spacing: -0.01em;
     font-family: 'Inter', 'Open Sans', Arial, sans-serif;
@@ -227,36 +264,59 @@
 .success-message {
     font-size: 1.125rem;
     line-height: 1.7;
-    color: #374151;
+    color: #475569;                                 /* MD3 on-surface-variant */
     margin: 0 0 1rem 0;
     max-width: 500px;
+    font-weight: 400;                               /* MD3 regular weight */
 }
 
 .success-note {
     font-size: 0.9375rem;
-    color: #6b7280;
+    color: #64748b;                                 /* MD3 on-surface-variant muted */
     margin: 0 0 2rem 0;
-    font-style: italic;
+    font-style: normal;                             /* MD3 - no italics */
+    font-weight: 300;                               /* MD3 light weight */
 }
 
+/* MD3 Close Success Button - Flat design with state layers */
 .btn-close-success {
     padding: 0.875rem 2rem;
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 500;                               /* MD3 medium weight */
     font-family: 'Inter', 'Open Sans', Arial, sans-serif;
-    color: var(--becq-blue);
-    background: linear-gradient(135deg, var(--becq-gold) 0%, var(--becq-gold-dark) 100%);
+    color: white;
+    background: #FFB74D;                            /* Flat Material Gold - MD3 */
     border: none;
-    border-radius: 10px;
+    border-radius: var(--md-sys-shape-corner-full, 9999px); /* MD3 pill shape */
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;                               /* MD3 flat - no shadows */
+    position: relative;
+    overflow: hidden;
+}
+
+/* MD3 State Layer */
+.btn-close-success::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 .btn-close-success:hover {
-    background: linear-gradient(135deg, var(--becq-gold-dark) 0%, var(--becq-gold) 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+    background: #FFB74D;                            /* Keep same color */
+    transform: none;                                /* MD3 flat - no lift */
+    box-shadow: none;
+}
+
+.btn-close-success:hover::before {
+    opacity: 0.08;                                  /* MD3 state layer opacity */
 }
 
 /* Responsive Design */

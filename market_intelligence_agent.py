@@ -347,7 +347,7 @@ Examples:
 - After a plot: "now do it for Italy" -> "plot" (context: user wants same plot for different country)
 - After a plot: "what about Germany?" -> "plot" (context: continuing plot requests)
 """,
-                model="gpt-4.1",  # Fast, lightweight model for simple classification (no reasoning support)
+                model="gpt-4.1-mini",  # Fast, lightweight model for simple classification (no reasoning support)
                 output_type=ClassificationAgentSchema,
                 model_settings=ModelSettings(
                     store=True
@@ -809,7 +809,7 @@ Return only:
 
 (Reminder: Choose "neutral" if the response is purely conversational or does not address the data request.)
 """,
-                model="gpt-4.1",  # Fast classification model
+                model="gpt-4.1-mini",  # Fast classification model
                 output_type=EvaluationAgentSchema,
                 model_settings=ModelSettings(
                     store=True

@@ -1,8 +1,8 @@
 """
-Digitalization Trends Agent
-===========================
+NZIA Policy Agent
+=================
 
-Single-agent workflow for digitalization and AI integration in the PV value chain.
+Single-agent workflow for NZIA policy analysis (Italy's FERX framework).
 Uses OpenAI Agents SDK with file search tool.
 """
 
@@ -31,7 +31,7 @@ def clean_citation_markers(text: str) -> str:
     Remove OpenAI citation markers from text.
 
     Citation format: 【citation_number:citation_index†source_file$content】
-    Example: 【7:3†news_articles_pretty.json$'s largest floating PV plant】
+    Example: 【7:3†FERX_1.pdf$Article 15】
 
     Args:
         text: Text containing citation markers
@@ -65,32 +65,40 @@ os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
 # === Pydantic Models ===
 class WorkflowInput(BaseModel):
-    """Input for the digitalization workflow"""
+    """Input for the NZIA policy workflow"""
     input_as_text: str
 
 @dataclass
-class DigitalizationAgentConfig:
-    """Configuration for the digitalization agent"""
+class NZIAPolicyAgentConfig:
+    """Configuration for the NZIA policy agent"""
     model: str = "gpt-4.1"
-    vector_store_ids: list = None  # Changed from single ID to list
-    agent_name: str = "Digitalization Expert"
+    vector_store_ids: list = None
+    agent_name: str = "NZIA Policy Agent"
     verbose: bool = True
 
     def __post_init__(self):
         """Set default vector store IDs if not provided"""
         if self.vector_store_ids is None:
             self.vector_store_ids = [
-                "vs_68e5846b1a708191a5b17970b3ac9994",  # Original AI report
-                "vs_6909d69381708191a178d2f3228f4408"   # Updated AI report with latest data
+                "vs_690a1f1d49f081918d551c4e4b5a9472"  # FERX framework documents
             ]
 
-class DigitalizationAgent:
+class NZIAPolicyAgent:
     """
-    Single-agent digitalization workflow using OpenAI Agents SDK.
-    Provides expert analysis on digitalization and AI integration in PV value chain.
+    Single-agent NZIA policy workflow using OpenAI Agents SDK.
+    Provides expert analysis on Italy's FERX framework and NZIA compliance.
     """
 
-    DIGITALIZATION_EXPERT_PROMPT = """You are an expert in digitalization and AI integration in the different solutions and stages of the PV value chain. You have access to an AI report in the PV industry. You must answer users' queries about digitalization topics by accessing the data from this report.
+    NZIA_POLICY_PROMPT = """You are NZIA Policy Agent, an expert AI assistant specialized in retrieving, analyzing, and summarizing content from Italy's FERX framework, including the following sources:
+- FERX_1.pdf – Ministerial Decree establishing capacity targets and approval of FERX rules
+- FERX_2.pdf – Regole Operative defining eligibility, bidding, payments, and compliance
+- FERX_3.pdf – Bando Pubblico launching the first PV ("Fotovoltaico NZIA") auction
+
+Your primary objectives:
+- Retrieve precise data (articles, clauses, dates, MW/€ values, deadlines)
+- Summarize procedures, eligibility, guarantees, and timelines
+- Compare and explain relationships between decree ↔ rules ↔ tender
+- Generate concise policy or market insights relevant to the Net-Zero Industry Act (NZIA) context
 
 **Response Formatting Guidelines:**
 - Use proper markdown formatting with headers (##), bullet points (-), and numbered lists
@@ -101,31 +109,41 @@ class DigitalizationAgent:
 - Use concise paragraphs (2-3 sentences max)
 
 **Content Guidelines:**
-- Search the knowledge base before answering only when the question is about digitalization or about the content of the report
-- Provide specific examples and data from the reports when available
+- Search the knowledge base before answering questions about FERX/NZIA policy
+- Provide specific examples and data from the documents when available
 - Cite relevant information from the documents
 - If information is not in the knowledge base, clearly state that
 - Keep responses clear, well-structured, and actionable
 
+**Critical Language Rule:**
+- You MUST ALWAYS respond in English, regardless of the language used in the user's query
+- Even if the user writes in Italian or any other language, your response must be in English only
+
 **Citation Guidelines - CRITICAL:**
-- ALWAYS cite information as coming from: "Transforming the PV Sector: The AI & Robotics Revolution" report
-- NEVER mention the actual filename or file extension (e.g., never say "according to digitalization_report.pdf" or "as stated in the PDF")
-- Use phrases like: "According to the Transforming the PV Sector: The AI & Robotics Revolution report..."
-- Example: "The report 'Transforming the PV Sector: The AI & Robotics Revolution' indicates that..."
-- When referencing specific data, say: "Based on the Transforming the PV Sector report..." or "The AI & Robotics Revolution report shows..."
+- ALWAYS refer to information as coming from the "Becquerel database"
+- NEVER mention the actual filename or file extension (e.g., never say "according to FERX_1.pdf" or "as stated in the PDF")
+- Use phrases like: "According to the Becquerel database..."
+- Example: "The Becquerel database indicates that..."
+- When referencing specific data, say: "Based on the Becquerel database..." or "The database shows..."
+
+**Italian Regulatory Terms:**
+- Use Italian regulatory terms (e.g., Prezzo di Esercizio, Manifestazione di Interesse, Graduatoria)
+- When helpful, briefly gloss them in English (but keep all text in the query language)
 
 **Important Guidelines:**
-- Never search the knowledge base for greetings and general conversation."""
+- Never search the knowledge base for greetings and general conversation
+- Output must always be fully and precisely in the language of the user's query—including headings, tables, glosses, and any explanatory notes
+- Remain factual, structured, and concise—do not speculate or introduce external interpretations"""
 
-    def __init__(self, config: Optional[DigitalizationAgentConfig] = None):
+    def __init__(self, config: Optional[NZIAPolicyAgentConfig] = None):
         """
-        Initialize the Digitalization Agent
+        Initialize the NZIA Policy Agent
 
         Args:
             config: Configuration object for the agent
         """
-        self.config = config or DigitalizationAgentConfig()
-        self.digitalization_expert = None
+        self.config = config or NZIAPolicyAgentConfig()
+        self.nzia_policy_expert = None
         self.conversation_sessions: Dict[str, Any] = {}  # conversation_id -> session
 
         logger.info("Using SQLite for session storage (simple and reliable)")
@@ -133,20 +151,20 @@ class DigitalizationAgent:
         # Initialize agent
         self._initialize_agent()
 
-        logger.info(f"✅ Digitalization Agent initialized (Memory: SQLite)")
+        logger.info(f"✅ NZIA Policy Agent initialized (Memory: SQLite)")
 
     def _initialize_agent(self):
-        """Create the digitalization expert agent"""
+        """Create the NZIA policy expert agent"""
         try:
-            # Create file search tool with multiple vector stores
+            # Create file search tool with vector stores
             file_search = FileSearchTool(
                 vector_store_ids=self.config.vector_store_ids
             )
 
-            # Create digitalization expert agent with file search
-            self.digitalization_expert = Agent(
-                name="Digitalization expert",
-                instructions=self.DIGITALIZATION_EXPERT_PROMPT,
+            # Create NZIA policy expert agent with file search
+            self.nzia_policy_expert = Agent(
+                name="NZIA Policy Agent",
+                instructions=self.NZIA_POLICY_PROMPT,
                 model=self.config.model,
                 tools=[file_search],
                 model_settings=ModelSettings(
@@ -156,7 +174,7 @@ class DigitalizationAgent:
                     store=True
                 )
             )
-            logger.info(f"✅ Created digitalization expert with {len(self.config.vector_store_ids)} vector stores: {', '.join(self.config.vector_store_ids)}")
+            logger.info(f"✅ Created NZIA policy expert with {len(self.config.vector_store_ids)} vector stores: {', '.join(self.config.vector_store_ids)}")
 
         except Exception as e:
             logger.error(f"❌ Failed to initialize agent: {e}")
@@ -164,7 +182,7 @@ class DigitalizationAgent:
 
     async def run_workflow(self, workflow_input: WorkflowInput, conversation_id: str = None):
         """
-        Run the digitalization workflow
+        Run the NZIA policy workflow
 
         Args:
             workflow_input: Input containing the user query
@@ -178,7 +196,7 @@ class DigitalizationAgent:
             session = None
             if conversation_id:
                 if conversation_id not in self.conversation_sessions:
-                    session_id = f"digitalization_{conversation_id}"
+                    session_id = f"nzia_policy_{conversation_id}"
                     self.conversation_sessions[conversation_id] = SQLiteSession(
                         session_id=session_id
                     )
@@ -200,31 +218,31 @@ class DigitalizationAgent:
                 }
             ]
 
-            # Run digitalization expert
-            digitalization_expert_result_temp = await Runner.run(
-                self.digitalization_expert,
+            # Run NZIA policy expert
+            nzia_policy_result_temp = await Runner.run(
+                self.nzia_policy_expert,
                 input=[*conversation_history],
                 session=session,
                 run_config=RunConfig(trace_metadata={
                     "__trace_source__": "agent-builder",
-                    "workflow_id": "wf_68e9933196dc8190b65301893f6024d10240b55e3f16f91c"
+                    "workflow_id": "wf_690a1dd23554819086449af2969f3816069e73514b61ce9e"
                 })
             )
 
             # Update conversation history
-            conversation_history.extend([item.to_input_item() for item in digitalization_expert_result_temp.new_items])
+            conversation_history.extend([item.to_input_item() for item in nzia_policy_result_temp.new_items])
 
             # Extract final output
-            output_text = digitalization_expert_result_temp.final_output_as(str)
+            output_text = nzia_policy_result_temp.final_output_as(str)
 
             # Clean citation markers
             output_text = clean_citation_markers(output_text)
 
-            digitalization_expert_result = {
+            nzia_policy_result = {
                 "output_text": output_text
             }
 
-            return digitalization_expert_result
+            return nzia_policy_result
 
     async def analyze_stream(self, query: str, conversation_id: str = None):
         """
@@ -244,7 +262,7 @@ class DigitalizationAgent:
             session = None
             if conversation_id:
                 if conversation_id not in self.conversation_sessions:
-                    session_id = f"digitalization_{conversation_id}"
+                    session_id = f"nzia_policy_{conversation_id}"
                     self.conversation_sessions[conversation_id] = SQLiteSession(
                         session_id=session_id
                     )
@@ -253,7 +271,7 @@ class DigitalizationAgent:
                 session = self.conversation_sessions[conversation_id]
 
             # Run with streaming
-            result = Runner.run_streamed(self.digitalization_expert, query, session=session)
+            result = Runner.run_streamed(self.nzia_policy_expert, query, session=session)
 
             # Stream text deltas as they arrive
             async for event in result.stream_events():
@@ -275,24 +293,24 @@ class DigitalizationAgent:
 
     async def analyze(self, query: str, conversation_id: str = None) -> Dict[str, Any]:
         """
-        Analyze digitalization query
+        Analyze NZIA policy query
 
         Args:
-            query: Natural language query about digitalization in PV
+            query: Natural language query about NZIA/FERX policy
             conversation_id: Optional conversation ID for maintaining context
 
         Returns:
             Dictionary with analysis results and metadata
         """
-        # Logfire span for digitalization agent
-        with logfire.span("digitalization_agent_call") as agent_span:
-            agent_span.set_attribute("agent_type", "digitalization")
+        # Logfire span for NZIA policy agent
+        with logfire.span("nzia_policy_agent_call") as agent_span:
+            agent_span.set_attribute("agent_type", "nzia_policy")
             agent_span.set_attribute("conversation_id", str(conversation_id))
             agent_span.set_attribute("message_length", len(query))
             agent_span.set_attribute("user_message", query)
 
             try:
-                logger.info(f"Processing digitalization query: {query}")
+                logger.info(f"Processing NZIA policy query: {query}")
 
                 # Create workflow input
                 workflow_input = WorkflowInput(input_as_text=query)
@@ -308,7 +326,7 @@ class DigitalizationAgent:
                 agent_span.set_attribute("response_length", len(response_text))
                 agent_span.set_attribute("success", True)
 
-                logger.info(f"✅ Digitalization agent response: {response_text[:100]}...")
+                logger.info(f"✅ NZIA policy agent response: {response_text[:100]}...")
 
                 return {
                     "success": True,
@@ -318,7 +336,7 @@ class DigitalizationAgent:
                 }
 
             except Exception as e:
-                error_msg = f"Failed to analyze digitalization query: {str(e)}"
+                error_msg = f"Failed to analyze NZIA policy query: {str(e)}"
                 logger.error(error_msg)
                 agent_span.set_attribute("success", False)
                 agent_span.set_attribute("error", str(e))
@@ -351,58 +369,58 @@ class DigitalizationAgent:
     def cleanup(self):
         """Cleanup resources"""
         try:
-            logger.info("Digitalization agent ready for cleanup if needed")
+            logger.info("NZIA policy agent ready for cleanup if needed")
         except Exception as e:
             logger.error(f"Error during cleanup: {e}")
 
 # Global agent instance
-_digitalization_agent = None
+_nzia_policy_agent = None
 
-def get_digitalization_agent() -> Optional[DigitalizationAgent]:
-    """Get or create the global digitalization agent instance"""
-    global _digitalization_agent
-    if _digitalization_agent is None:
+def get_nzia_policy_agent() -> Optional[NZIAPolicyAgent]:
+    """Get or create the global NZIA policy agent instance"""
+    global _nzia_policy_agent
+    if _nzia_policy_agent is None:
         try:
-            config = DigitalizationAgentConfig()
-            _digitalization_agent = DigitalizationAgent(config)
-            logger.info("✅ Global digitalization agent created")
+            config = NZIAPolicyAgentConfig()
+            _nzia_policy_agent = NZIAPolicyAgent(config)
+            logger.info("✅ Global NZIA policy agent created")
         except Exception as e:
-            logger.error(f"❌ Failed to create digitalization agent: {e}")
+            logger.error(f"❌ Failed to create NZIA policy agent: {e}")
             return None
-    return _digitalization_agent
+    return _nzia_policy_agent
 
-def close_digitalization_agent():
-    """Close the global digitalization agent"""
-    global _digitalization_agent
-    if _digitalization_agent:
-        _digitalization_agent.cleanup()
-        _digitalization_agent = None
-        logger.info("✅ Global digitalization agent closed")
+def close_nzia_policy_agent():
+    """Close the global NZIA policy agent"""
+    global _nzia_policy_agent
+    if _nzia_policy_agent:
+        _nzia_policy_agent.cleanup()
+        _nzia_policy_agent = None
+        logger.info("✅ Global NZIA policy agent closed")
 
 # Test function
-async def test_digitalization_agent():
-    """Test the digitalization agent"""
+async def test_nzia_policy_agent():
+    """Test the NZIA policy agent"""
     try:
-        agent = get_digitalization_agent()
+        agent = get_nzia_policy_agent()
         if agent:
             result = await agent.analyze(
-                "What are the key digitalization trends in the PV industry?",
+                "What are the main eligibility requirements for FERX PV auctions?",
                 conversation_id="test-1"
             )
-            print("Digitalization Agent response received successfully")
+            print("NZIA Policy Agent response received successfully")
             print(f"Response length: {len(result.get('analysis', ''))}")
             print(f"\nResponse:\n{result.get('analysis', '')}")
             return result
         else:
-            print("Digitalization Agent not available")
+            print("NZIA Policy Agent not available")
             return None
     except Exception as e:
-        print(f"Digitalization Agent error: {e}")
+        print(f"NZIA Policy Agent error: {e}")
         import traceback
         traceback.print_exc()
         return None
     finally:
-        close_digitalization_agent()
+        close_nzia_policy_agent()
 
 if __name__ == "__main__":
-    asyncio.run(test_digitalization_agent())
+    asyncio.run(test_nzia_policy_agent())
